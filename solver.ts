@@ -48,15 +48,8 @@ enum Cell {
     Empty = -1,
 }
 
-function arrayCountNumber(arr: number[], p: number): number {
-    let n = 0;
-    for (const v of arr) {
-        if (v === p) {
-            n += 1;
-        }
-    }
-    return n;
-}
+const NEIGHBOR_DXS = [-1, 1, 0, 0];
+const NEIGHBOR_DYS = [0, 0, -1, 1];
 
 function arrayCountTrue(arr: boolean[]): number {
     let n = 0;
@@ -145,17 +138,6 @@ class Grid {
             this.cells[(settings.height - 1) * settings.width + 0] =
                 Cell.Forbidden;
         }
-    }
-
-    clone(): Grid {
-        const grid = new Grid({
-            hasOob: this.hasOob,
-            commandLineRow: this.commandLineRow,
-            width: 0,
-            height: 0,
-        });
-        grid.cells = array2d.copy(this.cells);
-        return grid;
     }
 
     canPlace(mask: array2d.Array2D<boolean>, pos: Position) {
@@ -263,24 +245,10 @@ class Grid {
 
 interface Candidate {
     placement: Placement;
-    mask: array2d.Array2D<boolean>;
-}
-
-function partsArr2DForGrid(
-    grid: Grid,
-    reqs: Requirement[]
-): array2d.Array2D<number> {
-    const partsArr2d = array2d.full(-1, grid.cells.nrows, grid.cells.ncols);
-    for (let y = 0; y < grid.cells.nrows; ++y) {
-        for (let x = 0; x < grid.cells.ncols; ++x) {
-            const v = grid.cells[y * partsArr2d.ncols + x];
-            if (v < 0) {
-                continue;
-            }
-            partsArr2d[y * partsArr2d.ncols + x] = reqs[v].partIndex;
-        }
-    }
-    return partsArr2d;
+    // Grid cell indices this placement covers.
+    cellIndices: number[];
+    // Bug level of this placement alone (out of bounds + solidness), excluding same-color adjacency bugs.
+    baseBugLevel: number;
 }
 
 function encodeMaskToString(mask: array2d.Array2D<boolean>): string {
@@ -332,10 +300,88 @@ export function* solve(
         return i - j;
     });
 
+    const grid = new Grid(gridSettings);
+    const cells = grid.cells;
+    const ncols = cells.ncols;
+    const nrows = cells.nrows;
+
+    const isBorder = new Array<boolean>(cells.length);
+    for (let i = 0; i < cells.length; ++i) {
+        const x = i % ncols;
+        const y = (i - x) / ncols;
+        isBorder[i] = x === 0 || y === 0 || x === ncols - 1 || y === nrows - 1;
+    }
+
+    const reqColors = new Array<number>(requirements.length);
+    const reqMaxBugLevels = new Array<number>(requirements.length);
+    for (let i = 0; i < requirements.length; ++i) {
+        reqColors[i] = parts[requirements[i].partIndex].color;
+        reqMaxBugLevels[i] = requirements[i].constraint.maxBugLevel;
+    }
+
+    // Base bug level of each placed requirement: only meaningful while the requirement is on the grid.
+    const placedBaseBugLevels = new Array<number>(requirements.length).fill(0);
+
+    // Part index (offset by 1, so empty cells are 0) per grid cell, maintained incrementally so visited grids can be keyed cheaply.
+    const partCells = new Array<number>(cells.length).fill(0);
+
+    function candidateFits(candidate: Candidate, reqIdx: number): boolean {
+        const cellIndices = candidate.cellIndices;
+
+        for (let i = 0; i < cellIndices.length; ++i) {
+            if (cells[cellIndices[i]] !== Cell.Empty) {
+                return false;
+            }
+        }
+
+        // Same-colored adjacent blocks bug both blocks, and placing more blocks never removes a bug.
+        // So if this placement is already known to push any block past its maximum bug level, nothing
+        // we place later can fix it: prune the whole subtree immediately.
+        let adjacent = false;
+        for (let i = 0; i < cellIndices.length; ++i) {
+            const idx = cellIndices[i];
+            const x = idx % ncols;
+            const y = (idx - x) / ncols;
+            for (let d = 0; d < 4; ++d) {
+                const x2 = x + NEIGHBOR_DXS[d];
+                const y2 = y + NEIGHBOR_DYS[d];
+                if (x2 < 0 || x2 >= ncols || y2 < 0 || y2 >= nrows) {
+                    continue;
+                }
+                const idx2 = y2 * ncols + x2;
+
+                const neighborReqIdx = cells[idx2];
+                if (neighborReqIdx < 0) {
+                    continue;
+                }
+                if (reqColors[neighborReqIdx] !== reqColors[reqIdx]) {
+                    continue;
+                }
+
+                // Ignore touching in out of bounds regions.
+                if (grid.hasOob && isBorder[idx] && isBorder[idx2]) {
+                    continue;
+                }
+
+                adjacent = true;
+                if (
+                    placedBaseBugLevels[neighborReqIdx] + 1 >
+                    reqMaxBugLevels[neighborReqIdx]
+                ) {
+                    return false;
+                }
+            }
+        }
+        if (adjacent && candidate.baseBugLevel + 1 > reqMaxBugLevels[reqIdx]) {
+            return false;
+        }
+
+        return true;
+    }
+
     const visited = new Set();
 
     for (const raw of (function* helper(
-        grid: Grid,
         candidateIdx: number
     ): Iterable<{ reqIdx: number; placement: Placement }[]> {
         if (candidateIdx === candidates.length) {
@@ -344,55 +390,42 @@ export function* solve(
         }
 
         const [reqIdx, cands] = candidates[candidateIdx];
-        const req = requirements[reqIdx];
-        const part = parts[req.partIndex];
+        const partCellValue = requirements[reqIdx].partIndex + 1;
 
         for (const candidate of cands) {
-            if (
-                !grid.canPlace(candidate.mask, candidate.placement.loc.position)
-            ) {
+            if (!candidateFits(candidate, reqIdx)) {
                 continue;
             }
 
-            const grid2 = grid.clone();
-            grid2.placeNoCheck(
-                candidate.mask,
-                candidate.placement.loc.position,
-                reqIdx
-            );
-
-            if (
-                !placementIsAdmissible(
-                    grid2,
-                    part.isSolid,
-                    reqIdx,
-                    req.constraint.onCommandLine,
-                    req.constraint.maxBugLevel
-                )
-            ) {
-                continue;
+            const cellIndices = candidate.cellIndices;
+            for (let i = 0; i < cellIndices.length; ++i) {
+                cells[cellIndices[i]] = reqIdx;
+                partCells[cellIndices[i]] = partCellValue;
             }
+            placedBaseBugLevels[reqIdx] = candidate.baseBugLevel;
 
-            const gridByParts = String.fromCharCode(
-                ...partsArr2DForGrid(grid2, requirements)
-            );
-            if (visited.has(gridByParts)) {
-                continue;
-            }
-            visited.add(gridByParts);
+            const gridByParts = String.fromCharCode(...partCells);
+            if (!visited.has(gridByParts)) {
+                visited.add(gridByParts);
 
-            for (const solution of helper(grid2, candidateIdx + 1)) {
-                solution.push({ reqIdx, placement: candidate.placement });
-                if (
-                    candidateIdx === candidates.length - 1 &&
-                    !solutionIsAdmissible(parts, requirements, grid2)
-                ) {
-                    continue;
+                for (const solution of helper(candidateIdx + 1)) {
+                    solution.push({ reqIdx, placement: candidate.placement });
+                    if (
+                        candidateIdx === candidates.length - 1 &&
+                        !solutionIsAdmissible(parts, requirements, grid)
+                    ) {
+                        continue;
+                    }
+                    yield solution;
                 }
-                yield solution;
+            }
+
+            for (let i = 0; i < cellIndices.length; ++i) {
+                cells[cellIndices[i]] = Cell.Empty;
+                partCells[cellIndices[i]] = 0;
             }
         }
-    })(new Grid(gridSettings), 0)) {
+    })(0)) {
         raw.sort(({ reqIdx: i }, { reqIdx: j }) => i - j);
         const solution = new Array(raw.length);
         for (let i = 0; i < raw.length; ++i) {
@@ -486,12 +519,9 @@ function resolvePlacementDetails(
             }
 
             // Optional admissibility: check if same-colored blocks are appropriately touching/not touching.
-            for (const [x2, y2] of [
-                [x - 1, y],
-                [x + 1, y],
-                [x, y - 1],
-                [x, y + 1],
-            ]) {
+            for (let d = 0; d < 4; ++d) {
+                const x2 = x + NEIGHBOR_DXS[d];
+                const y2 = y + NEIGHBOR_DYS[d];
                 if (
                     x2 < 0 ||
                     x2 >= grid.cells.ncols ||
@@ -568,63 +598,6 @@ function solutionIsAdmissible(
     return true;
 }
 
-function placementIsAdmissible(
-    grid: Grid,
-    isSolid: boolean,
-    reqIdx: number,
-    onCommandLine: boolean | null,
-    maxBugLevel: number
-) {
-    // Mandatory admissibility: ensure not everything is out of bounds.
-    if (grid.hasOob) {
-        let isAllOob = true;
-        top: for (let y = 1; y < grid.cells.nrows - 1; ++y) {
-            for (let x = 1; x < grid.cells.ncols - 1; ++x) {
-                const cell = grid.cells[y * grid.cells.ncols + x];
-                if (cell === reqIdx) {
-                    isAllOob = false;
-                    break top;
-                }
-            }
-        }
-        if (isAllOob) {
-            return false;
-        }
-    }
-
-    // Optional admissibility: check if the block is appropriately in/out of bounds.
-    const outOfBounds =
-        grid.hasOob &&
-        (arrayCountNumber(array2d.row(grid.cells, 0), reqIdx) > 0 ||
-            arrayCountNumber(array2d.col(grid.cells, 0), reqIdx) > 0 ||
-            arrayCountNumber(
-                array2d.row(grid.cells, grid.cells.nrows - 1),
-                reqIdx
-            ) > 0 ||
-            arrayCountNumber(
-                array2d.col(grid.cells, grid.cells.ncols - 1),
-                reqIdx
-            ) > 0);
-
-    // Optional admissibility: check if the block is appropriately on/off the command line.
-    const placedOnCommandLine =
-        arrayCountNumber(array2d.row(grid.cells, grid.commandLineRow), reqIdx) >
-        0;
-
-    if (onCommandLine && !placedOnCommandLine) {
-        return false;
-    }
-
-    // It is not possible to tell if the bug level is less than the minimum bug level, because we might see more bugs later due to adjacent colors.
-    // So here, we only check if we have too many bugs.
-    const bugLevel = +outOfBounds + +(isSolid === !placedOnCommandLine);
-    if (bugLevel > maxBugLevel) {
-        return false;
-    }
-
-    return true;
-}
-
 function candidatesForPart(
     part: Part,
     gridSettings: GridSettings,
@@ -643,7 +616,11 @@ function candidatesForPart(
                   { mask: part.uncompressedMask, compressed: false },
               ];
     for (const { mask: partMask, compressed } of partMasks) {
-        for (const { loc, mask } of placementLocationsAndMasksForMask(
+        for (const {
+            loc,
+            cellIndices,
+            baseBugLevel,
+        } of placementLocationsForMask(
             partMask,
             part.isSolid,
             gridSettings,
@@ -651,13 +628,17 @@ function candidatesForPart(
             constraint.maxBugLevel,
             spinnable
         )) {
-            candidates.push({ placement: { loc, compressed }, mask });
+            candidates.push({
+                placement: { loc, compressed },
+                cellIndices,
+                baseBugLevel,
+            });
         }
     }
     return candidates;
 }
 
-function placementLocationsAndMasksForMask(
+function placementLocationsForMask(
     mask: array2d.Array2D<boolean>,
     isSolid: boolean,
     gridSettings: GridSettings,
@@ -665,15 +646,27 @@ function placementLocationsAndMasksForMask(
     maxBugLevel: number,
     spinnable: boolean
 ) {
-    const locations: { loc: Location; mask: array2d.Array2D<boolean> }[] = [];
-    for (const position of placementPositionsForMask(
+    const locations: {
+        loc: Location;
+        cellIndices: number[];
+        baseBugLevel: number;
+    }[] = [];
+    for (const {
+        position,
+        cellIndices,
+        baseBugLevel,
+    } of placementPositionsForMask(
         mask,
         isSolid,
         gridSettings,
         onCommandLine,
         maxBugLevel
     )) {
-        locations.push({ loc: { position, rotation: 0 }, mask });
+        locations.push({
+            loc: { position, rotation: 0 },
+            cellIndices,
+            baseBugLevel,
+        });
     }
 
     if (spinnable) {
@@ -688,7 +681,11 @@ function placementLocationsAndMasksForMask(
             }
             knownMasks.add(knownMask);
 
-            for (const position of placementPositionsForMask(
+            for (const {
+                position,
+                cellIndices,
+                baseBugLevel,
+            } of placementPositionsForMask(
                 mask,
                 isSolid,
                 gridSettings,
@@ -697,7 +694,8 @@ function placementLocationsAndMasksForMask(
             )) {
                 locations.push({
                     loc: { position, rotation: i },
-                    mask,
+                    cellIndices,
+                    baseBugLevel,
                 });
             }
         }
@@ -713,30 +711,77 @@ function placementPositionsForMask(
     onCommandLine: boolean | null,
     maxBugLevel: number
 ) {
-    const positions: Position[] = [];
+    const positions: {
+        position: Position;
+        cellIndices: number[];
+        baseBugLevel: number;
+    }[] = [];
+
+    const grid = new Grid(gridSettings);
+    const ncols = grid.cells.ncols;
+    const nrows = grid.cells.nrows;
 
     for (let y = -mask.nrows + 1; y < mask.nrows; ++y) {
         for (let x = -mask.ncols + 1; x < mask.ncols; ++x) {
             const pos = { x, y };
-            const grid = new Grid(gridSettings);
             if (!grid.canPlace(mask, pos)) {
                 continue;
             }
             grid.placeNoCheck(mask, pos, 0);
 
-            if (
-                !placementIsAdmissible(
-                    grid,
-                    isSolid,
-                    0,
-                    onCommandLine,
-                    maxBugLevel
-                )
-            ) {
+            // Collect the grid cells this placement covers, restoring the grid to empty as we go.
+            const cellIndices: number[] = [];
+            for (let i = 0; i < grid.cells.length; ++i) {
+                if (grid.cells[i] === 0) {
+                    cellIndices.push(i);
+                    grid.cells[i] = Cell.Empty;
+                }
+            }
+
+            let outOfBounds = false;
+            let placedOnCommandLine = false;
+            let isAllOob = true;
+            for (const idx of cellIndices) {
+                const cellX = idx % ncols;
+                const cellY = (idx - cellX) / ncols;
+                if (
+                    cellX === 0 ||
+                    cellY === 0 ||
+                    cellX === ncols - 1 ||
+                    cellY === nrows - 1
+                ) {
+                    // Optional admissibility: check if the block is appropriately in/out of bounds.
+                    if (grid.hasOob) {
+                        outOfBounds = true;
+                    }
+                } else {
+                    isAllOob = false;
+                }
+
+                // Optional admissibility: check if the block is appropriately on/off the command line.
+                if (cellY === grid.commandLineRow) {
+                    placedOnCommandLine = true;
+                }
+            }
+
+            // Mandatory admissibility: ensure not everything is out of bounds.
+            if (grid.hasOob && isAllOob) {
                 continue;
             }
 
-            positions.push(pos);
+            if (onCommandLine && !placedOnCommandLine) {
+                continue;
+            }
+
+            // It is not possible to tell if the bug level is less than the minimum bug level, because we might see more bugs later due to adjacent colors.
+            // So here, we only check if we have too many bugs.
+            const baseBugLevel =
+                +outOfBounds + +(isSolid === !placedOnCommandLine);
+            if (baseBugLevel > maxBugLevel) {
+                continue;
+            }
+
+            positions.push({ position: pos, cellIndices, baseBugLevel });
         }
     }
 
