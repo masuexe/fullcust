@@ -27,6 +27,8 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "typecheck": "tsc --noEmit",
+        "test": "node --test --require ./tests/register.cjs tests/*.test.cjs"
     }
 }

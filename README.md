@@ -1,23 +1,47 @@
 # fullcust
 
-NaviCust 自动布局工具，支持 BN4 / EXE4、BN5 / EXE5 和 BN6 / EXE6。
+An automatic NaviCust layout solver for BN4 / EXE4, BN5 / EXE5, and BN6 / EXE6.
 
-## 本地开发
+## Local development
 
-使用 Node.js 22 和 pnpm 10：
+Use Node.js 22 and pnpm 10:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-## GitHub Pages 部署
+## GitHub Pages deployment
 
-本项目使用 Vite 编译 TypeScript。GitHub Pages 必须发布构建后的 `dist/`，直接发布仓库根目录会导致浏览器加载 `index.tsx`，出现模块 MIME 类型错误和白屏。
+This project uses Vite to compile TypeScript. GitHub Pages must publish the built `dist/` directory. Publishing the repository root makes the browser load `index.tsx` directly, causing a module MIME type error and a blank page.
 
-1. 在仓库的 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。
-2. 将 `.github/workflows/deploy.yml` 的修改推送至 `main`。工作流会安装依赖、运行 `pnpm build`，并发布 `dist/`。
-3. 如需重新部署，在 **Actions → Deploy → Run workflow** 中选择 `main` 手动运行。
-4. 等待部署成功后访问站点。页面源代码中的模块入口应为 `./assets/index-*.js`，而非 `index.tsx`。
+1. In the repository's **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**.
+2. Push changes to `.github/workflows/deploy.yml` to `main`. The workflow installs dependencies, runs validation and `pnpm build`, and publishes `dist/`.
+3. To redeploy manually, open **Actions → Deploy → Run workflow** and select `main`.
+4. After deployment succeeds, open the site. Its HTML should reference `./assets/index-*.js` as the module entry instead of `index.tsx`.
 
-Vite 的 `base: "./"` 使构建产物可以部署在 `/fullcust/` 子路径下。
+Vite's `base: "./"` allows the built site to run under the `/fullcust/` subpath.
+
+## Game data and shared layouts
+
+- `games.ts` registers game names, data loaders, grid sizes for each expansion level, and defaults. BN6 grid dimensions include the out-of-bounds area; UI labels show the inner dimensions.
+- `game-data.ts` validates JSON colors, part variants, shapes, and grid settings, then converts them into solver data. To add a game, add its data and register it here. Any new rules require a separate implementation.
+- Different color variants of a program can share the original numeric `id`. Stable part identifiers use `game:originalID:colorName` (for example, `bn6:1:red`), so translations and part ordering do not affect identity.
+- New shared links use the `v: 2` format, recording the game, stable part identifiers, and spinner settings keyed by color name. The solver still uses array indices internally.
+- `data/legacy-catalogs.json` preserves the original part and color ordering for old links. **Do not reorder or regenerate this file to match updated part lists.** Valid old links migrate automatically. Invalid links or references to removed parts display an error and let the user start a new layout.
+
+The current implementation provides a foundation for extending BN4–6 support. EXE3, ROM hack imports, and a custom part editor are not yet implemented.
+
+## Validation
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Tests cover data validation, shared link migration, part and color reordering, and BN4–6 layout regressions. `tests/solver-baseline.json` records solution counts and hashes of the complete results for 24 scenarios using the data conversion logic from before the refactor. These scenarios cover grid expansion, rotation, compression, same-color adjacency, and bug constraints. The deployment workflow checks types and runs tests before building and publishing.
+
+## Documentation language
+
+Write all repository documentation in English. This policy applies to documentation, independently of the application's UI languages.

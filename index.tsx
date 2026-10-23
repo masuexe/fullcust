@@ -2,206 +2,24 @@ import isEqual from "lodash-es/isEqual";
 import React, { ChangeEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { useInView } from "react-intersection-observer";
-import { z } from "zod";
 
 import * as array2d from "./array2d";
 import AsyncSolver from "./async-solver";
 import { GridSettings, Part, placeAll, Requirement, Solution } from "./solver";
+import { COLORS } from "./colors";
+import { Data } from "./game-data";
+import { defaultGameId, findGame, games, loadGame } from "./games";
+import {
+    emptyProblem,
+    makeGridSettings,
+    Problem,
+    problemFromHash,
+    toHashString,
+} from "./problem";
 
 const queryParams = new URLSearchParams(location.search);
-const game = queryParams.get("game") || "bn6";
-
-function convertParts(
-    rawParts: {
-        name: string;
-        nameJa: string;
-        isSolid: boolean;
-        color: number;
-        compressedMask: number[];
-        uncompressedMask: number[];
-    }[],
-    height: number,
-    width: number
-): (Part & { name: string; nameJa: string })[] {
-    return rawParts.map(
-        ({
-            name,
-            nameJa,
-            isSolid,
-            color,
-            compressedMask,
-            uncompressedMask,
-        }) => ({
-            name,
-            nameJa,
-            isSolid,
-            color,
-            compressedMask: array2d.from(
-                compressedMask.map((v) => !!v),
-                height,
-                width
-            ),
-            uncompressedMask: array2d.from(
-                uncompressedMask.map((v) => !!v),
-                height,
-                width
-            ),
-        })
-    );
-}
-
-const COLORS = {
-    red: {
-        name: "red",
-        nameJa: "レッド",
-        solid: "#de1000",
-        plus: "#bd0000",
-    },
-    pink: {
-        name: "pink",
-        nameJa: "ピンク",
-        solid: "#de8cc6",
-        plus: "#bd6ba5",
-    },
-    yellow: {
-        name: "yellow",
-        nameJa: "イエロー",
-        solid: "#dede00",
-        plus: "#bdbd00",
-    },
-    green: {
-        name: "green",
-        nameJa: "グリーン",
-        solid: "#18c600",
-        plus: "#00a500",
-    },
-    blue: {
-        name: "blue",
-        nameJa: "ブルー",
-        solid: "#2984de",
-        plus: "#0860b8",
-    },
-    white: {
-        name: "white",
-        nameJa: "ホワイト",
-        solid: "#dedede",
-        plus: "#bdbdbd",
-    },
-    orange: {
-        name: "orange",
-        nameJa: "オレンジ",
-        solid: "#de7b00",
-        plus: "#bd5a00",
-    },
-    purple: {
-        name: "purple",
-        nameJa: "パープル",
-        solid: "#9400ce",
-        plus: "#7300ad",
-    },
-    gray: {
-        name: "gray",
-        nameJa: "グレー",
-        solid: "#848484",
-        plus: "#636363",
-    },
-};
-
-const HashStringProblem = z.object({
-    r: z.array(
-        // requirements
-        z.object({
-            i: z.number(), // partIndex
-            c: z.number(), // constraint.onCommandLine
-            b: z.number(), // constraint.maxBugLevel
-            d: z.number(), // constraint.minBugLevel
-            z: z.number(), // constraint.compressed
-        })
-    ),
-    s: z.array(z.number()), // spinnableColors,
-    x: z.number(), // expansionMemories
-});
-
-function fromHashString(s: string): Problem | null {
-    if (s == "") {
-        return null;
-    }
-
-    let j: z.infer<typeof HashStringProblem>;
-
-    try {
-        j = HashStringProblem.parse(JSON.parse(s));
-    } catch (e) {
-        return null;
-    }
-
-    return {
-        requirements: j.r.map((cr) => ({
-            partIndex: cr.i,
-            constraint: {
-                onCommandLine: cr.c === 1 ? true : cr.c === 0 ? false : null,
-                maxBugLevel: cr.b === -1 ? Infinity : cr.b,
-                minBugLevel: cr.d,
-                compressed: cr.z === 1 ? true : cr.z === 0 ? false : null,
-            },
-        })),
-        spinnableColors: j.s.map((v) => !!v),
-        expansionMemories: j.x,
-    };
-}
-
-function toHashString(problem: Problem): string {
-    return JSON.stringify({
-        r: problem.requirements.map((req) => ({
-            i: req.partIndex,
-            c:
-                req.constraint.onCommandLine === true
-                    ? 1
-                    : req.constraint.onCommandLine === false
-                    ? 0
-                    : -1,
-            b:
-                req.constraint.maxBugLevel === Infinity
-                    ? -1
-                    : req.constraint.maxBugLevel,
-            d: req.constraint.minBugLevel,
-            z:
-                req.constraint.compressed === true
-                    ? 1
-                    : req.constraint.compressed === false
-                    ? 0
-                    : -1,
-        })),
-        s: problem.spinnableColors.map((v) => (v ? 1 : 0)),
-        x: problem.expansionMemories,
-    } as z.infer<typeof HashStringProblem>);
-}
-
-interface Data {
-    colors: string[];
-    gridSettings: GridSettings;
-    parts: Part[];
-    partMetas: {
-        name: string;
-        nameJa: string;
-        compressedMask: (0 | 1)[];
-        uncompressedMask: (0 | 1)[];
-    }[];
-}
-
-interface Problem {
-    requirements: Requirement[];
-    spinnableColors: boolean[];
-    expansionMemories: number;
-}
-
-function emptyProblem(data: Data): Problem {
-    return {
-        requirements: [],
-        spinnableColors: data.colors.map((_: string) => true),
-        expansionMemories: 2,
-    };
-}
+const game = queryParams.get("game") || defaultGameId;
+const gameDefinition = findGame(game);
 
 function ConstraintDropdown({
     title,
@@ -588,9 +406,9 @@ function PartSelector({
                                             });
                                         }}
                                     >
-                                        <option value={0}>4×4</option>
-                                        <option value={1}>5×4</option>
-                                        <option value={2}>5×5</option>
+                                        {data.gridOptions.map((option, i) => (
+                                            <option value={i} key={i}>{option.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </div>
@@ -979,16 +797,6 @@ const NavicustPlaceholder = React.forwardRef(
     }
 );
 
-function makeGridSettings(data: Data, problem: Problem): GridSettings {
-    return {
-        ...data.gridSettings,
-        height:
-            data.gridSettings.height - (problem.expansionMemories < 2 ? 1 : 0),
-        width:
-            data.gridSettings.width - (problem.expansionMemories < 1 ? 1 : 0),
-    };
-}
-
 function Results({ problem, data }: { problem: Problem; data: Data }) {
     const gs = makeGridSettings(data, problem);
 
@@ -1085,54 +893,53 @@ function Results({ problem, data }: { problem: Problem; data: Data }) {
     );
 }
 
-function hashToProblem() {
-    return fromHashString(decodeURIComponent(window.location.hash.slice(1)));
-}
-
 function App() {
     const [data, setData] = React.useState<Data | null>(null);
-    const [problem, setProblem] = React.useState<Problem | null>(
-        hashToProblem()
-    );
+    const [problem, setProblem] = React.useState<Problem | null>(null);
+    const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-        if (data == null) {
+        let cancelled = false;
+        if (!gameDefinition) {
+            setError(`Unknown game: ${game}`);
             return;
         }
-        let p = problem;
-        if (p == null) {
-            p = emptyProblem(data);
-            setProblem(p);
-        }
-        window.location.hash = toHashString(p);
-    }, [data, problem, setProblem]);
+        loadGame(gameDefinition).then(loaded => {
+            if (!cancelled) setData(loaded);
+        }).catch(reason => {
+            if (!cancelled) {
+                console.error(reason);
+                setError("Unable to load game data. Please reload the page.・データを読み込めません。再読み込みしてください。");
+            }
+        });
+        return () => { cancelled = true; };
+    }, []);
 
     React.useEffect(() => {
+        if (!data) return;
         const onHashChange = () => {
-            setProblem(hashToProblem());
+            try {
+                const restored = problemFromHash(window.location.hash, data);
+                setProblem(previous =>
+                    previous && toHashString(previous, data) === toHashString(restored, data)
+                        ? previous : restored
+                );
+                setError(null);
+            } catch (reason) {
+                console.error(reason);
+                setProblem(null);
+                setError("This shared layout is invalid or unavailable for this game.・共有データが無効、またはこのゲームに対応していません。");
+            }
         };
+        onHashChange();
         window.addEventListener("hashchange", onHashChange);
-        return () => {
-            window.removeEventListener("hashchange", onHashChange);
-        };
-    }, [setProblem]);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, [data]);
 
     React.useEffect(() => {
-        (async () => {
-            const raw = await import(`./data/${game}.json`);
-            const data = {
-                colors: raw.colors,
-                gridSettings: raw.gridSettings,
-                partMetas: raw.parts,
-                parts: convertParts(
-                    raw.parts,
-                    raw.gridSettings.height,
-                    raw.gridSettings.width
-                ),
-            };
-            setData(data);
-        })();
-    }, [setProblem, setData]);
+        if (!data || !problem) return;
+        window.location.hash = toHashString(problem, data);
+    }, [data, problem]);
 
     return (
         <div>
@@ -1147,11 +954,7 @@ function App() {
                     </small>
                 </h1>
                 <ul id="games-nav" className="nav nav-pills mb-2">
-                    {[
-                        ["bn6", "bn6・exe6"],
-                        ["bn5", "bn5・exe5"],
-                        ["bn4", "bn4・exe4"],
-                    ].map(([key, label]) => (
+                    {games.map(({ id: key, label }) => (
                         <li className="nav-item" key={key}>
                             <a
                                 className={`nav-link ${
@@ -1164,6 +967,20 @@ function App() {
                         </li>
                     ))}
                 </ul>
+                {error ? (
+                    <div className="alert alert-danger" role="alert">
+                        {error}
+                        {data ? (
+                            <button className="btn btn-sm btn-outline-danger d-block mt-2"
+                                onClick={() => {
+                                    setError(null);
+                                    setProblem(emptyProblem(data));
+                                }}>
+                                Start a new layout・新規作成
+                            </button>
+                        ) : null}
+                    </div>
+                ) : null}
                 {data != null && problem != null ? (
                     <PartSelector
                         data={data}

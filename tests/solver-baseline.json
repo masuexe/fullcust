@@ -1,0 +1,98 @@
+{
+    "bn4/grid-0": {
+        "count": 170,
+        "sha256": "d7a2d3a8365f568cedfcc43e4dbe4ec62444c5c397c7aeecd5b8d8ff0b23c30f"
+    },
+    "bn4/grid-1": {
+        "count": 346,
+        "sha256": "22cceb48dab4b5d9da9589f4cca434d7063a65d5254e485c4db861cf20feb8ee"
+    },
+    "bn4/grid-2": {
+        "count": 736,
+        "sha256": "eb56cf56d3466bca23daf4c9259f2182a61c4b78668b47b8921c1416bd9462bb"
+    },
+    "bn4/no-spinner": {
+        "count": 96,
+        "sha256": "e9091f6b3e75353aafbe023e66da3b943d7afc480f292050330196c6ef9a6547"
+    },
+    "bn4/compression-choice": {
+        "count": 36,
+        "sha256": "2dc0318d9084d25e1e728190b4023896395a7eb162efbd902fb3234872832aac"
+    },
+    "bn4/same-color-no-bugs": {
+        "count": 221,
+        "sha256": "c41a9940d3c6d5139b73ea1fc1ad9cb5ebef94b0ca121f14b9a0d508608800f8"
+    },
+    "bn4/same-color-one-bug": {
+        "count": 89,
+        "sha256": "5a2e736f0538e0b286330d5fde3515a91c359490562e5add58b440df7003c851"
+    },
+    "bn4/uncompressed-bug": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "bn5/grid-0": {
+        "count": 170,
+        "sha256": "d7a2d3a8365f568cedfcc43e4dbe4ec62444c5c397c7aeecd5b8d8ff0b23c30f"
+    },
+    "bn5/grid-1": {
+        "count": 346,
+        "sha256": "22cceb48dab4b5d9da9589f4cca434d7063a65d5254e485c4db861cf20feb8ee"
+    },
+    "bn5/grid-2": {
+        "count": 736,
+        "sha256": "eb56cf56d3466bca23daf4c9259f2182a61c4b78668b47b8921c1416bd9462bb"
+    },
+    "bn5/no-spinner": {
+        "count": 96,
+        "sha256": "e9091f6b3e75353aafbe023e66da3b943d7afc480f292050330196c6ef9a6547"
+    },
+    "bn5/compression-choice": {
+        "count": 45,
+        "sha256": "7127574a6836fb89e0f2ab68818bab7d94f071b9b325782cd0922fcd9c06bf89"
+    },
+    "bn5/same-color-no-bugs": {
+        "count": 221,
+        "sha256": "c41a9940d3c6d5139b73ea1fc1ad9cb5ebef94b0ca121f14b9a0d508608800f8"
+    },
+    "bn5/same-color-one-bug": {
+        "count": 89,
+        "sha256": "5a2e736f0538e0b286330d5fde3515a91c359490562e5add58b440df7003c851"
+    },
+    "bn5/uncompressed-bug": {
+        "count": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "bn6/grid-0": {
+        "count": 170,
+        "sha256": "28fcd49ffd6a8db3a6657887abf9d219fb8701a0c2afd6fa25df2c7df8f814ef"
+    },
+    "bn6/grid-1": {
+        "count": 346,
+        "sha256": "91df09618ffc8619f9e6c150d66a7c7e7e2b8e05ac89e913e1de88c45470d835"
+    },
+    "bn6/grid-2": {
+        "count": 736,
+        "sha256": "b747ee68a58536d23725b506da0fb1e249217a3eea077604258972fa40343dd0"
+    },
+    "bn6/no-spinner": {
+        "count": 48,
+        "sha256": "2537c67efbb1bc40d42f9f4032a0d91424c8ca4aa35388cecfb74e0ec2a61553"
+    },
+    "bn6/compression-choice": {
+        "count": 72,
+        "sha256": "e021c5263d8ae0ae97b34c13778232430d37537832c2973c5a5b624c4d31d3e3"
+    },
+    "bn6/same-color-no-bugs": {
+        "count": 221,
+        "sha256": "c41a9940d3c6d5139b73ea1fc1ad9cb5ebef94b0ca121f14b9a0d508608800f8"
+    },
+    "bn6/same-color-one-bug": {
+        "count": 440,
+        "sha256": "d899c64eebadec2a5f00486b329f1f639fb5297ca20ec673d9d63d40ae22586a"
+    },
+    "bn6/uncompressed-bug": {
+        "count": 6,
+        "sha256": "e7b546e2d65be341a9eefc8ca0e174fddea75c654b8862d81460504ea640aa80"
+    }
+}
