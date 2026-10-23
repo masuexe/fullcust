@@ -7,7 +7,7 @@ import * as array2d from "./array2d";
 import AsyncSolver from "./async-solver";
 import { GridSettings, Part, placeAll, Requirement, Solution } from "./solver";
 import { COLORS } from "./colors";
-import { colorCompatibility } from "./compatibility";
+import { colorCompatibility, isPartCompatible } from "./compatibility";
 import { Data } from "./game-data";
 import { defaultGameId, findGame, games, loadGame } from "./games";
 import {
@@ -96,10 +96,16 @@ function PartSelector({
                     <div className="small text-muted mt-1">
                         Compatible colors・対応色: {compatibility.allowedColors.join(", ")}
                     </div>
-                    {compatibility.offColorParts.length > 0 && !compatibility.error ? (
-                        <div className="small mt-1" role="status">
-                            Requires an Error Code・エラーコードが必要: {compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name).join(", ")}
-                        </div>
+                    {compatibility.offColorParts.length > 0 ? (
+                        compatibility.error ? (
+                            <div className="small text-danger mt-1 fw-bold" role="status">
+                                Incompatible parts・使用不可パーツ: {[...new Set(compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name))].join(", ")}
+                            </div>
+                        ) : (
+                            <div className="small mt-1" role="status">
+                                Requires an Error Code・エラーコードが必要: {[...new Set(compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name))].join(", ")}
+                            </div>
+                        )
                     ) : null}
                     <div className="small text-muted mt-1">
                         BN3 compression is permanent in-game; choose the state you own.・ゲーム内の圧縮は元に戻せません。
@@ -145,11 +151,17 @@ function PartSelector({
                             Pick a part・パートを選択
                         </option>
                         {data != null
-                            ? data.partMetas.map((part, i) => (
-                                  <option value={i} key={i}>
-                                      {part.name}・{part.nameJa}
-                                  </option>
-                              ))
+                            ? data.partMetas.map((part, i) => {
+                                  const incompatible = !isPartCompatible(data, problem, i);
+                                  return (
+                                      <option value={i} key={i}>
+                                          {part.name}・{part.nameJa}
+                                          {incompatible
+                                              ? " ⚠️ (Incompatible・このスタイルでは使用不可)"
+                                              : ""}
+                                      </option>
+                                  );
+                              })
                             : null}
                     </select>
                 </div>
@@ -159,13 +171,40 @@ function PartSelector({
                 <ol className="list-group">
                     {problem.requirements.map((requirement, i) => {
                         const partMeta = data!.partMetas[requirement.partIndex];
+                        const incompatible = !isPartCompatible(data, problem, requirement.partIndex);
 
                         return (
-                            <li className="list-group-item" key={i}>
+                            <li
+                                className={`list-group-item ${
+                                    incompatible
+                                        ? compatibility.error
+                                            ? "list-group-item-danger border-danger"
+                                            : "list-group-item-warning border-warning"
+                                        : ""
+                                }`}
+                                key={i}
+                            >
                                 <div className="mb-2 d-flex align-items-center">
                                     <div className="flex-grow-1">
                                         {i + 1}. {partMeta.name}・
                                         {partMeta.nameJa}
+                                        {incompatible && (
+                                            compatibility.error ? (
+                                                <span
+                                                    className="badge bg-danger ms-2"
+                                                    title="Incompatible with the selected Style・このスタイルでは使えない色です"
+                                                >
+                                                    Incompatible・このスタイルでは使用不可
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className="badge bg-warning text-dark ms-2"
+                                                    title="Requires ModTools Error Code・改造ツールのエラーコードが必要です"
+                                                >
+                                                    Requires Error Code・要エラーコード
+                                                </span>
+                                            )
+                                        )}
                                     </div>
                                     <button
                                         type="button"
@@ -966,7 +1005,8 @@ function App() {
         window.location.hash = toHashString(problem, data);
     }, [data, problem]);
 
-    const compatibilityError = data && problem ? colorCompatibility(data, problem).error : null;
+    const compatibility = data && problem ? colorCompatibility(data, problem) : null;
+    const compatibilityError = compatibility ? compatibility.error : null;
 
     return (
         <div>
@@ -1023,7 +1063,14 @@ function App() {
                 style={{ marginLeft: "40%", width: "60%" }}
             >
                 {compatibilityError ? (
-                    <div className="alert alert-warning" role="alert">{compatibilityError}</div>
+                    <div className="alert alert-warning" role="alert">
+                        <div>{compatibilityError}</div>
+                        {compatibility && compatibility.offColorParts.length > 0 ? (
+                            <div className="mt-2 fw-semibold">
+                                Incompatible parts・使用不可パーツ: {[...new Set(compatibility.offColorParts.map(req => data!.partMetas[req.partIndex].name))].join(", ")}
+                            </div>
+                        ) : null}
+                    </div>
                 ) : data != null && problem != null ? (
                     <Results
                         key={JSON.stringify(problem)}

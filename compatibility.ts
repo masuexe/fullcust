@@ -23,6 +23,14 @@ export function compatibleColors(data: Data, problem: Problem): string[] {
     return [...rules.baseColors, ...(style?.extraColor ? [style.extraColor] : [])];
 }
 
+export function isPartCompatible(data: Data, problem: Problem, partIndex: number): boolean {
+    if (!data.styleColorRules) return true;
+    const part = data.parts[partIndex];
+    if (!part) return false;
+    const allowed = compatibleColors(data, problem);
+    return allowed.includes(data.colors[part.color]);
+}
+
 export function colorCompatibility(data: Data, problem: Problem) {
     const rules = data.styleColorRules;
     const allowed = compatibleColors(data, problem);

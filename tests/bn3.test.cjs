@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { findGame } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
-const { colorCompatibility, compatibleColors } = require("../compatibility.ts");
+const { colorCompatibility, compatibleColors, isPartCompatible } = require("../compatibility.ts");
 const { emptyProblem, makeGridSettings, fromHashString, toHashString } = require("../problem.ts");
 const { solve, placeAll } = require("../solver.ts");
 const array2d = require("../array2d.ts");
@@ -70,9 +70,16 @@ for (const [style, extra] of [
             const selection = { ...p, requirements: [{ partIndex: i, constraint: {} }] };
             const allowed = ["white", "pink", "yellow", extra].includes(data.colors[data.parts[i].color]);
             assert.equal(colorCompatibility(data, selection).error === null, allowed, data.partMetas[i].name);
+            assert.equal(isPartCompatible(data, p, i), allowed, data.partMetas[i].name);
         }
     });
 }
+
+test("isPartCompatible returns true when a game has no Style color rules", () => {
+    const bn6Def = findGame("bn6");
+    const bn6Data = parseGameData(require("../data/bn6.json"), bn6Def);
+    assert.equal(isPartCompatible(bn6Data, emptyProblem(bn6Data), 0), true);
+});
 
 test("ModTools permits one off-color part, not one entire extra color", () => {
     assert(colorCompatibility(data, problem(["1:red"])).error);
