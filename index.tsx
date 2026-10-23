@@ -88,10 +88,12 @@ function PartSelector({
     data,
     problem,
     onChange,
+    onNavigateToResults,
 }: {
     data: Data;
     problem: Problem;
     onChange: (problem: Problem) => void;
+    onNavigateToResults?: () => void;
 }) {
     const { lang } = useLang();
     const compatibility = colorCompatibility(data, problem);
@@ -579,6 +581,18 @@ function PartSelector({
                     </button>
                 </div>
             </div>
+
+            {onNavigateToResults ? (
+                <div className="d-lg-none mt-3">
+                    <button
+                        type="button"
+                        className="btn btn-primary w-100 py-2 fw-semibold"
+                        onClick={onNavigateToResults}
+                    >
+                        {t("viewSolutions", lang)} ➔
+                    </button>
+                </div>
+            ) : null}
         </>
     );
 }
@@ -881,7 +895,15 @@ const NavicustPlaceholder = React.forwardRef(
     }
 );
 
-function Results({ problem, data }: { problem: Problem; data: Data }) {
+function Results({
+    problem,
+    data,
+    onNavigateToSetup,
+}: {
+    problem: Problem;
+    data: Data;
+    onNavigateToSetup?: () => void;
+}) {
     const { lang } = useLang();
     const gs = makeGridSettings(data, problem);
 
@@ -929,48 +951,101 @@ function Results({ problem, data }: { problem: Problem; data: Data }) {
     }, [inView, done, pending, setDone, setSolutions]);
 
     return (
-        <div
-            style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-                gap: "1rem",
-            }}
-        >
-            {solutions.length > 0 ? (
-                solutions.map((solution, i) => (
-                    <div style={{ textAlign: "center" }} key={i}>
-                        <Navicust
-                            parts={data.parts}
-                            colors={data.colors}
-                            requirements={problem.requirements}
-                            gridSettings={gs}
-                            cells={placeAll(
-                                data.parts,
-                                problem.requirements,
-                                solution as Solution,
-                                gs
-                            )}
-                        />
-                    </div>
-                ))
-            ) : done ? (
-                problem.requirements.length > 0 ? (
-                    <div key="no-results" className="alert alert-danger">
-                        {t("noSolutions", lang)}
-                    </div>
-                ) : (
-                    <div key="no-requirements" className="alert alert-info">
-                        {t("selectPartsToSolve", lang)}
-                    </div>
-                )
+        <div>
+            {onNavigateToSetup ? (
+                <div className="d-lg-none mb-3">
+                    <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={onNavigateToSetup}
+                    >
+                        ← {t("backToSetup", lang)}
+                    </button>
+                </div>
             ) : null}
-            {done ? null : <NavicustPlaceholder ref={ref} gridSettings={gs} />}
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: "1rem",
+                }}
+            >
+                {solutions.length > 0 ? (
+                    solutions.map((solution, i) => (
+                        <div style={{ textAlign: "center" }} key={i}>
+                            <Navicust
+                                parts={data.parts}
+                                colors={data.colors}
+                                requirements={problem.requirements}
+                                gridSettings={gs}
+                                cells={placeAll(
+                                    data.parts,
+                                    problem.requirements,
+                                    solution as Solution,
+                                    gs
+                                )}
+                            />
+                        </div>
+                    ))
+                ) : done ? (
+                    problem.requirements.length > 0 ? (
+                        <div key="no-results" className="alert alert-danger">
+                            {t("noSolutions", lang)}
+                        </div>
+                    ) : (
+                        <div key="no-requirements" className="alert alert-info">
+                            {t("selectPartsToSolve", lang)}
+                        </div>
+                    )
+                ) : null}
+                {done ? null : <NavicustPlaceholder ref={ref} gridSettings={gs} />}
+            </div>
+        </div>
+    );
+}
+
+function MobileNav({
+    tab,
+    setTab,
+    hasError,
+}: {
+    tab: "setup" | "results";
+    setTab: (tab: "setup" | "results") => void;
+    hasError?: boolean;
+}) {
+    const { lang } = useLang();
+    return (
+        <div className="d-lg-none mb-2">
+            <ul className="nav nav-pills nav-fill bg-light p-1 rounded border">
+                <li className="nav-item">
+                    <button
+                        type="button"
+                        className={`nav-link py-1 ${tab === "setup" ? "active" : ""}`}
+                        onClick={() => setTab("setup")}
+                    >
+                        ⚙️ {t("tabSetup", lang)}
+                    </button>
+                </li>
+                <li className="nav-item">
+                    <button
+                        type="button"
+                        className={`nav-link py-1 ${tab === "results" ? "active" : ""}`}
+                        onClick={() => setTab("results")}
+                    >
+                        🧩 {t("tabSolutions", lang)}
+                        {hasError ? (
+                            <span className="badge bg-danger ms-1">!</span>
+                        ) : null}
+                    </button>
+                </li>
+            </ul>
         </div>
     );
 }
 
 function App() {
     const [lang, setLangState] = React.useState<Lang>(getInitialLang);
+    const [mobileTab, setMobileTab] = React.useState<"setup" | "results">("setup");
     const setLang = React.useCallback((newLang: Lang) => {
         setLangState(newLang);
         setPersistedLang(newLang);
@@ -1030,8 +1105,9 @@ function App() {
         <LangContext.Provider value={{ lang, setLang }}>
             <div>
                 <div
-                    className="h-100 position-fixed d-flex flex-column p-2 border-end"
-                    style={{ width: "40%", top: 0 }}
+                    className={`sidebar-panel d-flex flex-column p-2 ${
+                        mobileTab === "setup" ? "" : "d-none d-lg-flex"
+                    }`}
                 >
                     <div className="d-flex justify-content-between align-items-center mb-2">
                         <h1 className="h4 mb-0">
@@ -1057,7 +1133,12 @@ function App() {
                             </button>
                         </div>
                     </div>
-                    <ul id="games-nav" className="nav nav-pills mb-2">
+                    <MobileNav
+                        tab={mobileTab}
+                        setTab={setMobileTab}
+                        hasError={Boolean(compatibilityError)}
+                    />
+                    <ul id="games-nav" className="nav nav-pills mb-2 flex-wrap">
                         {games.map(({ id: key, label }) => (
                             <li className="nav-item" key={key}>
                                 <a
@@ -1092,13 +1173,20 @@ function App() {
                             onChange={(problem) => {
                                 setProblem(problem);
                             }}
+                            onNavigateToResults={() => setMobileTab("results")}
                         />
                     ) : null}
                 </div>
                 <div
-                    className="container-fluid my-2"
-                    style={{ marginLeft: "40%", width: "60%" }}
+                    className={`main-panel container-fluid my-2 ${
+                        mobileTab === "results" ? "" : "d-none d-lg-block"
+                    }`}
                 >
+                    <MobileNav
+                        tab={mobileTab}
+                        setTab={setMobileTab}
+                        hasError={Boolean(compatibilityError)}
+                    />
                     {compatibilityError ? (
                         <div className="alert alert-warning" role="alert">
                             <div>{tBilingual(compatibilityError, lang)}</div>
@@ -1113,6 +1201,7 @@ function App() {
                             key={JSON.stringify(problem)}
                             data={data}
                             problem={problem}
+                            onNavigateToSetup={() => setMobileTab("setup")}
                         />
                     ) : null}
                 </div>

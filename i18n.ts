@@ -121,6 +121,22 @@ export const translations = {
         en: "✅ must",
         ja: "✅ 必要",
     },
+    tabSetup: {
+        en: "Setup",
+        ja: "設定",
+    },
+    tabSolutions: {
+        en: "Solutions",
+        ja: "配置結果",
+    },
+    viewSolutions: {
+        en: "View Solutions",
+        ja: "配置結果を見る",
+    },
+    backToSetup: {
+        en: "Back to Setup",
+        ja: "設定に戻る",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {
