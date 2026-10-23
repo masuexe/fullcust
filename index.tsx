@@ -6,7 +6,7 @@ import { useInView } from "react-intersection-observer";
 import * as array2d from "./array2d";
 import AsyncSolver from "./async-solver";
 import { GridSettings, Part, placeAll, Requirement, Solution } from "./solver";
-import { COLORS } from "./colors";
+import { COLORS, getColorName } from "./colors";
 import { colorCompatibility, isPartCompatible } from "./compatibility";
 import { Data } from "./game-data";
 import { defaultGameId, findGame, games, loadGame } from "./games";
@@ -152,7 +152,7 @@ function PartSelector({
                         </label>
                     </div>
                     <div className="small text-muted mt-1">
-                        {t("compatibleColors", lang)}: {compatibility.allowedColors.join(", ")}
+                        {t("compatibleColors", lang)}: {compatibility.allowedColors.map(c => getColorName(c, lang)).join(", ")}
                     </div>
                     {compatibility.offColorParts.length > 0 ? (
                         compatibility.error ? (
@@ -593,6 +593,8 @@ function PartSelector({
                                             >
                                                 {lang === "ja"
                                                     ? `${t("spin", lang)}${COLORS[color as keyof typeof COLORS].nameJa}`
+                                                    : lang === "zh"
+                                                    ? `${COLORS[color as keyof typeof COLORS].nameZh}${t("spin", lang)}`
                                                     : `${t("spin", lang)} ${COLORS[color as keyof typeof COLORS].name}`}
                                             </label>
                                         </div>
@@ -1112,7 +1114,7 @@ function App() {
         }).catch(reason => {
             if (!cancelled) {
                 console.error(reason);
-                setError("Unable to load game data. Please reload the page.・データを読み込めません。再読み込みしてください。");
+                setError("Unable to load game data. Please reload the page.・データを読み込めません。再読み込みしてください。・无法加载游戏数据，请刷新页面。");
             }
         });
         return () => { cancelled = true; };
@@ -1131,7 +1133,7 @@ function App() {
             } catch (reason) {
                 console.error(reason);
                 setProblem(null);
-                setError("This shared layout is invalid or unavailable for this game.・共有データが無効、またはこのゲームに対応していません。");
+                setError("This shared layout is invalid or unavailable for this game.・共有データが無効、またはこのゲームに対応していません。・此分享配置无效或不适用于当前游戏。");
             }
         };
         onHashChange();
@@ -1186,6 +1188,13 @@ function App() {
                                     onClick={() => setLang("ja")}
                                 >
                                     日本語
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${lang === "zh" ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => setLang("zh")}
+                                >
+                                    中文
                                 </button>
                             </div>
                         </div>

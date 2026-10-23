@@ -11,6 +11,7 @@
             "id": 1,
             "name": "SprArmr (red)",
             "nameJa": "スーパーアーマー（レッド）",
+            "nameZh": "超级装甲（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -26,6 +27,7 @@
             "id": 2,
             "name": "Custom1 (blue)",
             "nameJa": "カスタム1（ブルー）",
+            "nameZh": "改装1（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -41,6 +43,7 @@
             "id": 3,
             "name": "Custom2 (blue)",
             "nameJa": "カスタム2（ブルー）",
+            "nameZh": "改装2（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0,
@@ -56,6 +59,7 @@
             "id": 4,
             "name": "MegFldr1 (green)",
             "nameJa": "メガフォルダ1（グリーン）",
+            "nameZh": "MEGA文件1（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -71,6 +75,7 @@
             "id": 5,
             "name": "MegFldr2 (green)",
             "nameJa": "メガフォルダ2（グリーン）",
+            "nameZh": "MEGA文件2（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -86,6 +91,7 @@
             "id": 6,
             "name": "GigFldr1 (red)",
             "nameJa": "ギガフォルダ1（レッド）",
+            "nameZh": "GIGA文件1（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0,
@@ -101,6 +107,7 @@
             "id": 7,
             "name": "FstBarr (blue)",
             "nameJa": "ファーストバリア（ブルー）",
+            "nameZh": "初始防护罩（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -116,6 +123,7 @@
             "id": 8,
             "name": "Shield (green)",
             "nameJa": "シールド（グリーン）",
+            "nameZh": "盾（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -131,6 +139,7 @@
             "id": 9,
             "name": "Reflect (white)",
             "nameJa": "リフレクト（ホワイト）",
+            "nameZh": "反射（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0,
@@ -146,6 +155,7 @@
             "id": 10,
             "name": "AntiDmg (red)",
             "nameJa": "カワリミマジック（レッド）",
+            "nameZh": "替身魔术（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -161,6 +171,7 @@
             "id": 11,
             "name": "FlotShoe (blue)",
             "nameJa": "フロートシューズ（ブルー）",
+            "nameZh": "漂浮鞋（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0,
@@ -176,6 +187,7 @@
             "id": 12,
             "name": "AirShoes (yellow)",
             "nameJa": "エアシューズ（イエロー）",
+            "nameZh": "飞行鞋（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0,
@@ -191,6 +203,7 @@
             "id": 13,
             "name": "UnderSht (white)",
             "nameJa": "アンダーシャツ（ホワイト）",
+            "nameZh": "紧身衣（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -206,6 +219,7 @@
             "id": 14,
             "name": "SneakRun (blue)",
             "nameJa": "シノビダッシュ（ブルー）",
+            "nameZh": "忍术冲刺（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0,
@@ -221,6 +235,7 @@
             "id": 15,
             "name": "OilBody (red)",
             "nameJa": "オイルボディ（レッド）",
+            "nameZh": "油性体质（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
@@ -236,6 +251,7 @@
             "id": 16,
             "name": "Fish (blue)",
             "nameJa": "アイムフィッシュ（ブルー）",
+            "nameZh": "我是鱼（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
@@ -251,6 +267,7 @@
             "id": 17,
             "name": "Battery (yellow)",
             "nameJa": "バッテリーモード（イエロー）",
+            "nameZh": "电池模式（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
@@ -266,6 +283,7 @@
             "id": 18,
             "name": "Jungle (green)",
             "nameJa": "ジャングルランド（グリーン）",
+            "nameZh": "丛林地带（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
@@ -281,6 +299,7 @@
             "id": 19,
             "name": "Collect (yellow)",
             "nameJa": "コレクターズアイ（イエロー）",
+            "nameZh": "收藏家之眼（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -296,6 +315,7 @@
             "id": 20,
             "name": "Millions (green)",
             "nameJa": "ミリオネア（グリーン）",
+            "nameZh": "百万富翁（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0,
@@ -311,6 +331,7 @@
             "id": 21,
             "name": "Humor (pink)",
             "nameJa": "ユーモアセンス（ピンク）",
+            "nameZh": "幽默感（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -326,6 +347,7 @@
             "id": 22,
             "name": "Chivalry (blue)",
             "nameJa": "ダンディズム（ブルー）",
+            "nameZh": "时髦士绅（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -341,6 +363,7 @@
             "id": 23,
             "name": "AutoRun (red)",
             "nameJa": "オートランニング（レッド）",
+            "nameZh": "自动跑步（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -356,6 +379,7 @@
             "id": 24,
             "name": "AutoHeal (pink)",
             "nameJa": "セルフリカバリー（ピンク）",
+            "nameZh": "自我回复（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -371,6 +395,7 @@
             "id": 25,
             "name": "BustPack (blue)",
             "nameJa": "バスターパック（ブルー）",
+            "nameZh": "子弹套组（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0,
@@ -386,6 +411,7 @@
             "id": 26,
             "name": "BodyPack (green)",
             "nameJa": "ボディパック（グリーン）",
+            "nameZh": "身体套组（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0,
@@ -401,6 +427,7 @@
             "id": 28,
             "name": "BugStop (white)",
             "nameJa": "バグストッパー（ホワイト）",
+            "nameZh": "BUG停止器（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -416,6 +443,7 @@
             "id": 29,
             "name": "SoulClen (white)",
             "nameJa": "ソウルクリーナー（ホワイト）",
+            "nameZh": "灵魂吸尘器（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0,
@@ -431,6 +459,7 @@
             "id": 30,
             "name": "Rush (yellow)",
             "nameJa": "ラッシュサポート（イエロー）",
+            "nameZh": "莱西支援（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -446,6 +475,7 @@
             "id": 31,
             "name": "Beat (blue)",
             "nameJa": "ビートサポート（ブルー）",
+            "nameZh": "比特支援（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -461,6 +491,7 @@
             "id": 32,
             "name": "Tango (green)",
             "nameJa": "タンゴサポート（グリーン）",
+            "nameZh": "探戈支援（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0,
@@ -476,6 +507,7 @@
             "id": 35,
             "name": "Attck+1 (white)",
             "nameJa": "アタック+1（ホワイト）",
+            "nameZh": "攻击+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -491,6 +523,7 @@
             "id": 35,
             "name": "Attck+1 (pink)",
             "nameJa": "アタック+1（ピンク）",
+            "nameZh": "攻击+1（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -506,6 +539,7 @@
             "id": 35,
             "name": "Attck+1 (yellow)",
             "nameJa": "アタック+1（イエロー）",
+            "nameZh": "攻击+1（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -521,6 +555,7 @@
             "id": 36,
             "name": "Speed+1 (white)",
             "nameJa": "ラピッド+1（ホワイト）",
+            "nameZh": "连射+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -536,6 +571,7 @@
             "id": 36,
             "name": "Speed+1 (pink)",
             "nameJa": "ラピッド+1（ピンク）",
+            "nameZh": "连射+1（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -551,6 +587,7 @@
             "id": 36,
             "name": "Speed+1 (yellow)",
             "nameJa": "ラピッド+1（イエロー）",
+            "nameZh": "连射+1（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -566,6 +603,7 @@
             "id": 37,
             "name": "Charge+1 (white)",
             "nameJa": "チャージ+1（ホワイト）",
+            "nameZh": "集气+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -581,6 +619,7 @@
             "id": 37,
             "name": "Charge+1 (pink)",
             "nameJa": "チャージ+1（ピンク）",
+            "nameZh": "集气+1（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -596,6 +635,7 @@
             "id": 37,
             "name": "Charge+1 (yellow)",
             "nameJa": "チャージ+1（イエロー）",
+            "nameZh": "集气+1（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -611,6 +651,7 @@
             "id": 38,
             "name": "SoulT+1 (white)",
             "nameJa": "ソウルタイム+1（ホワイト）",
+            "nameZh": "灵魂时间+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -626,6 +667,7 @@
             "id": 38,
             "name": "SoulT+1 (pink)",
             "nameJa": "ソウルタイム+1（ピンク）",
+            "nameZh": "灵魂时间+1（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -641,6 +683,7 @@
             "id": 38,
             "name": "SoulT+1 (yellow)",
             "nameJa": "ソウルタイム+1（イエロー）",
+            "nameZh": "灵魂时间+1（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -656,6 +699,7 @@
             "id": 39,
             "name": "AttckMAX (white)",
             "nameJa": "アタックMAX（ホワイト）",
+            "nameZh": "攻击MAX（白色）",
             "color": 1,
             "compressedMask": [
                 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -671,6 +715,7 @@
             "id": 39,
             "name": "AttckMAX (pink)",
             "nameJa": "アタックMAX（ピンク）",
+            "nameZh": "攻击MAX（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -686,6 +731,7 @@
             "id": 39,
             "name": "AttckMAX (yellow)",
             "nameJa": "アタックMAX（イエロー）",
+            "nameZh": "攻击MAX（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,
@@ -701,6 +747,7 @@
             "id": 40,
             "name": "SpeedMAX (white)",
             "nameJa": "ラピッドMAX（ホワイト）",
+            "nameZh": "连射MAX（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -716,6 +763,7 @@
             "id": 40,
             "name": "SpeedMAX (pink)",
             "nameJa": "ラピッドMAX（ピンク）",
+            "nameZh": "连射MAX（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -731,6 +779,7 @@
             "id": 40,
             "name": "SpeedMAX (yellow)",
             "nameJa": "ラピッドMAX（イエロー）",
+            "nameZh": "连射MAX（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -746,6 +795,7 @@
             "id": 41,
             "name": "ChargMAX (white)",
             "nameJa": "チャージMAX（ホワイト）",
+            "nameZh": "集气MAX（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -761,6 +811,7 @@
             "id": 41,
             "name": "ChargMAX (pink)",
             "nameJa": "チャージMAX（ピンク）",
+            "nameZh": "集气MAX（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -776,6 +827,7 @@
             "id": 41,
             "name": "ChargMAX (yellow)",
             "nameJa": "チャージMAX（イエロー）",
+            "nameZh": "集气MAX（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -791,6 +843,7 @@
             "id": 42,
             "name": "HP+50 (white)",
             "nameJa": "HP+50（ホワイト）",
+            "nameZh": "HP+50（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -806,6 +859,7 @@
             "id": 42,
             "name": "HP+50 (pink)",
             "nameJa": "HP+50（ピンク）",
+            "nameZh": "HP+50（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -821,6 +875,7 @@
             "id": 42,
             "name": "HP+50 (yellow)",
             "nameJa": "HP+50（イエロー）",
+            "nameZh": "HP+50（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -836,6 +891,7 @@
             "id": 43,
             "name": "HP+100 (white)",
             "nameJa": "HP+100（ホワイト）",
+            "nameZh": "HP+100（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -851,6 +907,7 @@
             "id": 43,
             "name": "HP+100 (pink)",
             "nameJa": "HP+100（ピンク）",
+            "nameZh": "HP+100（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -866,6 +923,7 @@
             "id": 43,
             "name": "HP+100 (yellow)",
             "nameJa": "HP+100（イエロー）",
+            "nameZh": "HP+100（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -881,6 +939,7 @@
             "id": 44,
             "name": "HP+200 (white)",
             "nameJa": "HP+200（ホワイト）",
+            "nameZh": "HP+200（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -896,6 +955,7 @@
             "id": 44,
             "name": "HP+200 (pink)",
             "nameJa": "HP+200（ピンク）",
+            "nameZh": "HP+200（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -911,6 +971,7 @@
             "id": 44,
             "name": "HP+200 (yellow)",
             "nameJa": "HP+200（イエロー）",
+            "nameZh": "HP+200（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -926,6 +987,7 @@
             "id": 45,
             "name": "HP+300 (white)",
             "nameJa": "HP+300（ホワイト）",
+            "nameZh": "HP+300（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -941,6 +1003,7 @@
             "id": 45,
             "name": "HP+300 (pink)",
             "nameJa": "HP+300（ピンク）",
+            "nameZh": "HP+300（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -956,6 +1019,7 @@
             "id": 45,
             "name": "HP+300 (yellow)",
             "nameJa": "HP+300（イエロー）",
+            "nameZh": "HP+300（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -971,6 +1035,7 @@
             "id": 46,
             "name": "HP+400 (white)",
             "nameJa": "HP+400（ホワイト）",
+            "nameZh": "HP+400（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
@@ -986,6 +1051,7 @@
             "id": 46,
             "name": "HP+400 (pink)",
             "nameJa": "HP+400（ピンク）",
+            "nameZh": "HP+400（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
@@ -1001,6 +1067,7 @@
             "id": 46,
             "name": "HP+400 (yellow)",
             "nameJa": "HP+400（イエロー）",
+            "nameZh": "HP+400（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
@@ -1016,6 +1083,7 @@
             "id": 47,
             "name": "HP+500 (white)",
             "nameJa": "HP+500（ホワイト）",
+            "nameZh": "HP+500（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
@@ -1031,6 +1099,7 @@
             "id": 47,
             "name": "HP+500 (pink)",
             "nameJa": "HP+500（ピンク）",
+            "nameZh": "HP+500（粉色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,
@@ -1046,6 +1115,7 @@
             "id": 47,
             "name": "HP+500 (yellow)",
             "nameJa": "HP+500（イエロー）",
+            "nameZh": "HP+500（黄色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,

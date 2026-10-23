@@ -45,8 +45,8 @@ export function colorCompatibility(data: Data, problem: Problem) {
         // so reject impossible selections before starting the placement worker.
         error: offColorParts.length > budget
             ? problem.modTools
-                ? "ModTools can fix only one incompatible part. Change Style or remove incompatible parts.・改造ツールで修正できる非対応パーツは1個までです。"
-                : "These parts are incompatible with the selected Style. Change Style or enable ModTools.・このスタイルでは使えない色があります。スタイルを変えるか改造ツールを有効にしてください。"
+                ? "ModTools can fix only one incompatible part. Change Style or remove incompatible parts.・改造ツールで修正できる非対応パーツは1個までです。・改造工具最多只能修正1个非对应程序。请更换型态或移除不可用程序。"
+                : "These parts are incompatible with the selected Style. Change Style or enable ModTools.・このスタイルでは使えない色があります。スタイルを変えるか改造ツールを有効にしてください。・所选程序包含当前型态无法使用的颜色。请更换型态或启用改造工具。"
             : null,
     };
 }

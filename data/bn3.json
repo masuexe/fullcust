@@ -22,6 +22,7 @@
             "id": 1,
             "name": "SprArmor (red)",
             "nameJa": "スーパーアーマー（レッド）",
+            "nameZh": "超级装甲（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -43,6 +44,7 @@
             "id": 2,
             "name": "BrakBust (red)",
             "nameJa": "ブレイクバスター（レッド）",
+            "nameZh": "破碎飞弹（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -64,6 +66,7 @@
             "id": 3,
             "name": "BrakChrg (orange)",
             "nameJa": "ブレイクチャージ（オレンジ）",
+            "nameZh": "破碎集气（橙色）",
             "color": 7,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -85,6 +88,7 @@
             "id": 3,
             "name": "BrakChrg (red)",
             "nameJa": "ブレイクチャージ（レッド）",
+            "nameZh": "破碎集气（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -106,6 +110,7 @@
             "id": 4,
             "name": "SetGreen (green)",
             "nameJa": "セットグリーン（グリーン）",
+            "nameZh": "设置绿（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -127,6 +132,7 @@
             "id": 5,
             "name": "SetIce (green)",
             "nameJa": "セットアイス（グリーン）",
+            "nameZh": "设置冰（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -148,6 +154,7 @@
             "id": 6,
             "name": "SetLava (green)",
             "nameJa": "セットマグマ（グリーン）",
+            "nameZh": "设置岩浆（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 1, 1, 0,
@@ -169,6 +176,7 @@
             "id": 7,
             "name": "SetSand (green)",
             "nameJa": "セットサンド（グリーン）",
+            "nameZh": "设置沙（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -190,6 +198,7 @@
             "id": 8,
             "name": "SetMetal (green)",
             "nameJa": "セットメタル（グリーン）",
+            "nameZh": "设置金属（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -211,6 +220,7 @@
             "id": 9,
             "name": "SetHoly (green)",
             "nameJa": "セットホーリー（グリーン）",
+            "nameZh": "设置神圣（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 1, 1, 1, 0,
@@ -232,6 +242,7 @@
             "id": 10,
             "name": "Custom1 (yellow)",
             "nameJa": "カスタム1（イエロー）",
+            "nameZh": "改装1（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -253,6 +264,7 @@
             "id": 10,
             "name": "Custom1 (blue)",
             "nameJa": "カスタム1（ブルー）",
+            "nameZh": "改装1（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -274,6 +286,7 @@
             "id": 11,
             "name": "Custom2 (blue)",
             "nameJa": "カスタム2（ブルー）",
+            "nameZh": "改装2（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -295,6 +308,7 @@
             "id": 12,
             "name": "MegFldr1 (pink)",
             "nameJa": "メガフォルダ1（ピンク）",
+            "nameZh": "MEGA文件1（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -316,6 +330,7 @@
             "id": 12,
             "name": "MegFldr1 (green)",
             "nameJa": "メガフォルダ1（グリーン）",
+            "nameZh": "MEGA文件1（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -337,6 +352,7 @@
             "id": 13,
             "name": "MegFldr2 (green)",
             "nameJa": "メガフォルダ2（グリーン）",
+            "nameZh": "MEGA文件2（绿色）",
             "color": 6,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -358,6 +374,7 @@
             "id": 14,
             "name": "Block (blue)",
             "nameJa": "ブロック（ブルー）",
+            "nameZh": "格挡（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -379,6 +396,7 @@
             "id": 15,
             "name": "Shield (blue)",
             "nameJa": "シールド（ブルー）",
+            "nameZh": "盾（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -400,6 +418,7 @@
             "id": 16,
             "name": "Reflect (blue)",
             "nameJa": "リフレクト（ブルー）",
+            "nameZh": "反射（蓝色）",
             "color": 5,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -421,6 +440,7 @@
             "id": 17,
             "name": "ShdwShoe (red)",
             "nameJa": "シャドーシューズ（レッド）",
+            "nameZh": "影子鞋（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -442,6 +462,7 @@
             "id": 18,
             "name": "FlotShoe (red)",
             "nameJa": "フロートシューズ（レッド）",
+            "nameZh": "漂浮鞋（红色）",
             "color": 4,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -463,6 +484,7 @@
             "id": 19,
             "name": "AntiDmg (red)",
             "nameJa": "カワリミマジック（レッド）",
+            "nameZh": "替身魔术（红色）",
             "color": 4,
             "compressedMask": [
                 0, 1, 1, 1, 0,
@@ -484,6 +506,7 @@
             "id": 20,
             "name": "Press (white)",
             "nameJa": "プレスプログラム（ホワイト）",
+            "nameZh": "压缩程序（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -505,6 +528,7 @@
             "id": 21,
             "name": "EngyChng (white)",
             "nameJa": "エナジーチェンジ（ホワイト）",
+            "nameZh": "能量转换（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -526,6 +550,7 @@
             "id": 22,
             "name": "Alpha (pink)",
             "nameJa": "アルファ（ピンク）",
+            "nameZh": "原型镜（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 1, 1, 0,
@@ -547,6 +572,7 @@
             "id": 23,
             "name": "SneakRun (yellow)",
             "nameJa": "シノビダッシュ（イエロー）",
+            "nameZh": "忍术冲刺（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -568,6 +594,7 @@
             "id": 24,
             "name": "OilBody (yellow)",
             "nameJa": "オイルボディ（イエロー）",
+            "nameZh": "油性体质（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -589,6 +616,7 @@
             "id": 25,
             "name": "Fish (pink)",
             "nameJa": "アイムフィッシュ（ピンク）",
+            "nameZh": "我是鱼（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -610,6 +638,7 @@
             "id": 26,
             "name": "Battery (yellow)",
             "nameJa": "アイムバッテリー（イエロー）",
+            "nameZh": "电池模式（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -631,6 +660,7 @@
             "id": 27,
             "name": "Jungle (white)",
             "nameJa": "アイムジャングル（ホワイト）",
+            "nameZh": "丛林地带（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -652,6 +682,7 @@
             "id": 28,
             "name": "Collect (pink)",
             "nameJa": "コレクターズアイ（ピンク）",
+            "nameZh": "收藏家之眼（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -673,6 +704,7 @@
             "id": 29,
             "name": "AirShoes (white)",
             "nameJa": "エアシューズ（ホワイト）",
+            "nameZh": "飞行鞋（白色）",
             "color": 1,
             "compressedMask": [
                 0, 1, 0, 0, 0,
@@ -694,6 +726,7 @@
             "id": 30,
             "name": "UnderSht (white)",
             "nameJa": "アンダーシャツ（ホワイト）",
+            "nameZh": "紧身衣（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -715,6 +748,7 @@
             "id": 31,
             "name": "FstGauge (pink)",
             "nameJa": "クイックゲージ（ピンク）",
+            "nameZh": "快速量表（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 1, 1, 0,
@@ -736,6 +770,7 @@
             "id": 32,
             "name": "Rush (yellow)",
             "nameJa": "ラッシュサポート（イエロー）",
+            "nameZh": "莱西支援（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -757,6 +792,7 @@
             "id": 33,
             "name": "Beat (white)",
             "nameJa": "ビートサポート（ホワイト）",
+            "nameZh": "比特支援（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -778,6 +814,7 @@
             "id": 34,
             "name": "Tango (pink)",
             "nameJa": "タンゴサポート（ピンク）",
+            "nameZh": "探戈支援（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 1, 1, 0, 0,
@@ -799,6 +836,7 @@
             "id": 35,
             "name": "WeapLV+1 (white)",
             "nameJa": "ウエポンLV+1（ホワイト）",
+            "nameZh": "武器等级+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -820,6 +858,7 @@
             "id": 35,
             "name": "WeapLV+1 (pink)",
             "nameJa": "ウエポンLV+1（ピンク）",
+            "nameZh": "武器等级+1（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -841,6 +880,7 @@
             "id": 35,
             "name": "WeapLV+1 (yellow)",
             "nameJa": "ウエポンLV+1（イエロー）",
+            "nameZh": "武器等级+1（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -862,6 +902,7 @@
             "id": 36,
             "name": "HP+100 (white)",
             "nameJa": "HP+100（ホワイト）",
+            "nameZh": "HP+100（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -883,6 +924,7 @@
             "id": 36,
             "name": "HP+100 (pink)",
             "nameJa": "HP+100（ピンク）",
+            "nameZh": "HP+100（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -904,6 +946,7 @@
             "id": 36,
             "name": "HP+100 (yellow)",
             "nameJa": "HP+100（イエロー）",
+            "nameZh": "HP+100（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -925,6 +968,7 @@
             "id": 37,
             "name": "HP+200 (pink)",
             "nameJa": "HP+200（ピンク）",
+            "nameZh": "HP+200（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -946,6 +990,7 @@
             "id": 37,
             "name": "HP+200 (yellow)",
             "nameJa": "HP+200（イエロー）",
+            "nameZh": "HP+200（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -967,6 +1012,7 @@
             "id": 38,
             "name": "HP+300 (pink)",
             "nameJa": "HP+300（ピンク）",
+            "nameZh": "HP+300（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -988,6 +1034,7 @@
             "id": 39,
             "name": "HP+500 (yellow)",
             "nameJa": "HP+500（イエロー）",
+            "nameZh": "HP+500（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1009,6 +1056,7 @@
             "id": 40,
             "name": "Reg+5 (white)",
             "nameJa": "レギュラー+5（ホワイト）",
+            "nameZh": "常规+5（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1030,6 +1078,7 @@
             "id": 40,
             "name": "Reg+5 (yellow)",
             "nameJa": "レギュラー+5（イエロー）",
+            "nameZh": "常规+5（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1051,6 +1100,7 @@
             "id": 41,
             "name": "Atk+1 (white)",
             "nameJa": "アタック+1（ホワイト）",
+            "nameZh": "攻击+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1072,6 +1122,7 @@
             "id": 41,
             "name": "Atk+1 (pink)",
             "nameJa": "アタック+1（ピンク）",
+            "nameZh": "攻击+1（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1093,6 +1144,7 @@
             "id": 41,
             "name": "Atk+1 (yellow)",
             "nameJa": "アタック+1（イエロー）",
+            "nameZh": "攻击+1（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1114,6 +1166,7 @@
             "id": 42,
             "name": "Speed+1 (white)",
             "nameJa": "ラピッド+1（ホワイト）",
+            "nameZh": "连射+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1135,6 +1188,7 @@
             "id": 42,
             "name": "Speed+1 (pink)",
             "nameJa": "ラピッド+1（ピンク）",
+            "nameZh": "连射+1（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1156,6 +1210,7 @@
             "id": 42,
             "name": "Speed+1 (yellow)",
             "nameJa": "ラピッド+1（イエロー）",
+            "nameZh": "连射+1（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1177,6 +1232,7 @@
             "id": 43,
             "name": "Charge+1 (white)",
             "nameJa": "チャージ+1（ホワイト）",
+            "nameZh": "集气+1（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1198,6 +1254,7 @@
             "id": 43,
             "name": "Charge+1 (pink)",
             "nameJa": "チャージ+1（ピンク）",
+            "nameZh": "集气+1（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1219,6 +1276,7 @@
             "id": 43,
             "name": "Charge+1 (yellow)",
             "nameJa": "チャージ+1（イエロー）",
+            "nameZh": "集气+1（黄色）",
             "color": 3,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1240,6 +1298,7 @@
             "id": 44,
             "name": "BugStop (white)",
             "nameJa": "バグストッパー（ホワイト）",
+            "nameZh": "BUG停止器（白色）",
             "color": 1,
             "compressedMask": [
                 0, 1, 0, 0, 0,
@@ -1261,6 +1320,7 @@
             "id": 45,
             "name": "Humor (pink)",
             "nameJa": "ユーモアセンス（ピンク）",
+            "nameZh": "幽默感（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1282,6 +1342,7 @@
             "id": 46,
             "name": "BlckMind (white)",
             "nameJa": "ブラックマインド（ホワイト）",
+            "nameZh": "黑色心灵（白色）",
             "color": 1,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1303,6 +1364,7 @@
             "id": 47,
             "name": "BustrMAX (pink)",
             "nameJa": "バスターMAX（ピンク）",
+            "nameZh": "子弹MAX（粉色）",
             "color": 2,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1324,6 +1386,7 @@
             "id": 48,
             "name": "GigFldr1 (purple)",
             "nameJa": "ギガフォルダ1（パープル）",
+            "nameZh": "GIGA文件1（紫色）",
             "color": 8,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1345,6 +1408,7 @@
             "id": 49,
             "name": "HubBatc (orange)",
             "nameJa": "サイトバッチ（オレンジ）",
+            "nameZh": "彩斗修正档（橙色）",
             "color": 7,
             "compressedMask": [
                 0, 0, 0, 0, 0,
@@ -1366,6 +1430,7 @@
             "id": 50,
             "name": "DarkLcns (gray)",
             "nameJa": "ダークライセンス（グレー）",
+            "nameZh": "黑暗执照（灰色）",
             "color": 9,
             "compressedMask": [
                 0, 0, 0, 0, 0,

@@ -19,6 +19,7 @@ const RawData = z.object({
         id: positiveInt,
         name: z.string().min(1),
         nameJa: z.string(),
+        nameZh: z.string().optional(),
         isSolid: z.boolean(),
         color: positiveInt,
         compressedMask: mask,
