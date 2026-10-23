@@ -11,12 +11,32 @@ import { colorCompatibility, isPartCompatible } from "./compatibility";
 import { Data } from "./game-data";
 import { defaultGameId, findGame, games, loadGame } from "./games";
 import {
+    getInitialLang,
+    getPartName,
+    Lang,
+    setPersistedLang,
+    t,
+    tBilingual,
+} from "./i18n";
+import {
     emptyProblem,
     makeGridSettings,
     Problem,
     problemFromHash,
     toHashString,
 } from "./problem";
+
+const LangContext = React.createContext<{
+    lang: Lang;
+    setLang: (lang: Lang) => void;
+}>({
+    lang: "en",
+    setLang: () => {},
+});
+
+function useLang() {
+    return React.useContext(LangContext);
+}
 
 const queryParams = new URLSearchParams(location.search);
 const game = queryParams.get("game") || defaultGameId;
@@ -33,6 +53,7 @@ function ConstraintDropdown({
     onChange: (value: boolean | null) => void;
     disabled?: boolean;
 }) {
+    const { lang } = useLang();
     return (
         <div className="form-floating">
             <select
@@ -44,9 +65,9 @@ function ConstraintDropdown({
                 }}
             >
                 {[
-                    [null, "🤷 maybe・任意"],
-                    [false, "❌ must not・不要"],
-                    [true, "✅ must・必要"],
+                    [null, t("constraintMaybe", lang)],
+                    [false, t("constraintMustNot", lang)],
+                    [true, t("constraintMust", lang)],
                 ].map(([v, label]) => {
                     return (
                         <option
@@ -72,17 +93,18 @@ function PartSelector({
     problem: Problem;
     onChange: (problem: Problem) => void;
 }) {
+    const { lang } = useLang();
     const compatibility = colorCompatibility(data, problem);
     return (
         <>
             {data.styleColorRules ? (
                 <div className="mb-2">
-                    <label htmlFor="style" className="form-label">Style・スタイル</label>
+                    <label htmlFor="style" className="form-label">{t("style", lang)}</label>
                     <select id="style" className="form-select mb-2"
                         value={problem.style}
                         onChange={event => onChange({ ...problem, style: event.target.value })}>
                         {data.styleColorRules.styles.map(style => (
-                            <option key={style.id} value={style.id}>{style.label}</option>
+                            <option key={style.id} value={style.id}>{tBilingual(style.label, lang)}</option>
                         ))}
                     </select>
                     <div className="form-check">
@@ -90,25 +112,25 @@ function PartSelector({
                             checked={problem.modTools ?? false}
                             onChange={event => onChange({ ...problem, modTools: event.target.checked })} />
                         <label htmlFor="mod-tools" className="form-check-label">
-                            ModTools: allow one incompatible part・改造ツール：非対応パーツ1個まで
+                            {t("modTools", lang)}
                         </label>
                     </div>
                     <div className="small text-muted mt-1">
-                        Compatible colors・対応色: {compatibility.allowedColors.join(", ")}
+                        {t("compatibleColors", lang)}: {compatibility.allowedColors.join(", ")}
                     </div>
                     {compatibility.offColorParts.length > 0 ? (
                         compatibility.error ? (
                             <div className="small text-danger mt-1 fw-bold" role="status">
-                                Incompatible parts・使用不可パーツ: {[...new Set(compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name))].join(", ")}
+                                {t("incompatibleParts", lang)}: {[...new Set(compatibility.offColorParts.map(req => getPartName(data.partMetas[req.partIndex], lang)))].join(", ")}
                             </div>
                         ) : (
                             <div className="small mt-1" role="status">
-                                Requires an Error Code・エラーコードが必要: {[...new Set(compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name))].join(", ")}
+                                {t("requiresErrorCode", lang)}: {[...new Set(compatibility.offColorParts.map(req => getPartName(data.partMetas[req.partIndex], lang)))].join(", ")}
                             </div>
                         )
                     ) : null}
                     <div className="small text-muted mt-1">
-                        BN3 compression is permanent in-game; choose the state you own.・ゲーム内の圧縮は元に戻せません。
+                        {t("bn3CompressionWarning", lang)}
                     </div>
                 </div>
             ) : null}
@@ -148,16 +170,16 @@ function PartSelector({
                         }}
                     >
                         <option value="" disabled>
-                            Pick a part・パートを選択
+                            {t("pickPart", lang)}
                         </option>
                         {data != null
                             ? data.partMetas.map((part, i) => {
                                   const incompatible = !isPartCompatible(data, problem, i);
                                   return (
                                       <option value={i} key={i}>
-                                          {part.name}・{part.nameJa}
+                                          {getPartName(part, lang)}
                                           {incompatible
-                                              ? " ⚠️ (Incompatible・このスタイルでは使用不可)"
+                                              ? t("incompatibleDropdownSuffix", lang)
                                               : ""}
                                       </option>
                                   );
@@ -186,22 +208,21 @@ function PartSelector({
                             >
                                 <div className="mb-2 d-flex align-items-center">
                                     <div className="flex-grow-1">
-                                        {i + 1}. {partMeta.name}・
-                                        {partMeta.nameJa}
+                                        {i + 1}. {getPartName(partMeta, lang)}
                                         {incompatible && (
                                             compatibility.error ? (
                                                 <span
                                                     className="badge bg-danger ms-2"
-                                                    title="Incompatible with the selected Style・このスタイルでは使えない色です"
+                                                    title={t("incompatibleBadgeTitle", lang)}
                                                 >
-                                                    Incompatible・このスタイルでは使用不可
+                                                    {t("incompatibleWithStyle", lang)}
                                                 </span>
                                             ) : (
                                                 <span
                                                     className="badge bg-warning text-dark ms-2"
-                                                    title="Requires ModTools Error Code・改造ツールのエラーコードが必要です"
+                                                    title={t("requiresErrorCodeBadgeTitle", lang)}
                                                 >
-                                                    Requires Error Code・要エラーコード
+                                                    {t("requiresErrorCodeBadge", lang)}
                                                 </span>
                                             )
                                         )}
@@ -227,7 +248,7 @@ function PartSelector({
                                                 requirement.constraint
                                                     .onCommandLine
                                             }
-                                            title="on command line・コマンドライン上"
+                                            title={t("onCommandLine", lang)}
                                             onChange={((
                                                 i: number,
                                                 v: boolean | null
@@ -318,7 +339,7 @@ function PartSelector({
                                                     }).bind(null, i)}
                                                 />
                                                 <label>
-                                                    min bugs・最小バグ数
+                                                    {t("minBugs", lang)}
                                                 </label>
                                             </div>
                                             <div className="form-floating">
@@ -387,7 +408,7 @@ function PartSelector({
                                                     }).bind(null, i)}
                                                 />
                                                 <label>
-                                                    max bugs・最大バグ数
+                                                    {t("maxBugs", lang)}
                                                 </label>
                                             </div>
                                         </div>
@@ -398,7 +419,7 @@ function PartSelector({
                                                 requirement.constraint
                                                     .compressed
                                             }
-                                            title="compress・圧縮"
+                                            title={t("compress", lang)}
                                             disabled={isEqual(
                                                 partMeta.compressedMask,
                                                 partMeta.uncompressedMask
@@ -446,7 +467,7 @@ function PartSelector({
                             aria-expanded="false"
                             aria-controls="extra-settings-body"
                         >
-                            Extra settings・追加設定
+                            {t("extraSettings", lang)}
                         </button>
                     </h2>
                     <div
@@ -461,7 +482,7 @@ function PartSelector({
                                     htmlFor="expansion-memories"
                                     className="col-sm-4 col-form-label"
                                 >
-                                    Expansion memory・拡張メモリ
+                                    {t("expansionMemory", lang)}
                                 </label>
                                 <div className="col-sm-8">
                                     <select
@@ -531,18 +552,9 @@ function PartSelector({
                                                         ].solid,
                                                 }}
                                             >
-                                                spin{" "}
-                                                {
-                                                    COLORS[
-                                                        color as keyof typeof COLORS
-                                                    ].name
-                                                }
-                                                ・スピン
-                                                {
-                                                    COLORS[
-                                                        color as keyof typeof COLORS
-                                                    ].nameJa
-                                                }
+                                                {lang === "ja"
+                                                    ? `${t("spin", lang)}${COLORS[color as keyof typeof COLORS].nameJa}`
+                                                    : `${t("spin", lang)} ${COLORS[color as keyof typeof COLORS].name}`}
                                             </label>
                                         </div>
                                     ); // TODO: Spinnables
@@ -563,7 +575,7 @@ function PartSelector({
                             onChange(emptyProblem(data));
                         }}
                     >
-                        <span>Reset・リセット</span>
+                        <span>{t("reset", lang)}</span>
                     </button>
                 </div>
             </div>
@@ -870,6 +882,7 @@ const NavicustPlaceholder = React.forwardRef(
 );
 
 function Results({ problem, data }: { problem: Problem; data: Data }) {
+    const { lang } = useLang();
     const gs = makeGridSettings(data, problem);
 
     const [pending, setPending] = React.useState(false);
@@ -943,12 +956,11 @@ function Results({ problem, data }: { problem: Problem; data: Data }) {
             ) : done ? (
                 problem.requirements.length > 0 ? (
                     <div key="no-results" className="alert alert-danger">
-                        No solutions found・解決が発見されなかった
+                        {t("noSolutions", lang)}
                     </div>
                 ) : (
                     <div key="no-requirements" className="alert alert-info">
-                        Select parts from the left to start
-                        solving・解決を開始するために、左面からパートを選択ください
+                        {t("selectPartsToSolve", lang)}
                     </div>
                 )
             ) : null}
@@ -958,6 +970,12 @@ function Results({ problem, data }: { problem: Problem; data: Data }) {
 }
 
 function App() {
+    const [lang, setLangState] = React.useState<Lang>(getInitialLang);
+    const setLang = React.useCallback((newLang: Lang) => {
+        setLangState(newLang);
+        setPersistedLang(newLang);
+    }, []);
+
     const [data, setData] = React.useState<Data | null>(null);
     const [problem, setProblem] = React.useState<Problem | null>(null);
     const [error, setError] = React.useState<string | null>(null);
@@ -1009,77 +1027,97 @@ function App() {
     const compatibilityError = compatibility ? compatibility.error : null;
 
     return (
-        <div>
-            <div
-                className="h-100 position-fixed d-flex flex-column p-2 border-end"
-                style={{ width: "40%", top: 0 }}
-            >
-                <h1 className="h4">
-                    fullcust{" "}
-                    <small className="text-muted">
-                        navicust autolayout・ナビカスタマイザー自動配置
-                    </small>
-                </h1>
-                <ul id="games-nav" className="nav nav-pills mb-2">
-                    {games.map(({ id: key, label }) => (
-                        <li className="nav-item" key={key}>
-                            <a
-                                className={`nav-link ${
-                                    game == key ? "active" : ""
-                                }`}
-                                href={`?game=${key}`}
+        <LangContext.Provider value={{ lang, setLang }}>
+            <div>
+                <div
+                    className="h-100 position-fixed d-flex flex-column p-2 border-end"
+                    style={{ width: "40%", top: 0 }}
+                >
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h1 className="h4 mb-0">
+                            fullcust{" "}
+                            <small className="text-muted">
+                                {t("titleSub", lang)}
+                            </small>
+                        </h1>
+                        <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
+                            <button
+                                type="button"
+                                className={`btn ${lang === "en" ? "btn-primary" : "btn-outline-secondary"}`}
+                                onClick={() => setLang("en")}
                             >
-                                {label}
-                            </a>
-                        </li>
-                    ))}
-                </ul>
-                {error ? (
-                    <div className="alert alert-danger" role="alert">
-                        {error}
-                        {data ? (
-                            <button className="btn btn-sm btn-outline-danger d-block mt-2"
-                                onClick={() => {
-                                    setError(null);
-                                    setProblem(emptyProblem(data));
-                                }}>
-                                Start a new layout・新規作成
+                                EN
                             </button>
-                        ) : null}
+                            <button
+                                type="button"
+                                className={`btn ${lang === "ja" ? "btn-primary" : "btn-outline-secondary"}`}
+                                onClick={() => setLang("ja")}
+                            >
+                                日本語
+                            </button>
+                        </div>
                     </div>
-                ) : null}
-                {data != null && problem != null ? (
-                    <PartSelector
-                        data={data}
-                        problem={problem}
-                        onChange={(problem) => {
-                            setProblem(problem);
-                        }}
-                    />
-                ) : null}
+                    <ul id="games-nav" className="nav nav-pills mb-2">
+                        {games.map(({ id: key, label }) => (
+                            <li className="nav-item" key={key}>
+                                <a
+                                    className={`nav-link ${
+                                        game == key ? "active" : ""
+                                    }`}
+                                    href={`?game=${key}`}
+                                >
+                                    {tBilingual(label, lang)}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                    {error ? (
+                        <div className="alert alert-danger" role="alert">
+                            {tBilingual(error, lang)}
+                            {data ? (
+                                <button className="btn btn-sm btn-outline-danger d-block mt-2"
+                                    onClick={() => {
+                                        setError(null);
+                                        setProblem(emptyProblem(data));
+                                    }}>
+                                    {t("startNewLayout", lang)}
+                                </button>
+                            ) : null}
+                        </div>
+                    ) : null}
+                    {data != null && problem != null ? (
+                        <PartSelector
+                            data={data}
+                            problem={problem}
+                            onChange={(problem) => {
+                                setProblem(problem);
+                            }}
+                        />
+                    ) : null}
+                </div>
+                <div
+                    className="container-fluid my-2"
+                    style={{ marginLeft: "40%", width: "60%" }}
+                >
+                    {compatibilityError ? (
+                        <div className="alert alert-warning" role="alert">
+                            <div>{tBilingual(compatibilityError, lang)}</div>
+                            {compatibility && compatibility.offColorParts.length > 0 ? (
+                                <div className="mt-2 fw-semibold">
+                                    {t("incompatibleParts", lang)}: {[...new Set(compatibility.offColorParts.map(req => getPartName(data!.partMetas[req.partIndex], lang)))].join(", ")}
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : data != null && problem != null ? (
+                        <Results
+                            key={JSON.stringify(problem)}
+                            data={data}
+                            problem={problem}
+                        />
+                    ) : null}
+                </div>
             </div>
-            <div
-                className="container-fluid my-2"
-                style={{ marginLeft: "40%", width: "60%" }}
-            >
-                {compatibilityError ? (
-                    <div className="alert alert-warning" role="alert">
-                        <div>{compatibilityError}</div>
-                        {compatibility && compatibility.offColorParts.length > 0 ? (
-                            <div className="mt-2 fw-semibold">
-                                Incompatible parts・使用不可パーツ: {[...new Set(compatibility.offColorParts.map(req => data!.partMetas[req.partIndex].name))].join(", ")}
-                            </div>
-                        ) : null}
-                    </div>
-                ) : data != null && problem != null ? (
-                    <Results
-                        key={JSON.stringify(problem)}
-                        data={data}
-                        problem={problem}
-                    />
-                ) : null}
-            </div>
-        </div>
+        </LangContext.Provider>
     );
 }
 
