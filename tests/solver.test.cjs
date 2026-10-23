@@ -1,3 +1,4 @@
+require("./register.cjs");
 const assert = require("node:assert/strict");
 const { createHash } = require("node:crypto");
 const { test } = require("node:test");
@@ -10,7 +11,7 @@ const baseline = require("./solver-baseline.json");
 
 // Baseline generated with the original data conversion and grid expansion logic.
 // Compare every solution, not just the first result or a successful solve.
-for (const game of games) {
+for (const game of games.filter(game => game.legacyCatalog)) {
     const data = parseGameData(require(`../data/${game.id}.json`), game);
     for (const fixture of solverCases(data)) {
         const name = `${game.id}/${fixture.name}`;

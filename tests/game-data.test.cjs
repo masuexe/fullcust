@@ -1,3 +1,4 @@
+require("./register.cjs");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { games, findGame, loadGame } = require("../games.ts");
@@ -7,8 +8,10 @@ for (const game of games) {
     test(`${game.id}: data validates and retains every legacy variant`, async () => {
         const data = await loadGame(game);
         assert.equal(data.partIds.length, new Set(data.partIds).size);
-        assert.deepEqual(data.partIds, game.legacyCatalog.partIds);
-        assert.deepEqual(data.colors, game.legacyCatalog.colors);
+        if (game.legacyCatalog) {
+            assert.deepEqual(data.partIds, game.legacyCatalog.partIds);
+            assert.deepEqual(data.colors, game.legacyCatalog.colors);
+        }
         assert.equal(data.defaultExpansion, 2);
         for (const part of data.parts) {
             assert.equal(part.compressedMask.length, data.gridSettings.height * data.gridSettings.width);

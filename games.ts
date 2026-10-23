@@ -37,6 +37,28 @@ export const games: GameDefinition[] = [
         defaultExpansion: 2,
         legacyCatalog: legacyCatalogs.bn4,
     },
+    {
+        id: "bn3",
+        label: "bn3・exe3",
+        load: () => import("./data/bn3.json").then(module => module.default),
+        gridSizes: standardSizes,
+        defaultExpansion: 2,
+        styleColorRules: {
+            baseColors: ["white", "pink", "yellow"],
+            styles: [
+                { id: "normal", label: "Normal・ノーマル", extraColor: null },
+                { id: "guts", label: "Guts・ガッツ", extraColor: "red" },
+                { id: "custom", label: "Custom・カスタム", extraColor: "blue" },
+                { id: "team", label: "Team・ブラザー", extraColor: "green" },
+                { id: "shield", label: "Shield・シールド", extraColor: "blue" },
+                { id: "ground", label: "Ground・グランド", extraColor: "green" },
+                { id: "shadow", label: "Shadow・シャドー", extraColor: "red" },
+                { id: "bug", label: "Bug・バグ", extraColor: "gray" },
+            ],
+            defaultStyle: "normal",
+            maxModToolsParts: 1,
+        },
+    },
 ];
 
 export const defaultGameId = "bn6";

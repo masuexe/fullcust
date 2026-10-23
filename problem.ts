@@ -7,6 +7,8 @@ export interface Problem {
     requirements: Requirement[];
     spinnableColors: boolean[];
     expansionMemories: number;
+    style?: string;
+    modTools?: boolean;
 }
 
 const toggle = z.union([z.literal(-1), z.literal(0), z.literal(1)]);
@@ -31,6 +33,8 @@ const SavedProblem = z.object({
     r: z.array(constraint.and(z.object({ p: z.string().min(1) }))),
     s: z.record(bit),
     x: nonnegativeInt,
+    t: z.string().optional(), // Style type, for games with Style color rules.
+    m: bit.optional(), // ModTools enabled.
 });
 
 export function emptyProblem(data: Data): Problem {
@@ -38,6 +42,10 @@ export function emptyProblem(data: Data): Problem {
         requirements: [],
         spinnableColors: data.colors.map(() => true),
         expansionMemories: data.defaultExpansion,
+        ...(data.styleColorRules ? {
+            style: data.styleColorRules.defaultStyle,
+            modTools: false,
+        } : {}),
     };
 }
 
@@ -47,21 +55,24 @@ export function fromHashString(s: string, data: Data): Problem | null {
     const json: unknown = JSON.parse(s);
     const versioned = typeof json === "object" && json !== null && "v" in json;
     const saved = versioned ? SavedProblem.parse(json) : LegacyProblem.parse(json);
+    if (!versioned && !data.legacyCatalog) {
+        throw new Error("This game has no legacy shared layout format.");
+    }
     if ("g" in saved && saved.g !== data.gameId) {
         throw new Error("The shared layout belongs to another game.");
     }
     if (!data.gridOptions[saved.x]) throw new Error("Unknown grid preset.");
     const colors = "v" in saved ? saved.s : Object.fromEntries(
-        data.legacyCatalog.colors.map((color, i) => [color, saved.s[i]])
+        data.legacyCatalog!.colors.map((color, i) => [color, saved.s[i]])
     );
-    if (!("v" in saved) && saved.s.length !== data.legacyCatalog.colors.length) {
+    if (!("v" in saved) && saved.s.length !== data.legacyCatalog!.colors.length) {
         throw new Error("Invalid legacy spinner settings.");
     }
     if (data.colors.some(color => colors[color] === undefined)) {
         throw new Error("Missing spinner settings.");
     }
     const requirements = saved.r.map(req => {
-        const id = "p" in req ? req.p : data.legacyCatalog.partIds[req.i];
+        const id = "p" in req ? req.p : data.legacyCatalog!.partIds[req.i];
         const partIndex = data.partIds.indexOf(id);
         if (partIndex < 0) throw new Error(`Unknown part: ${id ?? "invalid index"}`);
         return {
@@ -74,10 +85,19 @@ export function fromHashString(s: string, data: Data): Problem | null {
             },
         };
     });
+    const style = "t" in saved && saved.t !== undefined
+        ? saved.t : data.styleColorRules?.defaultStyle;
+    if (data.styleColorRules && !data.styleColorRules.styles.some(option => option.id === style)) {
+        throw new Error("Unknown Style.");
+    }
     return {
         requirements,
         spinnableColors: data.colors.map(color => !!colors[color]),
         expansionMemories: saved.x,
+        ...(data.styleColorRules ? {
+            style,
+            modTools: "m" in saved && saved.m === 1,
+        } : {}),
     };
 }
 
@@ -94,6 +114,7 @@ export function toHashString(problem: Problem, data: Data): string {
         })),
         s: Object.fromEntries(data.colors.map((color, i) => [color, problem.spinnableColors[i] ? 1 as const : 0 as const])),
         x: problem.expansionMemories,
+        ...(data.styleColorRules ? { t: problem.style, m: problem.modTools ? 1 as const : 0 as const } : {}),
     };
     return JSON.stringify(SavedProblem.parse(saved));
 }

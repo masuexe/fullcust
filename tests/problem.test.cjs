@@ -1,3 +1,4 @@
+require("./register.cjs");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { games } = require("../games.ts");
@@ -16,7 +17,7 @@ function legacy(data) {
     };
 }
 
-for (const game of games) {
+for (const game of games.filter(game => game.legacyCatalog)) {
     const raw = require(`../data/${game.id}.json`);
     const data = parseGameData(raw, game);
     const old = legacy(data);

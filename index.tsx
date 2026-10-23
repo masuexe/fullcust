@@ -7,6 +7,7 @@ import * as array2d from "./array2d";
 import AsyncSolver from "./async-solver";
 import { GridSettings, Part, placeAll, Requirement, Solution } from "./solver";
 import { COLORS } from "./colors";
+import { colorCompatibility } from "./compatibility";
 import { Data } from "./game-data";
 import { defaultGameId, findGame, games, loadGame } from "./games";
 import {
@@ -71,8 +72,40 @@ function PartSelector({
     problem: Problem;
     onChange: (problem: Problem) => void;
 }) {
+    const compatibility = colorCompatibility(data, problem);
     return (
         <>
+            {data.styleColorRules ? (
+                <div className="mb-2">
+                    <label htmlFor="style" className="form-label">Style・スタイル</label>
+                    <select id="style" className="form-select mb-2"
+                        value={problem.style}
+                        onChange={event => onChange({ ...problem, style: event.target.value })}>
+                        {data.styleColorRules.styles.map(style => (
+                            <option key={style.id} value={style.id}>{style.label}</option>
+                        ))}
+                    </select>
+                    <div className="form-check">
+                        <input id="mod-tools" type="checkbox" className="form-check-input"
+                            checked={problem.modTools ?? false}
+                            onChange={event => onChange({ ...problem, modTools: event.target.checked })} />
+                        <label htmlFor="mod-tools" className="form-check-label">
+                            ModTools: allow one incompatible part・改造ツール：非対応パーツ1個まで
+                        </label>
+                    </div>
+                    <div className="small text-muted mt-1">
+                        Compatible colors・対応色: {compatibility.allowedColors.join(", ")}
+                    </div>
+                    {compatibility.offColorParts.length > 0 && !compatibility.error ? (
+                        <div className="small mt-1" role="status">
+                            Requires an Error Code・エラーコードが必要: {compatibility.offColorParts.map(req => data.partMetas[req.partIndex].name).join(", ")}
+                        </div>
+                    ) : null}
+                    <div className="small text-muted mt-1">
+                        BN3 compression is permanent in-game; choose the state you own.・ゲーム内の圧縮は元に戻せません。
+                    </div>
+                </div>
+            ) : null}
             <div className="form mb-2">
                 <div className="col">
                     <select
@@ -804,14 +837,6 @@ function Results({ problem, data }: { problem: Problem; data: Data }) {
     const [done, setDone] = React.useState(false);
     const [solutions, setSolutions] = React.useState<Solution[]>([]);
     const solverRef = React.useRef<AsyncSolver | null>(null);
-    if (solverRef.current == null) {
-        solverRef.current = new AsyncSolver(
-            data.parts,
-            problem.requirements,
-            gs,
-            problem.spinnableColors
-        );
-    }
 
     const { ref, inView } = useInView({});
 
@@ -941,6 +966,8 @@ function App() {
         window.location.hash = toHashString(problem, data);
     }, [data, problem]);
 
+    const compatibilityError = data && problem ? colorCompatibility(data, problem).error : null;
+
     return (
         <div>
             <div
@@ -995,7 +1022,9 @@ function App() {
                 className="container-fluid my-2"
                 style={{ marginLeft: "40%", width: "60%" }}
             >
-                {data != null && problem != null ? (
+                {compatibilityError ? (
+                    <div className="alert alert-warning" role="alert">{compatibilityError}</div>
+                ) : data != null && problem != null ? (
                     <Results
                         key={JSON.stringify(problem)}
                         data={data}

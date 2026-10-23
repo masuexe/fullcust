@@ -455,11 +455,11 @@ function requirementsAreAdmissible(
     let occupiedSquares = 0;
     for (const req of requirements) {
         const part = parts[req.partIndex];
-        occupiedSquares += arrayCountTrue(
-            req.constraint.compressed
-                ? part.compressedMask
-                : part.uncompressedMask
-        );
+        const compressedSquares = arrayCountTrue(part.compressedMask);
+        const uncompressedSquares = arrayCountTrue(part.uncompressedMask);
+        occupiedSquares += req.constraint.compressed === null
+            ? Math.min(compressedSquares, uncompressedSquares)
+            : req.constraint.compressed ? compressedSquares : uncompressedSquares;
     }
     const availableSquares =
         gridSettings.width * gridSettings.height -
@@ -769,7 +769,7 @@ function placementPositionsForMask(
                 continue;
             }
 
-            if (onCommandLine && !placedOnCommandLine) {
+            if (onCommandLine !== null && onCommandLine !== placedOnCommandLine) {
                 continue;
             }
 

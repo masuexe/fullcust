@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import * as array2d from "./array2d";
 import { COLORS } from "./colors";
+import { StyleColorRules } from "./compatibility";
 import type { GridSettings, Part } from "./solver";
 
 const positiveInt = z.number().int().positive();
@@ -60,7 +61,8 @@ export interface DatasetOptions {
     gridSizes: { height: number; width: number; label: string }[];
     defaultExpansion: number;
     // Frozen v1 URL order; never derive this from the current part order.
-    legacyCatalog: { partIds: string[]; colors: string[] };
+    legacyCatalog?: { partIds: string[]; colors: string[] };
+    styleColorRules?: StyleColorRules;
 }
 
 export interface Data {
@@ -70,6 +72,7 @@ export interface Data {
     gridOptions: { label: string; settings: GridSettings }[];
     defaultExpansion: number;
     legacyCatalog: DatasetOptions["legacyCatalog"];
+    styleColorRules?: StyleColorRules;
     partIds: string[];
     parts: Part[];
     partMetas: z.infer<typeof RawData>["parts"];
@@ -77,6 +80,17 @@ export interface Data {
 
 export function parseGameData(raw: unknown, options: DatasetOptions): Data {
     const data = RawData.parse(raw);
+    const styleColorRules = options.styleColorRules
+        ? StyleColorRules.parse(options.styleColorRules) : undefined;
+    if (styleColorRules) {
+        const { baseColors, styles, defaultStyle } = styleColorRules;
+        const referencedColors = [...baseColors, ...styles.flatMap(style => style.extraColor ? [style.extraColor] : [])];
+        if (referencedColors.some(color => !color || !data.colors.includes(color)) ||
+            new Set(styles.map(style => style.id)).size !== styles.length ||
+            !styles.some(style => style.id === defaultStyle)) {
+            throw new Error(`Invalid Style color rules for ${options.id}`);
+        }
+    }
     const { height, width } = data.gridSettings;
     const gridOptions = options.gridSizes.map(({ height, width, label }) => {
         const settings = { ...data.gridSettings, height, width };
@@ -98,6 +112,7 @@ export function parseGameData(raw: unknown, options: DatasetOptions): Data {
         gridOptions,
         defaultExpansion: options.defaultExpansion,
         legacyCatalog: options.legacyCatalog,
+        styleColorRules,
         partIds: data.parts.map(part => `${options.id}:${part.id}:${data.colors[part.color]}`),
         partMetas: data.parts,
         parts: data.parts.map(part => ({

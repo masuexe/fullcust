@@ -17,16 +17,18 @@ export default class AsyncSolver {
         });
         this.worker = worker;
 
+        // Listen immediately: the worker can become ready before the result
+        // placeholder enters the viewport and next() is called for the first time.
+        const ready = new Promise<MessageEvent<Response>>((resolve) => {
+            worker.addEventListener("message", function eh(e) {
+                worker.removeEventListener("message", eh);
+                resolve(e);
+            });
+        });
+
         this.it = (async function* () {
             {
-                const e = await new Promise<MessageEvent<Response>>(
-                    (resolve) => {
-                        worker.addEventListener("message", function eh(e) {
-                            worker.removeEventListener("message", eh);
-                            resolve(e);
-                        });
-                    }
-                );
+                const e = await ready;
                 if (e.data.type != "ready") {
                     throw "not ready";
                 }
