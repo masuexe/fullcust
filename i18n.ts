@@ -137,6 +137,14 @@ export const translations = {
         en: "Back to Setup",
         ja: "設定に戻る",
     },
+    themeSwitchToLight: {
+        en: "Switch to light mode",
+        ja: "ライトモードに切り替え",
+    },
+    themeSwitchToDark: {
+        en: "Switch to dark mode",
+        ja: "ダークモードに切り替え",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

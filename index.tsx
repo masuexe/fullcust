@@ -38,6 +38,40 @@ function useLang() {
     return React.useContext(LangContext);
 }
 
+type Theme = "light" | "dark";
+
+function getInitialTheme(): Theme {
+    try {
+        if (typeof window !== "undefined" && window.localStorage) {
+            const saved = window.localStorage.getItem("fullcust_theme");
+            if (saved === "light" || saved === "dark") return saved;
+        }
+        if (
+            typeof window !== "undefined" &&
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+        ) {
+            return "dark";
+        }
+    } catch {
+        // Ignore storage errors
+    }
+    return "light";
+}
+
+function applyTheme(theme: Theme): void {
+    try {
+        if (typeof document !== "undefined") {
+            document.documentElement.setAttribute("data-bs-theme", theme);
+        }
+        if (typeof window !== "undefined" && window.localStorage) {
+            window.localStorage.setItem("fullcust_theme", theme);
+        }
+    } catch {
+        // Ignore storage errors
+    }
+}
+
 const queryParams = new URLSearchParams(location.search);
 const game = queryParams.get("game") || defaultGameId;
 const gameDefinition = findGame(game);
@@ -552,6 +586,9 @@ function PartSelector({
                                                         COLORS[
                                                             color as keyof typeof COLORS
                                                         ].solid,
+                                                    color: ["white", "yellow", "pink", "green"].includes(color)
+                                                        ? "#000"
+                                                        : "#fff",
                                                 }}
                                             >
                                                 {lang === "ja"
@@ -1016,7 +1053,7 @@ function MobileNav({
     const { lang } = useLang();
     return (
         <div className="d-lg-none mb-2">
-            <ul className="nav nav-pills nav-fill bg-light p-1 rounded border">
+            <ul className="nav nav-pills nav-fill bg-body-tertiary p-1 rounded border">
                 <li className="nav-item">
                     <button
                         type="button"
@@ -1044,6 +1081,15 @@ function MobileNav({
 }
 
 function App() {
+    const [theme, setTheme] = React.useState<Theme>(getInitialTheme);
+    const toggleTheme = React.useCallback(() => {
+        setTheme(prev => {
+            const next = prev === "dark" ? "light" : "dark";
+            applyTheme(next);
+            return next;
+        });
+    }, []);
+
     const [lang, setLangState] = React.useState<Lang>(getInitialLang);
     const [mobileTab, setMobileTab] = React.useState<"setup" | "results">("setup");
     const setLang = React.useCallback((newLang: Lang) => {
@@ -1116,21 +1162,32 @@ function App() {
                                 {t("titleSub", lang)}
                             </small>
                         </h1>
-                        <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
+                        <div className="d-flex align-items-center gap-2">
                             <button
                                 type="button"
-                                className={`btn ${lang === "en" ? "btn-primary" : "btn-outline-secondary"}`}
-                                onClick={() => setLang("en")}
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={toggleTheme}
+                                title={theme === "dark" ? t("themeSwitchToLight", lang) : t("themeSwitchToDark", lang)}
+                                aria-label={theme === "dark" ? t("themeSwitchToLight", lang) : t("themeSwitchToDark", lang)}
                             >
-                                EN
+                                {theme === "dark" ? "☀️" : "🌙"}
                             </button>
-                            <button
-                                type="button"
-                                className={`btn ${lang === "ja" ? "btn-primary" : "btn-outline-secondary"}`}
-                                onClick={() => setLang("ja")}
-                            >
-                                日本語
-                            </button>
+                            <div className="btn-group btn-group-sm" role="group" aria-label="Language selector">
+                                <button
+                                    type="button"
+                                    className={`btn ${lang === "en" ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => setLang("en")}
+                                >
+                                    EN
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`btn ${lang === "ja" ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => setLang("ja")}
+                                >
+                                    日本語
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <MobileNav
