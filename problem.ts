@@ -3,6 +3,18 @@ import { z } from "zod";
 import type { Data } from "./game-data";
 import type { Requirement } from "./solver";
 
+export type BugTolerance = "forbidden" | "allowed_lv1" | "allowed_any" | "required";
+export type BugPolicyType = "no_bugs" | "benign_allowed" | "custom";
+
+export interface BugPolicy {
+    type: BugPolicyType;
+    customRules?: Partial<Record<string, BugTolerance>>;
+}
+
+export const DEFAULT_BUG_POLICY: BugPolicy = {
+    type: "no_bugs",
+};
+
 export interface Problem {
     requirements: Requirement[];
     spinnableColors: boolean[];
@@ -11,6 +23,7 @@ export interface Problem {
     modTools?: boolean;
     modCards?: string[];
     baseHp?: number;
+    bugPolicy?: BugPolicy;
 }
 
 const toggle = z.union([z.literal(-1), z.literal(0), z.literal(1)]);
@@ -39,6 +52,10 @@ const SavedProblem = z.object({
     m: bit.optional(), // ModTools enabled.
     c: z.array(z.string()).optional(), // Mod Cards
     hp: z.number().int().positive().optional(), // Initial Base HP (default 1000)
+    bp: z.object({
+        t: z.union([z.literal("no_bugs"), z.literal("benign_allowed"), z.literal("custom")]),
+        r: z.record(z.string()).optional(),
+    }).optional(),
 });
 
 export function emptyProblem(data: Data): Problem {
@@ -48,6 +65,7 @@ export function emptyProblem(data: Data): Problem {
         spinnableColors: data.colors.map(() => true),
         expansionMemories: data.defaultExpansion,
         baseHp: 1000,
+        bugPolicy: DEFAULT_BUG_POLICY,
         ...(hasModCards ? { modCards: [] } : {}),
         ...(data.styleColorRules ? {
             style: data.styleColorRules.defaultStyle,
@@ -98,11 +116,17 @@ export function fromHashString(s: string, data: Data): Problem | null {
         throw new Error("Unknown Style.");
     }
     const hasModCards = data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6";
+    const bugPolicy: BugPolicy = "bp" in saved && saved.bp ? {
+        type: saved.bp.t,
+        ...(saved.bp.r ? { customRules: saved.bp.r as Record<string, BugTolerance> } : {}),
+    } : DEFAULT_BUG_POLICY;
+
     return {
         requirements,
         spinnableColors: data.colors.map(color => !!colors[color]),
         expansionMemories: saved.x,
         baseHp: "hp" in saved && typeof saved.hp === "number" ? saved.hp : 1000,
+        bugPolicy,
         ...(hasModCards ? {
             modCards: "c" in saved && Array.isArray(saved.c) ? saved.c : [],
         } : {}),
@@ -130,6 +154,12 @@ export function toHashString(problem: Problem, data: Data): string {
         ...(data.styleColorRules ? { t: problem.style, m: problem.modTools ? 1 as const : 0 as const } : {}),
         ...(hasModCards && problem.modCards && problem.modCards.length > 0 ? { c: problem.modCards } : {}),
         ...(problem.baseHp !== undefined && problem.baseHp !== 1000 ? { hp: problem.baseHp } : {}),
+        ...(problem.bugPolicy && problem.bugPolicy.type !== "no_bugs" ? {
+            bp: {
+                t: problem.bugPolicy.type,
+                ...(problem.bugPolicy.customRules ? { r: problem.bugPolicy.customRules as Record<string, string> } : {}),
+            },
+        } : {}),
     };
     return JSON.stringify(SavedProblem.parse(saved));
 }

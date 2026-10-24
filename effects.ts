@@ -1,5 +1,6 @@
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug } from "./modcards";
+import { BugPolicy, DEFAULT_BUG_POLICY } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -187,7 +188,43 @@ export const BN4_PART_EFFECTS: Record<number, PartEffect> = {
     46: { hp: 500 },
 };
 
+export const BN3_PART_EFFECTS: Record<number, PartEffect> = {
+    1: { abilities: ["superArmor"] },
+    10: { custom: 1 },
+    11: { custom: 2 },
+    12: { megaFolder: 1 },
+    13: { megaFolder: 2 },
+    15: { abilities: ["shield"] },
+    16: { abilities: ["reflect"] },
+    18: { abilities: ["floatShoes"] },
+    19: { abilities: ["antiDamage"] },
+    23: { abilities: ["sneakRun"] },
+    24: { abilities: ["oilBody"] },
+    25: { abilities: ["fish"] },
+    26: { abilities: ["battery"] },
+    27: { abilities: ["jungle"] },
+    28: { abilities: ["collect"] },
+    29: { abilities: ["airShoes"] },
+    30: { abilities: ["underShirt"] },
+    32: { abilities: ["rush"] },
+    33: { abilities: ["beat"] },
+    34: { abilities: ["tango"] },
+    36: { hp: 100 },
+    37: { hp: 200 },
+    38: { hp: 300 },
+    39: { hp: 500 },
+    41: { attack: 1 },
+    42: { rapid: 1 },
+    43: { charge: 1 },
+    44: { abilities: ["bugStop"] },
+    45: { abilities: ["humor"] },
+    47: { attackMax: true, rapidMax: true, chargeMax: true },
+    48: { gigaFolder: 1 },
+    49: { abilities: ["superArmor", "underShirt", "floatShoes", "airShoes", "shield"], custom: 1, megaFolder: 1 },
+};
+
 export const GAME_EFFECTS: Record<string, Record<number, PartEffect>> = {
+    bn3: BN3_PART_EFFECTS,
     bn4: BN4_PART_EFFECTS,
     bn5: BN5_PART_EFFECTS,
     bn6: BN6_PART_EFFECTS,
@@ -1872,4 +1909,73 @@ export function analyzeSolutionBugs(
         modCardBugs: modCardBugsList,
         repairedBugsNotice,
     };
+}
+
+/**
+ * Determines whether a bug is considered benign (minor enough to accept for stat gain in Netplay).
+ * - customhp: Menu HP drain Lv1 (only drains while selecting chips in custom screen)
+ * - buster: Buster blank Lv1 (minor rate of blank shots)
+ * - emotion: Emotion chaos Lv1 (cycles emotion)
+ */
+export function isBenignBug(bugType: string, level: number): boolean {
+    const norm = bugType.toLowerCase();
+    if (norm === "customhp" && level <= 1) return true;
+    if (norm === "buster" && level <= 1) return true;
+    if (norm === "emotion" && level <= 1) return true;
+    return false;
+}
+
+/**
+ * Returns only the bugs that actually take effect in battle, accounting for BugStop neutralization.
+ * If BugStop is active, all NaviCust placement bugs are absorbed and do NOT affect MegaMan in battle.
+ * Mod Card bugs are NOT neutralized by BugStop.
+ */
+export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis): ActiveBugEffect[] {
+    if (analysis.bugStopActive) {
+        return (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    }
+    return analysis.activeBugs || [];
+}
+
+/**
+ * Evaluates whether a solution's bug analysis satisfies the given BugPolicy.
+ */
+export function isSolutionAcceptable(analysis: SolutionBugAnalysis, policy: BugPolicy = DEFAULT_BUG_POLICY): boolean {
+    // 1. Color limit check: >4 colors is always an illegal build on GBA
+    if (analysis.tooManyColors) {
+        return false;
+    }
+
+    // 2. Get the bugs that actually affect MegaMan in battle (after BugStop absorption)
+    const effectiveBugs = getEffectiveInBattleBugs(analysis);
+
+    if (policy.type === "no_bugs") {
+        // Must have zero effective bugs in battle!
+        return effectiveBugs.length === 0;
+    }
+
+    if (policy.type === "benign_allowed") {
+        // Every effective bug must be benign
+        return effectiveBugs.every(b => isBenignBug(b.bugType, b.level));
+    }
+
+    if (policy.type === "custom") {
+        const rules = policy.customRules || {};
+        for (const bug of effectiveBugs) {
+            const rule = rules[bug.bugType] ?? "forbidden";
+            if (rule === "forbidden") return false;
+            if (rule === "allowed_lv1" && bug.level > 1) return false;
+        }
+
+        // Check required bugs
+        for (const [bugType, tolerance] of Object.entries(rules)) {
+            if (tolerance === "required") {
+                const found = effectiveBugs.some(b => b.bugType.toLowerCase() === bugType.toLowerCase() && b.level >= 1);
+                if (!found) return false;
+            }
+        }
+        return true;
+    }
+
+    return true;
 }

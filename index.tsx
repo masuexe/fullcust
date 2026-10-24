@@ -24,7 +24,10 @@ import {
     Problem,
     problemFromHash,
     toHashString,
+    BugPolicy,
+    BugPolicyType,
 } from "./problem";
+import { optimizeBuild, OptimizationTarget } from "./optimizer";
 import {
     computeBuildStats,
     tAbility,
@@ -908,6 +911,186 @@ function ModCardManager({
     );
 }
 
+function AutoOptimizerPanel({
+    data,
+    problem,
+    onChange,
+    lang,
+    onNavigateToResults,
+}: {
+    data: Data;
+    problem: Problem;
+    onChange: (problem: Problem) => void;
+    lang: Lang;
+    onNavigateToResults?: () => void;
+}) {
+    const [policyType, setPolicyType] = React.useState<BugPolicyType>(problem.bugPolicy?.type ?? "no_bugs");
+    const [target, setTarget] = React.useState<OptimizationTarget>("max_hp");
+    const [isOptimizing, setIsOptimizing] = React.useState(false);
+    const [statusMessage, setStatusMessage] = React.useState<{ type: "success" | "error"; text: string; details?: string[] } | null>(null);
+
+    const handleOptimize = () => {
+        setIsOptimizing(true);
+        setStatusMessage(null);
+
+        setTimeout(() => {
+            try {
+                const policy: BugPolicy = {
+                    type: policyType,
+                    customRules: problem.bugPolicy?.customRules,
+                };
+
+                const result = optimizeBuild({
+                    data,
+                    problem,
+                    policy,
+                    target,
+                    timeoutMs: 3500,
+                });
+
+                if (!result || result.addedPartIndices.length === 0) {
+                    setStatusMessage({
+                        type: "error",
+                        text: t("optNoSolution", lang),
+                    });
+                } else {
+                    onChange(result.problem);
+                    const names = result.addedPartIndices.map(idx => getPartName(data.partMetas[idx], lang));
+                    setStatusMessage({
+                        type: "success",
+                        text: `${t("optSuccessNotice", lang)} (+${names.length} parts, HP: ${result.stats.finalHp})`,
+                        details: names,
+                    });
+                }
+            } catch (err: any) {
+                setStatusMessage({
+                    type: "error",
+                    text: err?.message || String(err),
+                });
+            } finally {
+                setIsOptimizing(false);
+            }
+        }, 50);
+    };
+
+    return (
+        <div className="card shadow-sm mb-3 border-primary-subtle">
+            <div className="card-header bg-primary-subtle py-2 d-flex justify-content-between align-items-center">
+                <span className="fw-bold d-flex align-items-center gap-1">
+                    <span>✨</span>
+                    <span>{t("autoOptimizeTitle", lang)}</span>
+                </span>
+                <span className="badge bg-primary text-light small">AI Auto-Fill</span>
+            </div>
+            <div className="card-body py-2">
+                <p className="text-muted small mb-2">{t("autoOptimizeDesc", lang)}</p>
+
+                {/* Bug Policy Selector */}
+                <div className="mb-2">
+                    <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
+                    <div className="d-flex flex-column gap-1">
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="optBugPolicy"
+                                id="policyNoBugs"
+                                checked={policyType === "no_bugs"}
+                                onChange={() => {
+                                    setPolicyType("no_bugs");
+                                    onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
+                                }}
+                            />
+                            <label className="form-check-label small" htmlFor="policyNoBugs">
+                                <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
+                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                    {t("policyNoBugsDesc", lang)}
+                                </div>
+                            </label>
+                        </div>
+                        <div className="form-check">
+                            <input
+                                className="form-check-input"
+                                type="radio"
+                                name="optBugPolicy"
+                                id="policyBenign"
+                                checked={policyType === "benign_allowed"}
+                                onChange={() => {
+                                    setPolicyType("benign_allowed");
+                                    onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
+                                }}
+                            />
+                            <label className="form-check-label small" htmlFor="policyBenign">
+                                <span className="fw-semibold">{t("policyBenign", lang)}</span>
+                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                    {t("policyBenignDesc", lang)}
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Optimization Target Selector */}
+                <div className="mb-3">
+                    <label className="form-label small fw-semibold mb-1">{t("optTarget", lang)}:</label>
+                    <div className="btn-group btn-group-sm w-100" role="group">
+                        <button
+                            type="button"
+                            className={`btn ${target === "max_hp" ? "btn-primary" : "btn-outline-secondary"}`}
+                            onClick={() => setTarget("max_hp")}
+                        >
+                            {t("targetMaxHp", lang)}
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn ${target === "max_buster" ? "btn-primary" : "btn-outline-secondary"}`}
+                            onClick={() => setTarget("max_buster")}
+                        >
+                            {t("targetMaxBuster", lang)}
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn ${target === "balanced" ? "btn-primary" : "btn-outline-secondary"}`}
+                            onClick={() => setTarget("balanced")}
+                        >
+                            {t("targetBalanced", lang)}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Action button */}
+                <button
+                    type="button"
+                    className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
+                    disabled={isOptimizing}
+                    onClick={handleOptimize}
+                >
+                    {isOptimizing ? (
+                        <>
+                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <span>{t("optimizing", lang)}</span>
+                        </>
+                    ) : (
+                        <span>{t("autoOptimizeBtn", lang)}</span>
+                    )}
+                </button>
+
+                {/* Status notice */}
+                {statusMessage ? (
+                    <div className={`alert alert-${statusMessage.type === "success" ? "success" : "warning"} py-2 px-3 mt-2 mb-0 small`}>
+                        <div className="fw-semibold">{statusMessage.text}</div>
+                        {statusMessage.details && statusMessage.details.length > 0 ? (
+                            <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
+                                {t("optAddedParts", lang)}: {statusMessage.details.join(", ")}
+                            </div>
+                        ) : null}
+                    </div>
+                ) : null}
+            </div>
+        </div>
+    );
+}
+
 function PartSelector({
     data,
     problem,
@@ -1447,6 +1630,14 @@ function PartSelector({
             {data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6" ? (
                 <ModCardManager problem={problem} onChange={onChange} lang={lang} data={data} />
             ) : null}
+
+            <AutoOptimizerPanel
+                data={data}
+                problem={problem}
+                onChange={onChange}
+                lang={lang}
+                onNavigateToResults={onNavigateToResults}
+            />
 
             <BuildStatsView data={data} problem={problem} />
 

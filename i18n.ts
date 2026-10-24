@@ -651,6 +651,86 @@ export const translations = {
         ja: "配置結果もビルドデータに含まれます。",
         zh: "当前拼放结果将一并保存在构筑数据中。",
     },
+    autoOptimizeTitle: {
+        en: "Auto-Fill & Maximize",
+        ja: "自動補完＆最大化",
+        zh: "自动补全与最大化",
+    },
+    autoOptimizeDesc: {
+        en: "Automatically pack the remaining grid with optimal HP and Buster parts while respecting your Bug policy.",
+        ja: "選択したパーツを維持したまま、バグ方針に従って空きマスを最大HPやステータスパーツで自動補完します。",
+        zh: "保持当前选定的核心部件不变，在所选 Bug 策略约束下自动用最高收益的 HP / 属性零件填满剩余格子。",
+    },
+    autoOptimizeBtn: {
+        en: "✨ Auto-Fill Grid",
+        ja: "✨ 残りマスを自動補完",
+        zh: "✨ 自动补全剩余网格",
+    },
+    optimizing: {
+        en: "Optimizing...",
+        ja: "最適化中...",
+        zh: "正在计算最优补全方案...",
+    },
+    optTarget: {
+        en: "Optimization Goal",
+        ja: "優先ステータス",
+        zh: "优化偏好",
+    },
+    targetMaxHp: {
+        en: "❤️ Maximize HP",
+        ja: "❤️ 最大HP優先",
+        zh: "❤️ HP 最大化",
+    },
+    targetMaxBuster: {
+        en: "💥 Maximize Buster",
+        ja: "💥 バスター優先",
+        zh: "💥 Buster 属性优先",
+    },
+    targetBalanced: {
+        en: "⚖️ Balanced Rotation",
+        ja: "⚖️ バランス・回転重視",
+        zh: "⚖️ 综合轮转优先",
+    },
+    bugPolicyTitle: {
+        en: "Bug Policy in Battle",
+        ja: "実戦バグ許容方針",
+        zh: "实战 Bug 容忍偏好",
+    },
+    policyNoBugs: {
+        en: "🛡️ Pure / Zero Bugs (Recommended)",
+        ja: "🛡️ バグなし（実質デメリット0・推奨）",
+        zh: "🛡️ 纯净无 BUG（实战0负面效果・推荐）",
+    },
+    policyNoBugsDesc: {
+        en: "Zero negative bugs in combat. If BugStop is equipped, placement rules are fully unlocked; otherwise strictly compliant.",
+        ja: "実戦でのバグデメリットゼロ。バグストッパーがあれば配置制限完全解除、なければ厳格にルールを遵守します。",
+        zh: "战斗中 0 实际负面效果。若包含 BUG停止器 则完全放开摆放限制，否则严格遵守按线摆放。",
+    },
+    policyBenign: {
+        en: "⚔️ Allow Benign Bugs (Menu HP drain)",
+        ja: "⚔️ 軽微なバグ許容（カスタム画面HP減少など）",
+        zh: "⚔️ 允许良性微瑕（选卡菜单扣血等）",
+    },
+    policyBenignDesc: {
+        en: "Tolerates minor Custom Screen HP drain Lv1 or blank buster shots to squeeze in larger HP parts without BugStop.",
+        ja: "バグストッパーなしでも高HPパーツを詰め込むため、カスタム画面HP減少Lv1や空撃ちなどの軽微なバグを許容します。",
+        zh: "在无 BUG停止器 的情况下，允许承受选卡菜单扣血 Lv1 等微弱代价，以强行塞入超大 HP 部件。",
+    },
+    optSuccessNotice: {
+        en: "Successfully optimized build!",
+        ja: "自動補完が完了しました！",
+        zh: "已成功补全构筑！",
+    },
+    optNoSolution: {
+        en: "Could not find a valid placement for core parts under this policy. Try adjusting core parts or policy.",
+        ja: "現在の指定パーツでは選択されたポリシーを満たす配置が見つかりませんでした。",
+        zh: "当前选定的核心部件无法在此 Bug 策略下拼装，请调整核心部件或策略。",
+    },
+    optAddedParts: {
+        en: "Added Parts",
+        ja: "追加されたパーツ",
+        zh: "自动添加的部件",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {
