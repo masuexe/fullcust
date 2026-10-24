@@ -1040,12 +1040,20 @@ function Navicust({
     const height = gridSettings.height * CELL_SIZE + borderWidth;
 
     return (
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div
+            style={{
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+                overflow: "hidden",
+            }}
+        >
             <div
                 style={{
                     position: "relative",
-                    width: width / 2,
-                    height: height / 2,
+                    width: "100%",
+                    maxWidth: width / 2,
+                    aspectRatio: `${width} / ${height}`,
                 }}
             >
                 <canvas
@@ -1053,8 +1061,12 @@ function Navicust({
                     width={width}
                     height={height}
                     style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
                         width: "100%",
                         height: "100%",
+                        display: "block",
                     }}
                 />
                 <canvas
@@ -1068,6 +1080,7 @@ function Navicust({
                         left: 0,
                         width: "100%",
                         height: "100%",
+                        display: "block",
                     }}
                 />
             </div>
@@ -1081,14 +1094,18 @@ const NavicustPlaceholder = React.forwardRef(
         ref: React.Ref<HTMLDivElement>
     ) => {
         const borderWidth = CELL_SIZE / 12;
+        const width = gridSettings.width * CELL_SIZE + borderWidth;
+        const height = gridSettings.height * CELL_SIZE + borderWidth;
 
         return (
             <div
                 ref={ref}
                 className="d-flex justify-content-center align-items-center"
                 style={{
-                    width: (gridSettings.width * CELL_SIZE + borderWidth) / 2,
-                    height: (gridSettings.height * CELL_SIZE + borderWidth) / 2,
+                    width: "100%",
+                    maxWidth: width / 2,
+                    aspectRatio: `${width} / ${height}`,
+                    margin: "0 auto",
                 }}
             >
                 <div className="spinner-border" />
@@ -1169,8 +1186,9 @@ function Results({
             <div
                 style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                    gap: "1rem",
+                    gridTemplateColumns:
+                        "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
+                    gap: "1.25rem",
                 }}
             >
                 {solutions.length > 0 ? (
@@ -1191,7 +1209,11 @@ function Results({
                         );
 
                         return (
-                            <div className="card shadow-sm p-3 bg-body-tertiary" key={i}>
+                            <div
+                                className="card shadow-sm p-3 bg-body-tertiary"
+                                style={{ overflow: "hidden" }}
+                                key={i}
+                            >
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="fw-bold small text-muted text-uppercase">
                                         {t("solution", lang)} #{i + 1}
