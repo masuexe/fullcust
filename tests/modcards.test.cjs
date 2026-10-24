@@ -100,6 +100,10 @@ test("computeBuildStats merges NaviCust parts with equipped Mod Cards", () => {
     assert.equal(stats.modMbUsed, 10);
     assert.equal(stats.modCardCount, 1);
     assert.equal(stats.modBPwrAtk, "M-Cannon");
+
+    // KnightMan has 1 card bug
+    const kmStats = computeBuildStats("bn6", [], ["137-A036"]);
+    assert.equal(kmStats.modBugCount, 1);
 });
 
 test("analyzeSolutionBugs accounts for Mod Card bugs and BugStop isolation in BN6", async () => {

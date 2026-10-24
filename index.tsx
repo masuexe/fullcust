@@ -242,6 +242,11 @@ function BuildStatsView({
                         [B+←] {stats.modBLeft}
                     </span>
                 ) : null}
+                {stats.modBugCount && stats.modBugCount > 0 ? (
+                    <span className="badge bg-secondary py-1 px-2" title={t("modCardBugNotice", lang)}>
+                        🎴 {stats.modBugCount} {t("modCardBugCount", lang)}
+                    </span>
+                ) : null}
             </div>
 
             {stats.abilities.length > 0 ? (
@@ -268,28 +273,46 @@ function SolutionBugStatus({
         return <span className="badge bg-success px-2 py-1">✅ {t("noBugs", lang)}</span>;
     }
 
-    const activeModBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
-    if (analysis.bugStopActive && activeModBugs.length === 0 && !analysis.tooManyColors) {
-        return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
-    }
+    const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
+    const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    const ncBugCount = ncActiveBugs.length + (analysis.tooManyColors ? 1 : 0);
+    const modBugCount = modActiveBugs.length;
 
-    if (analysis.bugStopActive && activeModBugs.length > 0) {
+    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), analysis.tooManyColors ? 4 : 0);
+    const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
+
+    // When NO mod card bugs are involved, keep clean single badge
+    if (modBugCount === 0) {
+        if (analysis.bugStopActive && !analysis.tooManyColors) {
+            return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
+        }
         return (
-            <div className="d-flex gap-1 align-items-center flex-wrap">
-                <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>
-                <span className="badge bg-secondary px-2 py-1">🎴 {activeModBugs.length} {t("modCardBugs", lang)}</span>
-            </div>
+            <span className="badge bg-secondary px-2 py-1">
+                ⚙️ {ncBugCount} {t("bugsDetected", lang)}{ncLevelLabel}
+            </span>
         );
     }
 
-    const totalActive = (analysis.activeBugs?.length ?? analysis.bugs.length) + (analysis.tooManyColors ? 1 : 0);
-    const maxLevel = Math.max(0, ...(analysis.activeBugs || []).map(b => b.level));
-    const levelLabel = totalActive === 1 && maxLevel > 1 ? ` (Lv${maxLevel})` : "";
-
+    // When mod card bugs exist: clearly distinguish NC placement status vs Mod Card status!
     return (
-        <span className="badge bg-secondary px-2 py-1">
-            ⚙️ {totalActive} {t("bugsDetected", lang)}{levelLabel}
-        </span>
+        <div className="d-flex gap-1 align-items-center flex-wrap">
+            {ncBugCount === 0 ? (
+                <span className="badge bg-success px-2 py-1" title={t("ncNoBugsNotice", lang)}>
+                    ✅ {t("ncNoBugs", lang)}
+                </span>
+            ) : analysis.bugStopActive && !analysis.tooManyColors ? (
+                <span className="badge bg-info text-dark px-2 py-1" title={t("bugStopNeutralizedNotice", lang)}>
+                    🛡️ {t("bugStopActive", lang)} (NC)
+                </span>
+            ) : (
+                <span className="badge bg-warning text-dark px-2 py-1">
+                    ⚙️ {ncBugCount} {t("ncBugs", lang)}{ncLevelLabel}
+                </span>
+            )}
+            <span className="badge bg-secondary px-2 py-1" title={t("modCardBugNotice", lang)}>
+                🎴 {modBugCount} {t("modCardBugCount", lang)}
+            </span>
+        </div>
     );
 }
 
@@ -303,9 +326,23 @@ function SolutionBugDetails({
     const [open, setOpen] = React.useState(false);
     if (!analysis.hasBugs) return null;
 
-    const totalActive = (analysis.activeBugs?.length ?? analysis.bugs.length) + (analysis.tooManyColors ? 1 : 0);
-    const maxLevel = Math.max(0, ...(analysis.activeBugs || []).map(b => b.level));
-    const levelLabel = totalActive === 1 && maxLevel > 1 ? ` (Lv${maxLevel})` : "";
+    const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
+    const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    const ncBugCount = ncActiveBugs.length + (analysis.tooManyColors ? 1 : 0);
+    const modBugCount = modActiveBugs.length;
+
+    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), analysis.tooManyColors ? 4 : 0);
+    const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
+
+    const buttonSummary = (() => {
+        if (modBugCount > 0) {
+            if (ncBugCount === 0) {
+                return `🎴 ${modBugCount} ${t("modCardBugCount", lang)} (${t("ncNoBugs", lang)})`;
+            }
+            return `⚙️ ${ncBugCount} ${t("ncBugs", lang)} + 🎴 ${modBugCount} ${t("modCardBugCount", lang)}`;
+        }
+        return `⚙️ ${ncBugCount} ${t("bugsDetected", lang)}${ncLevelLabel}${analysis.bugStopActive ? ` (${t("bugStopActive", lang)})` : ""}`;
+    })();
 
     return (
         <div className="mt-2 text-start">
@@ -314,73 +351,93 @@ function SolutionBugDetails({
                 className="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center py-1"
                 onClick={() => setOpen(prev => !prev)}
             >
-                <span className="small">
-                    ⚙️ {totalActive} {t("bugsDetected", lang)}{levelLabel}
-                    {analysis.bugStopActive ? ` (${t("bugStopActive", lang)})` : ""}
-                </span>
+                <span className="small">{buttonSummary}</span>
                 <span className="small">{open ? "▲" : "▼"}</span>
             </button>
             {open ? (
                 <div className="p-2 border rounded mt-1 bg-body-tertiary small">
-                    {analysis.bugStopActive ? (
-                        <div className="alert alert-info py-1 px-2 mb-2 small">
-                            🛡️ {t("bugStopNeutralizedNotice", lang)}
+                    {/* Section 1: NaviCust Placement */}
+                    <div className="mb-2">
+                        <div className="fw-bold d-flex align-items-center gap-1 mb-1">
+                            <span>🧩</span>
+                            <span>{t("ncBugDetailsHeader", lang)}</span>
                         </div>
-                    ) : null}
 
-                    {analysis.repairedBugsNotice && analysis.repairedBugsNotice.length > 0 ? (
-                        <div className="alert alert-success py-1 px-2 mb-2 small">
-                            ✨ {analysis.repairedBugsNotice.map(r => `${lang === "zh" ? "改造卡修复" : lang === "ja" ? "改造カード修復" : "Card Repair"}: ${r}`).join("、")}
-                        </div>
-                    ) : null}
+                        {ncBugCount === 0 ? (
+                            <div className="text-success small mb-1">
+                                ✅ {t("ncNoBugsNotice", lang)}
+                            </div>
+                        ) : null}
 
-                    {analysis.tooManyColors ? (
-                        <div className="mb-2 pb-2 border-bottom">
-                            <div className="fw-bold">
-                                🎨 {analysis.colorBugTitle || tBugTitle("colorStatus", lang)}
+                        {analysis.bugStopActive ? (
+                            <div className="alert alert-info py-1 px-2 mb-1 small">
+                                🛡️ {t("bugStopNeutralizedNotice", lang)}
                             </div>
-                            <div className="text-muted">
-                                {t("bugOrigin", lang)}: {tBugCause("tooManyColors", lang)} ({analysis.distinctColorCount}/4)
-                            </div>
-                            <div className="mt-1">
-                                {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{analysis.colorBugMechanics || tBugMechanics("colorStatus", lang)}</span>
-                            </div>
-                        </div>
-                    ) : null}
+                        ) : null}
 
-                    {analysis.activeBugs && analysis.activeBugs.length > 0 ? (
-                        analysis.activeBugs.map((ab, idx) => (
-                            <div key={idx} className={idx < analysis.activeBugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
-                                <div className="fw-bold">
+                        {analysis.tooManyColors ? (
+                            <div className="mb-2 pb-1 border-bottom">
+                                <div className="fw-semibold text-danger">
+                                    🎨 {analysis.colorBugTitle || tBugTitle("colorStatus", lang)}
+                                </div>
+                                <div className="text-muted">
+                                    {t("bugOrigin", lang)}: {tBugCause("tooManyColors", lang)} ({analysis.distinctColorCount}/4)
+                                </div>
+                                <div className="mt-1">
+                                    {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{analysis.colorBugMechanics || tBugMechanics("colorStatus", lang)}</span>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        {ncActiveBugs.map((ab, idx) => (
+                            <div key={idx} className={idx < ncActiveBugs.length - 1 ? "mb-2 pb-1 border-bottom" : ""}>
+                                <div className="fw-semibold">
                                     ⚙️ {ab.title}
                                 </div>
                                 <div className="text-muted">
-                                    {t("bugOrigin", lang)}: {ab.isModCardBug ? (
-                                        <span className="fw-semibold text-primary">{t("cardSource", lang)}: {ab.sourceCardName}</span>
-                                    ) : (
-                                        ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")
-                                    )}
+                                    {t("bugOrigin", lang)}: {ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")}
                                 </div>
                                 <div className="mt-1">
                                     {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{ab.mechanics}</span>
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        analysis.bugs.map((b, idx) => (
-                            <div key={idx} className={idx < analysis.bugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
-                                <div className="fw-bold">
-                                    ⚙️ {b.bugTitle || tBugTitle(b.bugType, lang)}
-                                </div>
-                                <div className="text-muted">
-                                    {t("bugOrigin", lang)}: <span className="fw-semibold">{b.partName}</span> ({b.causes.map(c => tBugCause(c, lang)).join(", ")})
-                                </div>
-                                <div className="mt-1">
-                                    {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{b.bugMechanics || tBugMechanics(b.bugType, lang)}</span>
-                                </div>
+                        ))}
+                    </div>
+
+                    {/* Section 2: Mod Card Bugs (if any) */}
+                    {modBugCount > 0 ? (
+                        <div className="pt-2 border-top mb-1">
+                            <div className="fw-bold d-flex align-items-center gap-1 mb-1">
+                                <span>🎴</span>
+                                <span>{t("modCardBugsHeader", lang)}</span>
                             </div>
-                        ))
-                    )}
+                            <div className="text-muted mb-2" style={{ fontSize: "0.75rem" }}>
+                                {t("modCardBugNotice", lang)}
+                            </div>
+                            {modActiveBugs.map((mb, idx) => (
+                                <div key={idx} className={idx < modActiveBugs.length - 1 ? "mb-2 pb-1 border-bottom" : ""}>
+                                    <div className="fw-semibold text-primary">
+                                        🎴 {mb.title}
+                                    </div>
+                                    <div className="text-muted">
+                                        {t("bugOrigin", lang)}: <span className="fw-semibold text-body">{t("cardSource", lang)}: {mb.sourceCardName}</span>
+                                    </div>
+                                    <div className="mt-1">
+                                        {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{mb.mechanics}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : null}
+
+                    {/* Section 3: Mod Card Repairs (if any) */}
+                    {analysis.repairedBugsNotice && analysis.repairedBugsNotice.length > 0 ? (
+                        <div className="pt-2 border-top mt-1">
+                            <div className="alert alert-success py-1 px-2 mb-0 small">
+                                ✨ {analysis.repairedBugsNotice.map(r => `${t("modCardRepairsHeader", lang)}: ${r}`).join("、")}
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
             ) : null}
         </div>

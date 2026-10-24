@@ -461,6 +461,46 @@ export const translations = {
         ja: "Uシャツ",
         zh: "危机守护",
     },
+    ncNoBugs: {
+        en: "NC Bug-Free",
+        ja: "NCバグなし",
+        zh: "NC无Bug",
+    },
+    ncBugs: {
+        en: "NC Bug(s)",
+        ja: "件のNCバグ",
+        zh: "处 NC Bug",
+    },
+    ncBugDetailsHeader: {
+        en: "NaviCust Placement",
+        ja: "ナビカス配置",
+        zh: "领航员客制化拼放",
+    },
+    ncNoBugsNotice: {
+        en: "This layout produces no NaviCust placement bugs.",
+        ja: "この配置によるナビカスバグは発生していません。",
+        zh: "此方案未产生任何 NC 摆放 Bug。",
+    },
+    modCardBugsHeader: {
+        en: "Patch Card Bugs (Not neutralized by BugStop)",
+        ja: "改造カードバグ（バグストッパー無効）",
+        zh: "改造卡自带 Bug（不受 BugStop 影响）",
+    },
+    modCardBugCount: {
+        en: "Card Bug",
+        ja: "改造カードバグ",
+        zh: "改造卡Bug",
+    },
+    modCardBugNotice: {
+        en: "From equipped Patch Cards, applies to all layouts.",
+        ja: "装備中の改造カードによるもので、全配置共通です。",
+        zh: "来自已装备的改造卡，所有方案通用（不受NC拼图影响）。",
+    },
+    modCardRepairsHeader: {
+        en: "Patch Card Repairs",
+        ja: "改造カード修復",
+        zh: "改造卡修复",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

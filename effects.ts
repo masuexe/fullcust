@@ -43,6 +43,7 @@ export interface BuildStats {
     modTripleBuster?: boolean;
     modSoul?: string;
     modSlotsUsed?: string[];
+    modBugCount?: number;
     repairedBugs?: string[];
 }
 
@@ -251,6 +252,7 @@ export function computeBuildStats(
     let modTripleBuster: boolean | undefined;
     let modSoul: string | undefined;
     let modSlotsUsed: string[] | undefined;
+    let modBugCount: number | undefined;
     let repairedBugs: string[] | undefined;
 
     let baseAttack = attackMax ? 5 : (1 + attackBonus);
@@ -261,6 +263,7 @@ export function computeBuildStats(
         const deck = computeDeckStats(modCardIds, gameId);
         modMbUsed = deck.totalMb;
         modCardCount = modCardIds.length;
+        modBugCount = deck.activeBugs.length;
         hp += deck.stats.hp;
         hpPercent = deck.stats.hpPercent;
 
@@ -326,6 +329,7 @@ export function computeBuildStats(
         modTripleBuster,
         modSoul,
         modSlotsUsed,
+        modBugCount,
         repairedBugs,
     };
 }
