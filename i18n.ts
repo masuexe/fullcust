@@ -251,6 +251,111 @@ export const translations = {
         ja: "戦闘仕様・効果",
         zh: "游戏内机制效果",
     },
+    modCards: {
+        en: "Patch Cards (Mod Cards)",
+        ja: "改造カード",
+        zh: "改造卡",
+    },
+    modCapacity: {
+        en: "Patch Card Capacity",
+        ja: "改造カード容量",
+        zh: "改造卡容量",
+    },
+    modCardsDeck: {
+        en: "Equipped Cards",
+        ja: "装備カード",
+        zh: "已装备卡片",
+    },
+    addModCard: {
+        en: "Add Patch Card",
+        ja: "カードを追加",
+        zh: "添加改造卡",
+    },
+    removeCard: {
+        en: "Remove",
+        ja: "外す",
+        zh: "卸下",
+    },
+    moveUp: {
+        en: "Move Up",
+        ja: "上へ",
+        zh: "上移",
+    },
+    moveDown: {
+        en: "Move Down",
+        ja: "下へ",
+        zh: "下移",
+    },
+    clearAllCards: {
+        en: "Clear All Cards",
+        ja: "すべて外す",
+        zh: "清空改造卡",
+    },
+    capacityExceeded: {
+        en: "Capacity exceeded 80 MB limit",
+        ja: "容量制限 (80 MB) を超えています",
+        zh: "已超过 80 MB 容量上限",
+    },
+    noCardsEquipped: {
+        en: "No Patch Cards equipped.",
+        ja: "改造カードは装備されていません。",
+        zh: "未装备改造卡。",
+    },
+    cardOrderHint: {
+        en: "Lower cards overwrite conflicting effects of upper cards.",
+        ja: "下位のカードは上位のカードと競合する効果を上書きします。",
+        zh: "下方的卡片会覆盖上方卡片的冲突效果。",
+    },
+    searchCards: {
+        en: "Search card name or effect...",
+        ja: "カード名や効果で検索...",
+        zh: "搜索卡片名称或效果...",
+    },
+    allCardCategories: {
+        en: "All Categories",
+        ja: "すべてのカテゴリ",
+        zh: "全部类别",
+    },
+    part1Cards: {
+        en: "Part 1 (Item #1~53)",
+        ja: "第1弾 (137-A)",
+        zh: "第1弹 (137-A)",
+    },
+    part2Cards: {
+        en: "Part 2 (Item #54~106)",
+        ja: "第2弾 (137-B)",
+        zh: "第2弹 (137-B)",
+    },
+    promoCards: {
+        en: "Promotional & Special",
+        ja: "プロモ・特殊",
+        zh: "特典与特殊卡",
+    },
+    posEffects: {
+        en: "Positive Effects",
+        ja: "プラス効果",
+        zh: "正面效果",
+    },
+    negEffects: {
+        en: "Drawbacks & Bugs",
+        ja: "マイナス効果・バグ",
+        zh: "负面效果与BUG",
+    },
+    equippedCardsCount: {
+        en: "Cards Equipped",
+        ja: "装備数",
+        zh: "已装备数",
+    },
+    cardSource: {
+        en: "Patch Card",
+        ja: "改造カード",
+        zh: "改造卡",
+    },
+    modCardBugs: {
+        en: "Patch Card Bug",
+        ja: "改造カードバグ",
+        zh: "改造卡 BUG",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

@@ -34,6 +34,13 @@ import {
     tBugTitle,
     tBugMechanics,
 } from "./effects";
+import {
+    BN6_MOD_CARDS,
+    computeDeckStats,
+    getCardDisplayName,
+    getModCard,
+    ModCard,
+} from "./modcards";
 
 const LangContext = React.createContext<{
     lang: Lang;
@@ -135,23 +142,33 @@ function BuildStatsView({
     problem: Problem;
 }) {
     const { lang } = useLang();
-    if (problem.requirements.length === 0) return null;
     const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
-    const stats = computeBuildStats(data.gameId, partIds);
+    const stats = computeBuildStats(data.gameId, partIds, problem.modCards);
 
-    const hasAnyStats = stats.hp > 0 || stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
-        stats.custom > 5 || stats.megaFolder > 5 || stats.gigaFolder > 1 || stats.abilities.length > 0;
-    if (!hasAnyStats) return null;
+    const hasAnyStats = stats.hp !== 0 || stats.hpPercent !== 0 ||
+        stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
+        stats.custom > 5 || stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
+        stats.abilities.length > 0 || (stats.modMbUsed !== undefined && stats.modMbUsed > 0);
+    if (!hasAnyStats && problem.requirements.length === 0) return null;
 
     return (
         <div className="card mb-3 p-2 bg-body-tertiary">
-            <div className="fw-semibold mb-2 small text-muted text-uppercase">
-                📊 {t("buildStats", lang)}
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="fw-semibold small text-muted text-uppercase">
+                    📊 {t("buildStats", lang)}
+                </span>
+                {stats.modMbUsed !== undefined && stats.modMbUsed > 0 ? (
+                    <span className={`badge ${stats.modMbUsed > 80 ? "bg-danger" : "bg-dark border border-primary text-light"} py-1 px-2`}>
+                        🎴 {t("modCards", lang)}: {stats.modMbUsed} / 80 MB
+                    </span>
+                ) : null}
             </div>
+
             <div className="d-flex flex-wrap gap-2 small align-items-center">
-                {stats.hp > 0 ? (
-                    <span className="badge bg-success py-1 px-2">
-                        HP +{stats.hp}
+                {stats.hp !== 0 || stats.hpPercent !== 0 ? (
+                    <span className={`badge ${stats.hp < 0 || stats.hpPercent < 0 ? "bg-danger" : "bg-success"} py-1 px-2`}>
+                        HP {stats.hp >= 0 ? "+" : ""}{stats.hp}
+                        {stats.hpPercent !== 0 ? ` (${stats.hpPercent >= 0 ? "+" : ""}${stats.hpPercent}%)` : ""}
                     </span>
                 ) : null}
                 <span className={`badge ${stats.attackMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
@@ -172,13 +189,55 @@ function BuildStatsView({
                     <span className="badge bg-secondary py-1 px-2">
                         {t("statMega", lang)}: +{stats.megaFolder - 5}
                     </span>
+                ) : stats.megaFolder < 5 ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        {t("statMega", lang)}: {stats.megaFolder - 5}
+                    </span>
                 ) : null}
                 {stats.gigaFolder > 1 ? (
                     <span className="badge bg-secondary py-1 px-2">
                         {t("statGiga", lang)}: +{stats.gigaFolder - 1}
                     </span>
                 ) : null}
+
+                {/* Mod Card active traits */}
+                {stats.modBody ? (
+                    <span className="badge bg-info text-dark py-1 px-2 border border-info">
+                        🧬 {stats.modBody}Body
+                    </span>
+                ) : null}
+                {stats.modGauge ? (
+                    <span className={`badge ${stats.modGauge === "fast" ? "bg-success" : stats.modGauge === "slow" ? "bg-danger" : "bg-secondary"} py-1 px-2`}>
+                        ⏱️ {stats.modGauge === "fast" ? (lang === "zh" ? "快速量表" : lang === "ja" ? "クイックゲージ" : "FastGauge") : stats.modGauge === "slow" ? (lang === "zh" ? "缓慢量表" : lang === "ja" ? "ヘビーゲージ" : "SlowGauge") : "NormalGauge"}
+                    </span>
+                ) : null}
+                {stats.modTripleBuster ? (
+                    <span className="badge bg-warning text-dark py-1 px-2 fw-semibold">
+                        💥 {lang === "zh" ? "三重子弹" : lang === "ja" ? "トリプルバスター" : "Triple Buster"}
+                    </span>
+                ) : null}
+                {stats.modChipRecovery ? (
+                    <span className="badge bg-success py-1 px-2">
+                        💊 {lang === "zh" ? `芯片回复 (+${stats.modChipRecovery} HP)` : lang === "ja" ? `チップリカバリー (+${stats.modChipRecovery} HP)` : `Chip Recovery (+${stats.modChipRecovery} HP)`}
+                    </span>
+                ) : null}
+                {stats.modBButton ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        [B] {stats.modBButton}
+                    </span>
+                ) : null}
+                {stats.modBPwrAtk ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        [B集气] {stats.modBPwrAtk}
+                    </span>
+                ) : null}
+                {stats.modBLeft ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        [B+←] {stats.modBLeft}
+                    </span>
+                ) : null}
             </div>
+
             {stats.abilities.length > 0 ? (
                 <div className="d-flex flex-wrap gap-1 mt-2">
                     {stats.abilities.map(ability => (
@@ -202,8 +261,19 @@ function SolutionBugStatus({
     if (!analysis.hasBugs) {
         return <span className="badge bg-success px-2 py-1">✅ {t("noBugs", lang)}</span>;
     }
-    if (analysis.bugStopActive) {
+
+    const activeModBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    if (analysis.bugStopActive && activeModBugs.length === 0 && !analysis.tooManyColors) {
         return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
+    }
+
+    if (analysis.bugStopActive && activeModBugs.length > 0) {
+        return (
+            <div className="d-flex gap-1 align-items-center flex-wrap">
+                <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>
+                <span className="badge bg-secondary px-2 py-1">🎴 {activeModBugs.length} {t("modCardBugs", lang)}</span>
+            </div>
+        );
     }
 
     const totalActive = (analysis.activeBugs?.length ?? analysis.bugs.length) + (analysis.tooManyColors ? 1 : 0);
@@ -252,6 +322,12 @@ function SolutionBugDetails({
                         </div>
                     ) : null}
 
+                    {analysis.repairedBugsNotice && analysis.repairedBugsNotice.length > 0 ? (
+                        <div className="alert alert-success py-1 px-2 mb-2 small">
+                            ✨ {analysis.repairedBugsNotice.map(r => `${lang === "zh" ? "改造卡修复" : lang === "ja" ? "改造カード修復" : "Card Repair"}: ${r}`).join("、")}
+                        </div>
+                    ) : null}
+
                     {analysis.tooManyColors ? (
                         <div className="mb-2 pb-2 border-bottom">
                             <div className="fw-bold">
@@ -273,7 +349,11 @@ function SolutionBugDetails({
                                     ⚙️ {ab.title}
                                 </div>
                                 <div className="text-muted">
-                                    {t("bugOrigin", lang)}: {ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")}
+                                    {t("bugOrigin", lang)}: {ab.isModCardBug ? (
+                                        <span className="fw-semibold text-primary">{t("cardSource", lang)}: {ab.sourceCardName}</span>
+                                    ) : (
+                                        ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")
+                                    )}
                                 </div>
                                 <div className="mt-1">
                                     {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{ab.mechanics}</span>
@@ -297,6 +377,294 @@ function SolutionBugDetails({
                     )}
                 </div>
             ) : null}
+        </div>
+    );
+}
+
+function ModCardManager({
+    problem,
+    onChange,
+    lang,
+}: {
+    problem: Problem;
+    onChange: (problem: Problem) => void;
+    lang: Lang;
+}) {
+    const cardIds = problem.modCards || [];
+    const deck = computeDeckStats(cardIds);
+    const [selectedCardToAdd, setSelectedCardToAdd] = React.useState<string>("");
+    const [searchQuery, setSearchQuery] = React.useState<string>("");
+    const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
+
+    const filteredCards = React.useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        return BN6_MOD_CARDS.filter((c: ModCard) => {
+            if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 53)) return false;
+            if (categoryFilter === "part2" && (c.cardNo < 54 || c.cardNo > 106)) return false;
+            if (categoryFilter === "promo" && c.cardNo < 107) return false;
+
+            if (!q) return true;
+            const nameMatch = c.name.toLowerCase().includes(q) ||
+                c.nameZh.toLowerCase().includes(q) ||
+                c.nameJa.toLowerCase().includes(q) ||
+                c.id.toLowerCase().includes(q);
+            const posMatch = c.posRaw.some(p => p.toLowerCase().includes(q));
+            const negMatch = c.negRaw.some(n => n.toLowerCase().includes(q));
+            return nameMatch || posMatch || negMatch;
+        });
+    }, [searchQuery, categoryFilter]);
+
+    const handleAddCard = (cid: string) => {
+        if (!cid) return;
+        onChange({
+            ...problem,
+            modCards: [...cardIds, cid],
+        });
+        setSelectedCardToAdd("");
+    };
+
+    const handleRemoveCard = (index: number) => {
+        const next = [...cardIds];
+        next.splice(index, 1);
+        onChange({
+            ...problem,
+            modCards: next,
+        });
+    };
+
+    const handleMoveUp = (index: number) => {
+        if (index <= 0) return;
+        const next = [...cardIds];
+        const temp = next[index - 1];
+        next[index - 1] = next[index];
+        next[index] = temp;
+        onChange({
+            ...problem,
+            modCards: next,
+        });
+    };
+
+    const handleMoveDown = (index: number) => {
+        if (index >= cardIds.length - 1) return;
+        const next = [...cardIds];
+        const temp = next[index + 1];
+        next[index + 1] = next[index];
+        next[index] = temp;
+        onChange({
+            ...problem,
+            modCards: next,
+        });
+    };
+
+    const handleClearAll = () => {
+        onChange({
+            ...problem,
+            modCards: [],
+        });
+    };
+
+    const percentUsed = Math.min(100, Math.round((deck.totalMb / 80) * 100));
+    const isOver = deck.totalMb > 80;
+
+    return (
+        <div className="accordion mb-2" id="modcards-section">
+            <div className="accordion-item">
+                <h2 className="accordion-header" id="modcards-header">
+                    <button
+                        className="accordion-button collapsed py-2"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#modcards-body"
+                        aria-expanded="false"
+                        aria-controls="modcards-body"
+                    >
+                        <span className="me-2">🎴</span>
+                        <span className="fw-semibold me-2">{t("modCards", lang)}</span>
+                        <span className={`badge ${isOver ? "bg-danger" : deck.totalMb > 0 ? "bg-primary" : "bg-secondary"} ms-auto me-2`}>
+                            {deck.totalMb} / 80 MB ({cardIds.length})
+                        </span>
+                    </button>
+                </h2>
+                <div
+                    id="modcards-body"
+                    className="accordion-collapse collapse"
+                    aria-labelledby="modcards-header"
+                    data-bs-parent="#modcards-section"
+                >
+                    <div className="accordion-body p-2">
+                        {/* MB Capacity Progress Bar */}
+                        <div className="mb-2">
+                            <div className="d-flex justify-content-between small text-muted mb-1">
+                                <span>{t("modCapacity", lang)}</span>
+                                <span className={isOver ? "text-danger fw-bold" : "fw-semibold"}>
+                                    {deck.totalMb} / 80 MB {isOver ? `(${t("capacityExceeded", lang)})` : `(${80 - deck.totalMb} MB left)`}
+                                </span>
+                            </div>
+                            <div className="progress" style={{ height: "8px" }}>
+                                <div
+                                    className={`progress-bar ${isOver ? "bg-danger" : percentUsed >= 90 ? "bg-warning" : "bg-success"}`}
+                                    role="progressbar"
+                                    style={{ width: `${percentUsed}%` }}
+                                    aria-valuenow={deck.totalMb}
+                                    aria-valuemin={0}
+                                    aria-valuemax={80}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Order Hint */}
+                        <div className="alert alert-secondary py-1 px-2 mb-2 small text-muted" style={{ fontSize: "0.8rem" }}>
+                            ℹ️ {t("cardOrderHint", lang)}
+                        </div>
+
+                        {/* Equipped Cards List */}
+                        {cardIds.length === 0 ? (
+                            <div className="text-center text-muted py-2 small border rounded mb-2 bg-body-tertiary">
+                                {t("noCardsEquipped", lang)}
+                            </div>
+                        ) : (
+                            <div className="list-group mb-2">
+                                {cardIds.map((cid, idx) => {
+                                    const card = getModCard(cid);
+                                    if (!card) return null;
+                                    const cardName = getCardDisplayName(card, lang);
+
+                                    return (
+                                        <div
+                                            key={`${cid}-${idx}`}
+                                            className="list-group-item list-group-item-action p-2 d-flex flex-column gap-1"
+                                        >
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div className="d-flex align-items-center gap-1 flex-wrap">
+                                                    <span className="badge bg-secondary" style={{ fontSize: "0.75rem" }}>
+                                                        #{card.cardNo}
+                                                    </span>
+                                                    <span className="fw-bold small">{cardName}</span>
+                                                    <span className="badge bg-primary text-light" style={{ fontSize: "0.75rem" }}>
+                                                        {card.mb} MB
+                                                    </span>
+                                                    <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
+                                                        [{card.id}]
+                                                    </span>
+                                                </div>
+                                                <div className="btn-group btn-group-sm">
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary py-0 px-1"
+                                                        disabled={idx === 0}
+                                                        onClick={() => handleMoveUp(idx)}
+                                                        title={t("moveUp", lang)}
+                                                    >
+                                                        ▲
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary py-0 px-1"
+                                                        disabled={idx === cardIds.length - 1}
+                                                        onClick={() => handleMoveDown(idx)}
+                                                        title={t("moveDown", lang)}
+                                                    >
+                                                        ▼
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-outline-danger py-0 px-1"
+                                                        onClick={() => handleRemoveCard(idx)}
+                                                        title={t("removeCard", lang)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Pos & Neg items */}
+                                            <div className="d-flex flex-wrap gap-1" style={{ fontSize: "0.75rem" }}>
+                                                {card.posRaw.map((p, pidx) => (
+                                                    <span key={pidx} className="badge bg-success-subtle text-success-emphasis border border-success-subtle py-0 px-1">
+                                                        +{p}
+                                                    </span>
+                                                ))}
+                                                {card.negRaw.map((n, nidx) => (
+                                                    <span key={nidx} className="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle py-0 px-1">
+                                                        {n}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Clear all button */}
+                        {cardIds.length > 0 ? (
+                            <div className="d-flex justify-content-end mb-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger py-0 px-2 small"
+                                    onClick={handleClearAll}
+                                >
+                                    {t("clearAllCards", lang)}
+                                </button>
+                            </div>
+                        ) : null}
+
+                        {/* Add Card Controls */}
+                        <div className="p-2 border rounded bg-body-tertiary">
+                            <div className="fw-semibold small mb-1">{t("addModCard", lang)}</div>
+                            <div className="row g-1 mb-1">
+                                <div className="col-sm-5">
+                                    <select
+                                        className="form-select form-select-sm"
+                                        value={categoryFilter}
+                                        onChange={e => setCategoryFilter(e.target.value)}
+                                    >
+                                        <option value="all">{t("allCardCategories", lang)}</option>
+                                        <option value="part1">{t("part1Cards", lang)}</option>
+                                        <option value="part2">{t("part2Cards", lang)}</option>
+                                        <option value="promo">{t("promoCards", lang)}</option>
+                                    </select>
+                                </div>
+                                <div className="col-sm-7">
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        placeholder={t("searchCards", lang)}
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="input-group input-group-sm">
+                                <select
+                                    className="form-select form-select-sm"
+                                    value={selectedCardToAdd}
+                                    onChange={e => setSelectedCardToAdd(e.target.value)}
+                                >
+                                    <option value="">-- {t("addModCard", lang)} ({filteredCards.length}) --</option>
+                                    {filteredCards.map(c => {
+                                        const cName = getCardDisplayName(c, lang);
+                                        return (
+                                            <option key={c.id} value={c.id}>
+                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    disabled={!selectedCardToAdd}
+                                    onClick={() => handleAddCard(selectedCardToAdd)}
+                                >
+                                    {t("addModCard", lang)}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
@@ -789,6 +1157,10 @@ function PartSelector({
                 </div>
             </div>
 
+            {data.gameId === "bn6" ? (
+                <ModCardManager problem={problem} onChange={onChange} lang={lang} />
+            ) : null}
+
             <BuildStatsView data={data} problem={problem} />
 
             <div className="row">
@@ -1204,6 +1576,7 @@ function Results({
                     </button>
                 </div>
             ) : null}
+
             <BuildStatsView data={data} problem={problem} />
             <div
                 style={{
@@ -1227,7 +1600,8 @@ function Results({
                             problem.requirements,
                             cells,
                             gs,
-                            lang
+                            lang,
+                            problem.modCards
                         );
 
                         return (

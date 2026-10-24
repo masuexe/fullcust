@@ -1,4 +1,5 @@
 import { getPartName, Lang } from "./i18n";
+import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug } from "./modcards";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -18,6 +19,7 @@ export interface PartEffect {
 
 export interface BuildStats {
     hp: number;
+    hpPercent: number;
     attack: number;
     rapid: number;
     charge: number;
@@ -28,6 +30,18 @@ export interface BuildStats {
     megaFolder: number;
     gigaFolder: number;
     abilities: string[];
+    // Mod card integration
+    modMbUsed?: number;
+    modCardCount?: number;
+    modBody?: string;
+    modGauge?: "fast" | "slow" | "normal";
+    modBButton?: string;
+    modBPwrAtk?: string;
+    modBLeft?: string;
+    modChipRecovery?: number;
+    modFirstBarrier?: number | string;
+    modTripleBuster?: boolean;
+    repairedBugs?: string[];
 }
 
 export const BN6_PART_EFFECTS: Record<number, PartEffect> = {
@@ -87,7 +101,11 @@ export function getPartEffect(gameId: string, partId: number): PartEffect | unde
     return GAME_EFFECTS[gameId]?.[partId];
 }
 
-export function computeBuildStats(gameId: string, partIds: number[]): BuildStats {
+export function computeBuildStats(
+    gameId: string,
+    partIds: number[],
+    modCardIds?: string[]
+): BuildStats {
     let hp = 0;
     let attackBonus = 0;
     let rapidBonus = 0;
@@ -127,15 +145,68 @@ export function computeBuildStats(gameId: string, partIds: number[]): BuildStats
         }
     }
 
-    const attack = attackMax ? 5 : Math.min(5, 1 + attackBonus);
-    const rapid = rapidMax ? 5 : Math.min(5, 1 + rapidBonus);
-    const charge = chargeMax ? 5 : Math.min(5, 1 + chargeBonus);
-    const custom = numberOpen ? 10 : Math.min(10, 5 + customBonus);
-    const megaFolder = 5 + megaFolderBonus;
-    const gigaFolder = 1 + gigaFolderBonus;
+    let hpPercent = 0;
+    let modMbUsed: number | undefined;
+    let modCardCount: number | undefined;
+    let modBody: string | undefined;
+    let modGauge: "fast" | "slow" | "normal" | undefined;
+    let modBButton: string | undefined;
+    let modBPwrAtk: string | undefined;
+    let modBLeft: string | undefined;
+    let modChipRecovery: number | undefined;
+    let modFirstBarrier: number | string | undefined;
+    let modTripleBuster: boolean | undefined;
+    let repairedBugs: string[] | undefined;
+
+    let baseAttack = attackMax ? 5 : (1 + attackBonus);
+    let baseRapid = rapidMax ? 5 : (1 + rapidBonus);
+    let baseCharge = chargeMax ? 5 : (1 + chargeBonus);
+
+    if (gameId === "bn6" && modCardIds && modCardIds.length > 0) {
+        const deck = computeDeckStats(modCardIds);
+        modMbUsed = deck.totalMb;
+        modCardCount = modCardIds.length;
+        hp += deck.stats.hp;
+        hpPercent = deck.stats.hpPercent;
+
+        if (deck.stats.attackMult > 1) {
+            baseAttack *= deck.stats.attackMult;
+        }
+        baseAttack += deck.stats.attack;
+        baseRapid += deck.stats.rapid;
+        baseCharge += deck.stats.charge;
+        customBonus += deck.stats.custom;
+        megaFolderBonus += deck.stats.megaFolder;
+        gigaFolderBonus += deck.stats.gigaFolder;
+
+        for (const ab of deck.activeAbilities) {
+            abilitySet.add(ab);
+        }
+        for (const dab of deck.disabledAbilities) {
+            abilitySet.delete(dab);
+        }
+
+        modBody = deck.body;
+        modGauge = deck.gauge;
+        modBButton = deck.bButton;
+        modBPwrAtk = deck.bPwrAtk;
+        modBLeft = deck.bLeft;
+        modChipRecovery = deck.chipRecovery;
+        modFirstBarrier = deck.firstBarrier;
+        modTripleBuster = deck.tripleBuster;
+        repairedBugs = deck.repairedBugs;
+    }
+
+    const attack = Math.max(1, Math.min(5, baseAttack));
+    const rapid = Math.max(1, Math.min(5, baseRapid));
+    const charge = Math.max(1, Math.min(5, baseCharge));
+    const custom = numberOpen ? 10 : Math.max(5, Math.min(10, 5 + customBonus));
+    const megaFolder = Math.max(0, 5 + megaFolderBonus);
+    const gigaFolder = Math.max(0, 1 + gigaFolderBonus);
 
     return {
         hp,
+        hpPercent,
         attack,
         rapid,
         charge,
@@ -146,6 +217,17 @@ export function computeBuildStats(gameId: string, partIds: number[]): BuildStats
         megaFolder,
         gigaFolder,
         abilities: Array.from(abilitySet).sort(),
+        modMbUsed,
+        modCardCount,
+        modBody,
+        modGauge,
+        modBButton,
+        modBPwrAtk,
+        modBLeft,
+        modChipRecovery,
+        modFirstBarrier,
+        modTripleBuster,
+        repairedBugs,
     };
 }
 
@@ -1362,6 +1444,8 @@ export interface ActiveBugEffect {
         partName: string;
         causes: BugCause[];
     }[];
+    isModCardBug?: boolean;
+    sourceCardName?: string;
 }
 
 export interface AnalyzedBug {
@@ -1384,6 +1468,12 @@ export interface SolutionBugAnalysis {
     colorBugTitle?: string;
     colorBugMechanics?: string;
     distinctColorCount: number;
+    modCardBugs?: {
+        cardId: string;
+        cardName: string;
+        bug: ModCardBug;
+    }[];
+    repairedBugsNotice?: string[];
 }
 
 export function analyzeSolutionBugs(
@@ -1392,7 +1482,8 @@ export function analyzeSolutionBugs(
     requirements: Requirement[],
     cells: (number | null)[],
     gridSettings: GridSettings,
-    lang: Lang
+    lang: Lang,
+    modCardIds?: string[]
 ): SolutionBugAnalysis {
     const ncols = gridSettings.width;
     const nrows = gridSettings.height;
@@ -1577,16 +1668,70 @@ export function analyzeSolutionBugs(
     const colorBugTitle = colorDef?.title[lang];
     const colorBugMechanics = colorDef?.mechanics[lang];
 
-    const hasBugs = bugs.length > 0 || tooManyColors;
+    let finalActiveBugs = activeBugs;
+    let modCardBugsList: { cardId: string; cardName: string; bug: ModCardBug }[] | undefined;
+    let repairedBugsNotice: string[] | undefined;
+
+    if (gameId === "bn6" && modCardIds && modCardIds.length > 0) {
+        const deck = computeDeckStats(modCardIds);
+        repairedBugsNotice = deck.repairedBugs;
+
+        // If card has Repair, remove corresponding NaviCust active bugs
+        if (deck.repairedBugs.length > 0) {
+            finalActiveBugs = finalActiveBugs.filter(ab => {
+                for (const rep of deck.repairedBugs) {
+                    const normRep = rep.toLowerCase();
+                    const bType = ab.bugType.toLowerCase();
+                    if (normRep.includes("battle hp") && bType === "battlehp") return false;
+                    if (normRep.includes("movement") && bType === "movement") return false;
+                    if (normRep.includes("buster blank") && bType === "buster") return false;
+                    if (normRep.includes("custom damage") && bType === "customdamage") return false;
+                    if ((normRep.includes("custom hp") || normRep.includes("custom screen hp")) && bType === "customhp") return false;
+                    if (normRep.includes("panel") && bType === "panel") return false;
+                    if (normRep.includes("status") && bType === "status") return false;
+                    if (normRep.includes("emotion") && bType === "emotion") return false;
+                }
+                return true;
+            });
+        }
+
+        // Mod card bugs are NOT neutralized by BugStop!
+        if (deck.activeBugs.length > 0) {
+            modCardBugsList = [];
+            for (const entry of deck.activeBugs) {
+                const card = getModCard(entry.sourceCardId);
+                const cardDisplayName = card ? getCardDisplayName(card, lang) : entry.sourceCardId;
+                modCardBugsList.push({
+                    cardId: entry.sourceCardId,
+                    cardName: cardDisplayName,
+                    bug: entry.bug,
+                });
+
+                finalActiveBugs.push({
+                    bugType: entry.bug.type as BugType,
+                    level: entry.bug.level ?? 1,
+                    title: `[${cardDisplayName}] ${entry.bug.name[lang]}`,
+                    mechanics: entry.bug.description[lang],
+                    parts: [],
+                    isModCardBug: true,
+                    sourceCardName: cardDisplayName,
+                });
+            }
+        }
+    }
+
+    const hasBugs = finalActiveBugs.length > 0 || tooManyColors || (bugs.length > 0 && !bugStopActive);
 
     return {
         hasBugs,
         bugStopActive,
         bugs,
-        activeBugs,
+        activeBugs: finalActiveBugs,
         tooManyColors,
         colorBugTitle,
         colorBugMechanics,
         distinctColorCount: distinctColors.size,
+        modCardBugs: modCardBugsList,
+        repairedBugsNotice,
     };
 }

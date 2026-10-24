@@ -9,6 +9,7 @@ export interface Problem {
     expansionMemories: number;
     style?: string;
     modTools?: boolean;
+    modCards?: string[];
 }
 
 const toggle = z.union([z.literal(-1), z.literal(0), z.literal(1)]);
@@ -35,6 +36,7 @@ const SavedProblem = z.object({
     x: nonnegativeInt,
     t: z.string().optional(), // Style type, for games with Style color rules.
     m: bit.optional(), // ModTools enabled.
+    c: z.array(z.string()).optional(), // BN6 Mod Cards
 });
 
 export function emptyProblem(data: Data): Problem {
@@ -42,6 +44,7 @@ export function emptyProblem(data: Data): Problem {
         requirements: [],
         spinnableColors: data.colors.map(() => true),
         expansionMemories: data.defaultExpansion,
+        ...(data.gameId === "bn6" ? { modCards: [] } : {}),
         ...(data.styleColorRules ? {
             style: data.styleColorRules.defaultStyle,
             modTools: false,
@@ -94,6 +97,9 @@ export function fromHashString(s: string, data: Data): Problem | null {
         requirements,
         spinnableColors: data.colors.map(color => !!colors[color]),
         expansionMemories: saved.x,
+        ...(data.gameId === "bn6" ? {
+            modCards: "c" in saved && Array.isArray(saved.c) ? saved.c : [],
+        } : {}),
         ...(data.styleColorRules ? {
             style,
             modTools: "m" in saved && saved.m === 1,
@@ -115,6 +121,7 @@ export function toHashString(problem: Problem, data: Data): string {
         s: Object.fromEntries(data.colors.map((color, i) => [color, problem.spinnableColors[i] ? 1 as const : 0 as const])),
         x: problem.expansionMemories,
         ...(data.styleColorRules ? { t: problem.style, m: problem.modTools ? 1 as const : 0 as const } : {}),
+        ...(data.gameId === "bn6" && problem.modCards && problem.modCards.length > 0 ? { c: problem.modCards } : {}),
     };
     return JSON.stringify(SavedProblem.parse(saved));
 }
