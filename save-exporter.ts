@@ -228,6 +228,13 @@ export interface BuildSaveOptions {
  */
 export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     const { edition, templateBytes, problem, solution, data } = options;
+    if (solution && solution.length !== problem.requirements.length) {
+        throw new Error("The NaviCust solution does not match the selected parts.");
+    }
+    if (solution && solution.length > 25) {
+        throw new Error("A save supports at most 25 installed NaviCust parts.");
+    }
+    const hasSolution = solution !== undefined && solution.length > 0;
 
     // Clone template buffer
     const buf = new Uint8Array(templateBytes.length);
@@ -237,15 +244,17 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     const gameId = edition.gameId;
     const isJp = edition.romType === "JP";
 
-    // BN6 US cartridges have 0x40 more bytes of shop data in 0x410c..0x50fc.
-    // Consequently, all offsets in that region are shifted forward by 0x40 in US vs JP.
+    // Templates contain native WRAM, unlike Tango's internal US-canonicalized buffer.
+    // A JP game header with US NC offsets makes Tango shift the NC data a second
+    // time: the color bar still works, but the part records and grid no longer agree.
+    // The game also reads its cached abilities from the native stats offset.
     const bn6GridOffset = isJp ? 0x410c : 0x414c;
     const bn6PartsOffset = isJp ? 0x4150 : 0x4190;
     const bn6NaviStatsOffset = isJp ? 0x478c : 0x47cc;
     const bn6AnticheatOffset = isJp ? 0x4ff8 : 0x5038;
 
     // 1. Process NaviCust Installation
-    if (solution && solution.length > 0 && solution.length === problem.requirements.length) {
+    if (hasSolution && solution) {
         const placements = solution;
         const requirements = problem.requirements;
 
@@ -444,7 +453,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     // If this is not updated to match the installed parts, MegaMan enters battle with 1000 HP,
     // Buster level 1, and no NaviCust abilities until the player visits the NC screen and clicks RUN.
     const partIds: number[] = [];
-    if (solution && solution.length > 0) {
+    if (hasSolution) {
         for (const req of problem.requirements) {
             const meta = data.partMetas[req.partIndex];
             if (meta && typeof meta.id === "number") {
@@ -482,15 +491,28 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn6NaviStatsOffset + 0x0b] = Math.max(0, Math.min(10, stats.megaFolder));
         buf[bn6NaviStatsOffset + 0x0c] = Math.max(0, Math.min(10, stats.gigaFolder));
 
-        // Ability flags
+        // RUN caches these flags in NaviStats; writing the grid alone does not
+        // activate them. Keep absent abilities clear instead of inheriting the template.
+        const abilityOffsets: [string, number][] = [
+            ["floatShoes", 0x1b], ["airShoes", 0x1c], ["underShirt", 0x1d],
+            ["sneakRun", 0x1e], ["bugStop", 0x1f], ["superArmor", 0x23],
+            ["humor", 0x25], ["millions", 0x33], ["slipRunner", 0x35],
+            ["autoHeal", 0x36], ["poem", 0x5f], ["chipShuffle", 0x60],
+        ];
+        for (const [ability, offset] of abilityOffsets) {
+            buf[bn6NaviStatsOffset + offset] = stats.abilities.includes(ability) ? 1 : 0;
+        }
         buf[bn6NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x1b] = stats.abilities.includes("floatShoes") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x1c] = stats.abilities.includes("airShoes") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x1d] = stats.abilities.includes("underShirt") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x23] = stats.abilities.includes("superArmor") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x25] = stats.abilities.includes("humor") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x35] = stats.abilities.includes("slipRunner") ? 1 : 0;
-        buf[bn6NaviStatsOffset + 0x5f] = stats.abilities.includes("poem") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x0d] = (stats.abilities.includes("rush") ? 1 : 0)
+            | (stats.abilities.includes("beat") ? 2 : 0)
+            | (stats.abilities.includes("tango") ? 4 : 0);
+        buf[bn6NaviStatsOffset + 0x26] = stats.abilities.includes("collect") ? 2 : 0;
+        const encounterAbilities: [string, number][] = [
+            ["oilBody", 2], ["fish", 4], ["battery", 8], ["jungle", 16],
+        ];
+        buf[bn6NaviStatsOffset + 0x27] = encounterAbilities.find(([ability]) =>
+            stats.abilities.includes(ability))?.[1] ?? 0x1f;
+        buf[bn6NaviStatsOffset + 0x61] = partIds.includes(15) ? 1 : 0;
 
         // HP stats
         view.setUint16(bn6NaviStatsOffset + 0x3e, stats.baseHp, true);
@@ -498,9 +520,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         view.setUint16(bn6NaviStatsOffset + 0x42, stats.finalHp, true);
 
         // Chip recovery
-        if (stats.modChipRecovery) {
-            view.setUint16(bn6NaviStatsOffset + 0x50, stats.modChipRecovery, true);
-        }
+        view.setUint16(bn6NaviStatsOffset + 0x50, stats.modChipRecovery ?? 0, true);
     } else if (gameId === "bn5") {
         const bn5NaviStatsOffset = 0x52e6;
         view.setUint16(bn5NaviStatsOffset + 0x00, stats.baseHp, true);

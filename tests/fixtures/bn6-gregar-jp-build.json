@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "id": "bn6-gregar-jp-regression",
+  "name": "AntiDmg + FstBarr + MagTect",
+  "gameId": "bn6",
+  "createdAt": "2026-10-24T16:56:38.247Z",
+  "updatedAt": "2026-10-24T16:56:38.247Z",
+  "baseHp": 1000,
+  "expansionMemories": 2,
+  "requirements": [
+    { "id": 10, "color": "green", "compress": true, "onCommandLine": true },
+    { "id": 7, "color": "blue", "compress": true, "onCommandLine": true }
+  ],
+  "spinnableColors": ["white", "yellow", "pink", "red", "blue", "green"],
+  "modCards": ["137-A015"],
+  "solution": {
+    "placements": [
+      { "reqIndex": 0, "x": -2, "y": -2, "rotation": 0, "compressed": true },
+      { "reqIndex": 1, "x": -1, "y": 0, "rotation": 0, "compressed": true }
+    ]
+  }
+}
