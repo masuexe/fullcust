@@ -1,4 +1,5 @@
 import type { Data } from "./game-data";
+import { computeBuildStats } from "./effects";
 import { getModCard } from "./modcards";
 import type { Problem } from "./problem";
 import { placeAll, type Solution } from "./solver";
@@ -234,6 +235,14 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
 
     const gameId = edition.gameId;
+    const isJp = edition.romType === "JP";
+
+    // BN6 US cartridges have 0x40 more bytes of shop data in 0x410c..0x50fc.
+    // Consequently, all offsets in that region are shifted forward by 0x40 in US vs JP.
+    const bn6GridOffset = isJp ? 0x410c : 0x414c;
+    const bn6PartsOffset = isJp ? 0x4150 : 0x4190;
+    const bn6NaviStatsOffset = isJp ? 0x478c : 0x47cc;
+    const bn6AnticheatOffset = isJp ? 0x4ff8 : 0x5038;
 
     // 1. Process NaviCust Installation
     if (solution && solution.length > 0 && solution.length === problem.requirements.length) {
@@ -245,7 +254,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
 
         // A. Materialized Grid
         if (gameId === "bn6") {
-            const gridOffset = 0x414c;
+            const gridOffset = bn6GridOffset;
             buf.fill(0, gridOffset, gridOffset + 0x44);
             for (let i = 0; i < 49 && i < occupancy.length; i++) {
                 const cell = occupancy[i];
@@ -275,7 +284,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         }
 
         // B. Parts Array
-        const partsOffset = gameId === "bn6" ? 0x4190
+        const partsOffset = gameId === "bn6" ? bn6PartsOffset
             : gameId === "bn5" ? 0x4d6c
             : gameId === "bn4" ? 0x4564
             : 0x1300; // bn3
@@ -368,8 +377,8 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     } else {
         // Clear NaviCust grid if no solution
         if (gameId === "bn6") {
-            buf.fill(0, 0x414c, 0x414c + 0x44);
-            buf.fill(0, 0x4190, 0x4190 + 25 * 8);
+            buf.fill(0, bn6GridOffset, bn6GridOffset + 0x44);
+            buf.fill(0, bn6PartsOffset, bn6PartsOffset + 25 * 8);
             buf.fill(0, 0x90, 0x90 + 6);
         } else if (gameId === "bn5") {
             buf.fill(0, 0x4d48, 0x4d48 + 0x24);
@@ -399,7 +408,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         // Anti-cheat table
         const mask = edition.variant === "gregar" ? 0x43 : 0x8d;
         for (let id = 0; id < 0x200; id++) {
-            buf[0x5038 + id] = buf[0x0670 + id] ^ mask;
+            buf[bn6AnticheatOffset + id] = buf[0x0670 + id] ^ mask;
         }
     } else if (gameId === "bn5") {
         buf[0x79a0] = modCards.length & 0xff;
@@ -430,7 +439,82 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         }
     }
 
-    // 3. Rebuild Checksum
+    // 3. Synchronize In-Game Navi Stats Block
+    // In GBA Battle Network games, battles read the cached in-memory/SRAM status block.
+    // If this is not updated to match the installed parts, MegaMan enters battle with 1000 HP,
+    // Buster level 1, and no NaviCust abilities until the player visits the NC screen and clicks RUN.
+    const partIds: number[] = [];
+    if (solution && solution.length > 0) {
+        for (const req of problem.requirements) {
+            const meta = data.partMetas[req.partIndex];
+            if (meta && typeof meta.id === "number") {
+                partIds.push(meta.id);
+            }
+        }
+    }
+    const stats = computeBuildStats(
+        gameId,
+        partIds,
+        problem.modCards,
+        problem.baseHp ?? 1000
+    );
+
+    if (gameId === "bn6") {
+        // Buster stats: 0-based in GBA memory (0..4 for level 1..5)
+        buf[bn6NaviStatsOffset + 0x01] = Math.max(0, Math.min(4, stats.attack - 1));
+        buf[bn6NaviStatsOffset + 0x02] = Math.max(0, Math.min(4, stats.rapid - 1));
+        buf[bn6NaviStatsOffset + 0x03] = Math.max(0, Math.min(4, stats.charge - 1));
+
+        // B+Left ability: Shield 0x3b, Reflect 0x8b, AntiDamage 0x3d
+        let bLeft = 0xff;
+        if (stats.modBLeft === "shield" || stats.abilities.includes("shield")) {
+            bLeft = 0x3b;
+        } else if (stats.modBLeft === "reflect" || stats.abilities.includes("reflect")) {
+            bLeft = 0x8b;
+        } else if (stats.modBLeft === "antiDamage" || stats.abilities.includes("antiDamage")) {
+            bLeft = 0x3d;
+        }
+        buf[bn6NaviStatsOffset + 0x07] = bLeft;
+
+        // Custom window: clamped 5..10
+        buf[bn6NaviStatsOffset + 0x0a] = Math.max(5, Math.min(10, stats.custom));
+        // Folder limits: mega 0..10, giga 0..10
+        buf[bn6NaviStatsOffset + 0x0b] = Math.max(0, Math.min(10, stats.megaFolder));
+        buf[bn6NaviStatsOffset + 0x0c] = Math.max(0, Math.min(10, stats.gigaFolder));
+
+        // Ability flags
+        buf[bn6NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x1b] = stats.abilities.includes("floatShoes") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x1c] = stats.abilities.includes("airShoes") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x1d] = stats.abilities.includes("underShirt") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x23] = stats.abilities.includes("superArmor") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x25] = stats.abilities.includes("humor") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x35] = stats.abilities.includes("slipRunner") ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x5f] = stats.abilities.includes("poem") ? 1 : 0;
+
+        // HP stats
+        view.setUint16(bn6NaviStatsOffset + 0x3e, stats.baseHp, true);
+        view.setUint16(bn6NaviStatsOffset + 0x40, stats.finalHp, true);
+        view.setUint16(bn6NaviStatsOffset + 0x42, stats.finalHp, true);
+
+        // Chip recovery
+        if (stats.modChipRecovery) {
+            view.setUint16(bn6NaviStatsOffset + 0x50, stats.modChipRecovery, true);
+        }
+    } else if (gameId === "bn5") {
+        const bn5NaviStatsOffset = 0x52e6;
+        view.setUint16(bn5NaviStatsOffset + 0x00, stats.baseHp, true);
+        view.setUint16(bn5NaviStatsOffset + 0x02, stats.finalHp, true);
+        view.setUint16(bn5NaviStatsOffset + 0x04, stats.finalHp, true);
+    } else if (gameId === "bn4") {
+        view.setUint16(0x21c8, stats.finalHp, true);
+        view.setUint16(0x21ca, stats.finalHp, true);
+    } else if (gameId === "bn3") {
+        const hpMemCount = Math.max(0, Math.min(45, Math.floor((stats.baseHp - 100) / 20)));
+        buf[0x1a20] = hpMemCount;
+    }
+
+    // 4. Rebuild Checksum
     if (gameId === "bn6") {
         const variantAdd = edition.variant === "gregar" ? 0x72 : 0x18;
         const cs = (computeRawChecksum(buf, 0x1c6c) + variantAdd) >>> 0;
@@ -449,7 +533,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         view.setUint32(0x1dd8, cs, true);
     }
 
-    // 4. Create 64KB SRAM Dump with Mask
+    // 5. Create 64KB SRAM Dump with Mask
     const sram = new Uint8Array(0x10000);
     const startOffset = gameId === "bn3" ? 0 : 0x0100;
     sram.set(buf, startOffset);

@@ -135,10 +135,16 @@ export function buildDataToProblem(
         return build.spinnableColors.includes(c);
     });
 
+    const maxExpansion = data.gridOptions.length - 1;
+    const expansionMemories = Math.min(
+        Math.max(0, build.expansionMemories ?? data.defaultExpansion),
+        maxExpansion
+    );
+
     const problem: Problem = {
         requirements,
         spinnableColors,
-        expansionMemories: build.expansionMemories ?? data.defaultExpansion,
+        expansionMemories,
         baseHp: build.baseHp ?? 1000,
         modCards: build.modCards ? [...build.modCards] : [],
         style: build.style,
@@ -260,7 +266,7 @@ export const COMMUNITY_PRESETS: FullCustBuild[] = [
         createdAt: "2026-10-24T00:00:00Z",
         updatedAt: "2026-10-24T00:00:00Z",
         baseHp: 1000,
-        expansionMemories: 5,
+        expansionMemories: 2,
         requirements: [
             { id: 1, color: "red", compress: true },    // SuprArmr
             { id: 2, color: "blue", compress: true },   // Custom1
@@ -290,7 +296,7 @@ export const COMMUNITY_PRESETS: FullCustBuild[] = [
         createdAt: "2026-10-24T00:00:00Z",
         updatedAt: "2026-10-24T00:00:00Z",
         baseHp: 1000,
-        expansionMemories: 5,
+        expansionMemories: 2,
         requirements: [
             { id: 27, color: "red", compress: true },    // BustPack
             { id: 28, color: "pink", compress: true },   // BodyPack
