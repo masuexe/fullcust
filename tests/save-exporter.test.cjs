@@ -147,6 +147,63 @@ test("BN6 caches every NC ability without retaining template flags", () => {
     }
 });
 
+test("BN5 caches every NC ability without retaining template flags", () => {
+    const data = getGameData("bn5");
+    const edition = SAVE_EDITIONS.find(e => e.id === "bn5_protoman_jp");
+    const template = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+    const cases = [
+        [1, 0x23, 1], [11, 0x1b, 1], [12, 0x1c, 1], [13, 0x1d, 1],
+        [14, 0x1e, 1], [15, 0x27, 2], [16, 0x27, 4], [17, 0x27, 8], [18, 0x27, 16],
+        [19, 0x26, 2], [20, 0x33, 1], [21, 0x25, 1], [22, 0x5f, 1], [23, 0x35, 1],
+        [24, 0x36, 1], [28, 0x1f, 1], [29, 0x60, 1], [30, 0x0d, 1], [31, 0x0d, 2], [32, 0x0d, 4],
+    ];
+    for (const [id, offset, expected] of cases) {
+        const problem = emptyProblem(data);
+        problem.requirements = [{ partIndex: data.partMetas.findIndex(p => p.id === id),
+            constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }];
+        const solution = solve(data.parts, problem.requirements, data.gridSettings, problem.spinnableColors).next().value;
+        assert.ok(solution, `Part ${id} must have a real placement`);
+        const templateBytes = Uint8Array.from(template);
+        templateBytes[0x52a8 + offset] = 0xff;
+        const sram = buildGbaSave({ edition, templateBytes, problem, solution, data });
+        const wramSlice = sram.subarray(0x0100, 0x0100 + templateBytes.length);
+        applySaveMask(wramSlice, 0x1a34);
+        assert.equal(wramSlice[0x52a8 + offset], expected, `BN5 Part ${id} must activate its cached ability`);
+        const clearedSram = buildGbaSave({ edition, templateBytes, problem, data });
+        const clearedWram = clearedSram.subarray(0x0100, 0x0100 + templateBytes.length);
+        applySaveMask(clearedWram, 0x1a34);
+        assert.equal(clearedWram[0x52a8 + offset], offset === 0x27 ? 0x1f : 0, `BN5 absent part ${id} must clear its cached ability`);
+    }
+});
+
+test("BN4 caches every NC ability without retaining template flags", () => {
+    const data = getGameData("bn4");
+    const edition = SAVE_EDITIONS.find(e => e.id === "bn4_redsun_jp");
+    const template = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+    const cases = [
+        [1, 0x01, 1], [11, 0x02, 1], [12, 0x03, 1], [13, 0x04, 1],
+        [14, 0x16, 1], [15, 0x17, 2], [16, 0x17, 3], [17, 0x17, 4], [18, 0x17, 5],
+        [19, 0x19, 1], [20, 0x1c, 1], [24, 0x1d, 1], [25, 0x1e, 1],
+    ];
+    for (const [id, offset, expected] of cases) {
+        const problem = emptyProblem(data);
+        problem.requirements = [{ partIndex: data.partMetas.findIndex(p => p.id === id),
+            constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }];
+        const solution = solve(data.parts, problem.requirements, data.gridSettings, problem.spinnableColors).next().value;
+        assert.ok(solution, `Part ${id} must have a real placement`);
+        const templateBytes = Uint8Array.from(template);
+        templateBytes[0x4ea0 + offset] = 0xff;
+        const sram = buildGbaSave({ edition, templateBytes, problem, solution, data });
+        const wramSlice = sram.subarray(0, templateBytes.length);
+        applySaveMask(wramSlice, 0x1554);
+        assert.equal(wramSlice[0x4ea0 + offset], expected, `BN4 Part ${id} must activate its cached ability`);
+        const clearedSram = buildGbaSave({ edition, templateBytes, problem, data });
+        const clearedWram = clearedSram.subarray(0, templateBytes.length);
+        applySaveMask(clearedWram, 0x1554);
+        assert.equal(clearedWram[0x4ea0 + offset], offset === 0x17 ? 0x1f : 0, `BN4 absent part ${id} must clear its cached ability`);
+    }
+});
+
 test("Save export rejects incomplete or overflowing NC solutions", () => {
     const data = getGameData("bn6");
     const edition = SAVE_EDITIONS.find(e => e.id === "bn6_gregar_jp");
@@ -267,88 +324,126 @@ test("BN6 US buildGbaSave places grid and stats at US offsets", () => {
     assert.ok(effHp >= 1000, "US effective_max_hp must be set");
 });
 
-test("BN5 buildGbaSave produces valid 64KB SRAM with clean unmasking and checksum", () => {
-    const edition = SAVE_EDITIONS.find(e => e.id === "bn5_protoman_us");
-    assert.ok(edition);
-    const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+test("BN5 buildGbaSave produces valid 64KB SRAM with clean unmasking, checksum, and ability cache", () => {
+    for (const editionId of ["bn5_protoman_us", "bn5_colonel_jp"]) {
+        const edition = SAVE_EDITIONS.find(e => e.id === editionId);
+        assert.ok(edition);
+        const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
 
-    const gameData = getGameData("bn5");
-    const preset = COMMUNITY_PRESETS.find(p => p.id === "preset_bn5_protoman_standard");
-    const { problem } = buildDataToProblem(preset, gameData);
+        const gameData = getGameData("bn5");
+        const preset = COMMUNITY_PRESETS.find(p => p.id === "preset_bn5_protoman_standard");
+        const { problem } = buildDataToProblem(preset, gameData);
 
-    const dummySolution = problem.requirements.map((_, i) => ({
-        loc: {
-            position: { x: (i % 3) - 1, y: Math.floor(i / 3) - 1 },
-            rotation: 0,
-        },
-        compressed: true,
-    }));
+        const dummySolution = problem.requirements.map((_, i) => ({
+            loc: {
+                position: { x: (i % 3) - 1, y: Math.floor(i / 3) - 1 },
+                rotation: 0,
+            },
+            compressed: true,
+        }));
 
-    const sram = buildGbaSave({
-        edition,
-        templateBytes,
-        problem,
-        solution: dummySolution,
-        data: gameData,
-    });
+        const sram = buildGbaSave({
+            edition,
+            templateBytes,
+            problem,
+            solution: dummySolution,
+            data: gameData,
+        });
 
-    assert.equal(sram.length, 0x10000);
+        assert.equal(sram.length, 0x10000);
 
-    const wramSlice = sram.subarray(0x0100, 0x0100 + templateBytes.length);
-    applySaveMask(wramSlice, 0x1a34);
+        const wramSlice = sram.subarray(0x0100, 0x0100 + templateBytes.length);
+        applySaveMask(wramSlice, 0x1a34);
 
-    const storedCs = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint32(0x29dc, true);
-    const computedCs = (computeRawChecksum(wramSlice, 0x29dc) + 0x72) >>> 0;
-    assert.equal(storedCs, computedCs, "Checksum must match computed");
+        const variantAdd = edition.variant === "protoman" ? 0x72 : 0x18;
+        const storedCs = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint32(0x29dc, true);
+        const computedCs = (computeRawChecksum(wramSlice, 0x29dc) + variantAdd) >>> 0;
+        assert.equal(storedCs, computedCs, "Checksum must match computed");
 
-    // Check Mod Cards count at 0x79a0
-    assert.equal(wramSlice[0x79a0], problem.modCards.length);
+        // Check Mod Cards count at 0x79a0
+        assert.equal(wramSlice[0x79a0], problem.modCards.length);
 
-    // Check BN5 effective max HP at 0x52e6 + 0x04
-    const effHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x52e6 + 0x04, true);
-    assert.ok(effHp >= 1000, "BN5 effective_max_hp must be at least 1000");
+        // Check Mod Card anticheat table at 0x60dc (512 bytes, source 0x1220)
+        const mask = edition.variant === "protoman" ? 0x43 : 0x8d;
+        for (let id = 0; id < 0x200; id++) {
+            assert.equal(wramSlice[0x60dc + id], wramSlice[0x1220 + id] ^ mask, "Mod card anticheat must be valid");
+        }
+
+        // Check BN5 NaviStats base at 0x52a8
+        // HP fields at +0x3e, +0x40, +0x42 (0x52e6, 0x52e8, 0x52ea)
+        const effHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x52a8 + 0x42, true);
+        assert.ok(effHp >= 1000, "BN5 effective_max_hp must be at least 1000");
+
+        // SuperArmor at 0x52a8 + 0x23
+        assert.equal(wramSlice[0x52a8 + 0x23], 1, "SuperArmor must be cached at 0x52a8 + 0x23");
+        // FloatShoes at 0x52a8 + 0x1b
+        assert.equal(wramSlice[0x52a8 + 0x1b], 1, "FloatShoes must be cached at 0x52a8 + 0x1b");
+        // Custom window at 0x52a8 + 0x0a
+        assert.ok(wramSlice[0x52a8 + 0x0a] >= 5, "Custom window must be at least 5");
+        // Folder limits at 0x52a8 + 0x0b, 0x0c
+        assert.ok(wramSlice[0x52a8 + 0x0b] >= 5, "Mega folder limit must be at least 5");
+        assert.ok(wramSlice[0x52a8 + 0x0c] >= 1, "Giga folder limit must be at least 1");
+    }
 });
 
 test("BN4 buildGbaSave produces valid 64KB SRAM with clean unmasking and checksum", () => {
-    const edition = SAVE_EDITIONS.find(e => e.id === "bn4_redsun_us");
-    assert.ok(edition);
-    const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+    for (const editionId of ["bn4_redsun_us", "bn4_bluemoon_jp"]) {
+        const edition = SAVE_EDITIONS.find(e => e.id === editionId);
+        assert.ok(edition);
+        const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
 
-    const gameData = getGameData("bn4");
-    const preset = COMMUNITY_PRESETS.find(p => p.id === "preset_bn4_redsun_custom");
-    const { problem } = buildDataToProblem(preset, gameData);
+        const gameData = getGameData("bn4");
+        const preset = COMMUNITY_PRESETS.find(p => p.id === "preset_bn4_redsun_custom");
+        const { problem } = buildDataToProblem(preset, gameData);
 
-    const dummySolution = problem.requirements.map((_, i) => ({
-        loc: {
-            position: { x: (i % 3) - 1, y: Math.floor(i / 3) - 1 },
-            rotation: 0,
-        },
-        compressed: true,
-    }));
+        const dummySolution = problem.requirements.map((_, i) => ({
+            loc: {
+                position: { x: (i % 3) - 1, y: Math.floor(i / 3) - 1 },
+                rotation: 0,
+            },
+            compressed: true,
+        }));
 
-    const sram = buildGbaSave({
-        edition,
-        templateBytes,
-        problem,
-        solution: dummySolution,
-        data: gameData,
-    });
+        const sram = buildGbaSave({
+            edition,
+            templateBytes,
+            problem,
+            solution: dummySolution,
+            data: gameData,
+        });
 
-    assert.equal(sram.length, 0x10000);
+        assert.equal(sram.length, 0x10000);
 
-    const wramSlice = sram.subarray(0x0100, 0x0100 + templateBytes.length);
-    applySaveMask(wramSlice, 0x1554);
+        // BN4 starts at offset 0 in SRAM
+        const wramSlice = sram.subarray(0, templateBytes.length);
+        applySaveMask(wramSlice, 0x1554);
 
-    const storedCs = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint32(0x21e8, true);
-    const computedCs = (computeRawChecksum(wramSlice, 0x21e8) + 0x16) >>> 0;
-    assert.equal(storedCs, computedCs, "Checksum must match computed");
+        const isJp = edition.romType === "JP";
+        const variantAdd = edition.variant === "redsun" ? 0x16 : 0x22;
+        const storedCs = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint32(0x21e8, true);
+        const computedCs = (computeRawChecksum(wramSlice, 0x21e8) + variantAdd - (isJp ? wramSlice[0] : 0)) >>> 0;
+        assert.equal(storedCs, computedCs, "Checksum must match computed");
 
-    // Check BN4 patch card slots at 0x464c
-    assert.notEqual(wramSlice[0x464c], 0xff, "Slot 0A should be equipped");
+        // Check BN4 patch card slots at 0x464c
+        assert.notEqual(wramSlice[0x464c], 0xff, "Slot 0A should be equipped");
 
-    // Check BN4 effective max HP at 0x21ca
-    const effHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x21ca, true);
-    assert.ok(effHp >= 1000, "BN4 effective_max_hp at 0x21ca must be at least 1000");
+        // Check BN4 mod card anticheat table at 0x5d14 (256 bytes, source 0x03d0)
+        const mask = edition.variant === "redsun" ? 0x43 : 0x31;
+        for (let id = 0; id < 0x100; id++) {
+            assert.equal(wramSlice[0x5d14 + id], wramSlice[0x03d0 + id] ^ mask, "BN4 mod card anticheat must be valid");
+        }
+
+        // Check BN4 overworld effective max HP at 0x21ca
+        const effHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x21ca, true);
+        assert.ok(effHp >= 1000, "BN4 effective_max_hp at 0x21ca must be at least 1000");
+
+        // Check BN4 in-battle navi record at 0x4ea0
+        assert.equal(wramSlice[0x4ea0 + 0x01], 1, "SuperArmor must be cached at 0x4ea0 + 0x01");
+        assert.equal(wramSlice[0x4ea0 + 0x02], 1, "FloatShoes must be cached at 0x4ea0 + 0x02");
+        assert.ok(wramSlice[0x4ea0 + 0x12] >= 5, "Custom window must be at least 5");
+        const battleHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x4ea0 + 0x34, true);
+        assert.equal(battleHp, effHp, "In-battle HP must match overworld HP");
+    }
 });
 
 test("BN3 buildGbaSave produces valid 64KB SRAM with checksum", () => {

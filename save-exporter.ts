@@ -446,6 +446,11 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
                 }
             }
         }
+        // Anti-cheat table
+        const mask = edition.variant === "redsun" ? 0x43 : 0x31;
+        for (let id = 0; id < 0x100; id++) {
+            buf[0x5d14 + id] = buf[0x03d0 + id] ^ mask;
+        }
     }
 
     // 3. Synchronize In-Game Navi Stats Block
@@ -522,13 +527,130 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         // Chip recovery
         view.setUint16(bn6NaviStatsOffset + 0x50, stats.modChipRecovery ?? 0, true);
     } else if (gameId === "bn5") {
-        const bn5NaviStatsOffset = 0x52e6;
-        view.setUint16(bn5NaviStatsOffset + 0x00, stats.baseHp, true);
-        view.setUint16(bn5NaviStatsOffset + 0x02, stats.finalHp, true);
-        view.setUint16(bn5NaviStatsOffset + 0x04, stats.finalHp, true);
+        const bn5NaviStatsOffset = 0x52a8;
+
+        // Buster stats: 0-based in GBA memory (0..4 for level 1..5)
+        buf[bn5NaviStatsOffset + 0x01] = Math.max(0, Math.min(4, stats.attack - 1));
+        buf[bn5NaviStatsOffset + 0x02] = Math.max(0, Math.min(4, stats.rapid - 1));
+        buf[bn5NaviStatsOffset + 0x03] = Math.max(0, Math.min(4, stats.charge - 1));
+
+        // First barrier
+        buf[bn5NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+
+        // B+Left ability: Shield 0x3b, Reflect 0x8b, AntiDamage 0x3d, None 0xff
+        let bLeft = 0xff;
+        if (stats.modBLeft === "shield" || stats.abilities.includes("shield")) {
+            bLeft = 0x3b;
+        } else if (stats.modBLeft === "reflect" || stats.abilities.includes("reflect")) {
+            bLeft = 0x8b;
+        } else if (stats.modBLeft === "antiDamage" || stats.abilities.includes("antiDamage")) {
+            bLeft = 0x3d;
+        }
+        buf[bn5NaviStatsOffset + 0x07] = bLeft;
+
+        // Custom window: clamped 5..10
+        buf[bn5NaviStatsOffset + 0x0a] = Math.max(5, Math.min(10, stats.custom));
+        // Folder limits: mega 0..10, giga 0..10
+        buf[bn5NaviStatsOffset + 0x0b] = Math.max(0, Math.min(10, stats.megaFolder));
+        buf[bn5NaviStatsOffset + 0x0c] = Math.max(0, Math.min(10, stats.gigaFolder));
+
+        // Support navis
+        buf[bn5NaviStatsOffset + 0x0d] = (stats.abilities.includes("rush") ? 1 : 0)
+            | (stats.abilities.includes("beat") ? 2 : 0)
+            | (stats.abilities.includes("tango") ? 4 : 0);
+
+        // Ability flags
+        const bn5AbilityOffsets: [string[], number][] = [
+            [["floatShoes"], 0x1b],
+            [["airShoes"], 0x1c],
+            [["underShirt"], 0x1d],
+            [["sneakRun"], 0x1e],
+            [["bugStop"], 0x1f],
+            [["superArmor"], 0x23],
+            [["humor"], 0x25],
+            [["millions"], 0x33],
+            [["slipRunner", "autoRun"], 0x35],
+            [["autoHeal"], 0x36],
+            [["chivalry"], 0x5e],
+            [["poem"], 0x5f],
+            [["soulClean", "soulCleanse"], 0x60],
+        ];
+        for (const [abs, offset] of bn5AbilityOffsets) {
+            buf[bn5NaviStatsOffset + offset] = abs.some(a => stats.abilities.includes(a)) ? 1 : 0;
+        }
+        buf[bn5NaviStatsOffset + 0x26] = stats.abilities.includes("collect") ? 2 : 0;
+        const encounterAbilities: [string, number][] = [
+            ["oilBody", 2], ["fish", 4], ["battery", 8], ["jungle", 16],
+        ];
+        buf[bn5NaviStatsOffset + 0x27] = encounterAbilities.find(([ability]) =>
+            stats.abilities.includes(ability))?.[1] ?? 0x1f;
+
+        // HP stats (0x52a8 + 0x3e = 0x52e6 base max HP, 0x52e8 current HP, 0x52ea effective max HP)
+        view.setUint16(bn5NaviStatsOffset + 0x3e, stats.baseHp, true);
+        view.setUint16(bn5NaviStatsOffset + 0x40, stats.finalHp, true);
+        view.setUint16(bn5NaviStatsOffset + 0x42, stats.finalHp, true);
+        view.setUint16(bn5NaviStatsOffset + 0x44, 1000, true);
+
+        // Chip recovery
+        view.setUint16(bn5NaviStatsOffset + 0x50, stats.modChipRecovery ?? 0, true);
     } else if (gameId === "bn4") {
+        // Overworld HP (current HP at 0x21c8, effective max HP at 0x21ca)
         view.setUint16(0x21c8, stats.finalHp, true);
         view.setUint16(0x21ca, stats.finalHp, true);
+
+        // In-Battle Player Navi Record at 0x4ea0 (Slot 1)
+        const bn4NaviOffset = 0x4ea0;
+
+        // Abilities at +0x01..+0x04
+        buf[bn4NaviOffset + 0x01] = stats.abilities.includes("superArmor") ? 1 : 0;
+        buf[bn4NaviOffset + 0x02] = stats.abilities.includes("floatShoes") ? 1 : 0;
+        buf[bn4NaviOffset + 0x03] = stats.abilities.includes("airShoes") ? 1 : 0;
+        buf[bn4NaviOffset + 0x04] = stats.abilities.includes("underShirt") ? 1 : 0;
+
+        // Buster stats: 0-based in GBA memory (0..4 for level 1..5)
+        buf[bn4NaviOffset + 0x05] = Math.max(0, Math.min(4, stats.attack - 1));
+        buf[bn4NaviOffset + 0x06] = Math.max(0, Math.min(4, stats.rapid - 1));
+        buf[bn4NaviOffset + 0x07] = Math.max(0, Math.min(4, stats.charge - 1));
+
+        // B+Left ability: Shield 0x25, Reflect 0x26, AntiMagic 0x27, None 0xff
+        let bLeft = 0xff;
+        if (stats.modBLeft === "shield" || stats.abilities.includes("shield")) {
+            bLeft = 0x25;
+        } else if (stats.modBLeft === "reflect" || stats.abilities.includes("reflect")) {
+            bLeft = 0x26;
+        } else if (stats.modBLeft === "antiDamage" || stats.modBLeft === "antiMagic" ||
+                   stats.abilities.includes("antiDamage") || stats.abilities.includes("antiMagic")) {
+            bLeft = 0x27;
+        }
+        buf[bn4NaviOffset + 0x0c] = bLeft;
+
+        // Custom window: clamped 5..8
+        buf[bn4NaviOffset + 0x12] = Math.max(5, Math.min(8, stats.custom));
+        // Folder limits: mega 0..10, giga 0..10
+        buf[bn4NaviOffset + 0x13] = Math.max(0, Math.min(10, stats.megaFolder));
+        buf[bn4NaviOffset + 0x14] = Math.max(0, Math.min(10, stats.gigaFolder));
+
+        // Other abilities
+        buf[bn4NaviOffset + 0x16] = stats.abilities.includes("sneakRun") ? 1 : 0;
+
+        // Encounter element (oilBody: 2, fish: 3, battery: 4, jungle: 5, default: 0x1f)
+        const bn4EncounterAbilities: [string, number][] = [
+            ["oilBody", 2], ["fish", 3], ["battery", 4], ["jungle", 5],
+        ];
+        buf[bn4NaviOffset + 0x17] = bn4EncounterAbilities.find(([ability]) =>
+            stats.abilities.includes(ability))?.[1] ?? 0x1f;
+
+        buf[bn4NaviOffset + 0x19] = stats.abilities.includes("collect") ? 1 : 0;
+        buf[bn4NaviOffset + 0x1c] = stats.abilities.includes("humor") ? 1 : 0;
+        buf[bn4NaviOffset + 0x1d] = stats.abilities.includes("bugStop") ? 1 : 0;
+        buf[bn4NaviOffset + 0x1e] = (stats.abilities.includes("soulClean") || stats.abilities.includes("soulCleanse")) ? 1 : 0;
+        buf[bn4NaviOffset + 0x21] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+
+        // HPs in battle record
+        view.setUint16(bn4NaviOffset + 0x30, stats.baseHp, true);
+        view.setUint16(bn4NaviOffset + 0x32, stats.finalHp, true);
+        view.setUint16(bn4NaviOffset + 0x34, stats.finalHp, true);
+        view.setUint16(bn4NaviOffset + 0x36, stats.finalHp, true);
     } else if (gameId === "bn3") {
         const hpMemCount = Math.max(0, Math.min(45, Math.floor((stats.baseHp - 100) / 20)));
         buf[0x1a20] = hpMemCount;
@@ -545,7 +667,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         view.setUint32(0x29dc, cs, true);
     } else if (gameId === "bn4") {
         const variantAdd = edition.variant === "redsun" ? 0x16 : 0x22;
-        const cs = (computeRawChecksum(buf, 0x21e8) + variantAdd) >>> 0;
+        const cs = (computeRawChecksum(buf, 0x21e8) + variantAdd - (isJp ? buf[0] : 0)) >>> 0;
         view.setUint32(0x21e8, cs, true);
     } else if (gameId === "bn3") {
         const variantAdd = edition.variant === "white" ? 0x16 : 0x22;
@@ -555,7 +677,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
 
     // 5. Create 64KB SRAM Dump with Mask
     const sram = new Uint8Array(0x10000);
-    const startOffset = gameId === "bn3" ? 0 : 0x0100;
+    const startOffset = (gameId === "bn3" || gameId === "bn4") ? 0 : 0x0100;
     sram.set(buf, startOffset);
 
     if (gameId === "bn6") {
@@ -563,7 +685,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     } else if (gameId === "bn5") {
         applySaveMask(sram.subarray(0x0100, 0x0100 + buf.length), 0x1a34);
     } else if (gameId === "bn4") {
-        applySaveMask(sram.subarray(0x0100, 0x0100 + buf.length), 0x1554);
+        applySaveMask(sram.subarray(0, buf.length), 0x1554);
     }
     // BN3 has no masking and starts at offset 0
 
