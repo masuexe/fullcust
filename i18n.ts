@@ -501,6 +501,26 @@ export const translations = {
         ja: "改造カード修復",
         zh: "改造卡修复",
     },
+    baseHp: {
+        en: "Initial HP",
+        ja: "初期HP",
+        zh: "初始 HP",
+    },
+    finalHp: {
+        en: "Final HP",
+        ja: "最終HP",
+        zh: "最终 HP",
+    },
+    baseHpHelp: {
+        en: "Default 1000 (standard endgame/PvP). Used to compute final build HP.",
+        ja: "デフォルト1000（対戦・終盤基準）。最終HPの算出に使用されます。",
+        zh: "默认为 1000（标准终盘/对战基准）。用于计算 Build 的最终总 HP。",
+    },
+    resetBaseHp: {
+        en: "Reset to 1000 HP",
+        ja: "1000 HPにリセット",
+        zh: "重置为 1000 HP",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

@@ -96,14 +96,21 @@ test("computeBuildStats merges NaviCust parts with equipped Mod Cards", () => {
     // Mod Card: 137-A001 (Canodumb: Attack +1, HP -40)
     const stats = computeBuildStats("bn6", [35, 42], ["137-A001"]);
     assert.equal(stats.hp, 60); // 100 - 40
+    assert.equal(stats.finalHp, 1060); // 1000 + 100 - 40
     assert.equal(stats.attack, 3); // 1 (base) + 1 (NaviCust) + 1 (Canodumb)
     assert.equal(stats.modMbUsed, 10);
     assert.equal(stats.modCardCount, 1);
     assert.equal(stats.modBPwrAtk, "M-Cannon");
 
-    // KnightMan has 1 card bug
+    // KnightMan (+20% HP)
     const kmStats = computeBuildStats("bn6", [], ["137-A036"]);
     assert.equal(kmStats.modBugCount, 1);
+    assert.equal(kmStats.hpPercent, 20);
+    assert.equal(kmStats.finalHp, 1200); // 1000 * 1.20
+
+    // NC HP+500 (part 46) + KnightMan (+20% HP)
+    const comboHpStats = computeBuildStats("bn6", [46], ["137-A036"]);
+    assert.equal(comboHpStats.finalHp, 1800); // (1000 + 500) * 1.20
 });
 
 test("analyzeSolutionBugs accounts for Mod Card bugs and BugStop isolation in BN6", async () => {
@@ -154,6 +161,18 @@ test("Mod Cards serialize and round-trip via URL hash in problem.ts", async () =
     const restored = fromHashString(hashStr, data);
     assert.ok(restored);
     assert.deepEqual(restored.modCards, ["137-A036", "137-A031"]);
+    assert.equal(restored.baseHp, 1000);
+
+    // Custom baseHp roundtrip
+    const problemWithHp = {
+        ...emptyProblem(data),
+        baseHp: 500,
+    };
+    const hashWithHp = toHashString(problemWithHp, data);
+    const parsedWithHp = JSON.parse(hashWithHp);
+    assert.equal(parsedWithHp.hp, 500);
+    const restoredWithHp = fromHashString(hashWithHp, data);
+    assert.equal(restoredWithHp.baseHp, 500);
 });
 
 test("searchModCards searches abilities bidirectionally (granting vs removing) and multilingual", () => {

@@ -10,6 +10,7 @@ export interface Problem {
     style?: string;
     modTools?: boolean;
     modCards?: string[];
+    baseHp?: number;
 }
 
 const toggle = z.union([z.literal(-1), z.literal(0), z.literal(1)]);
@@ -36,15 +37,18 @@ const SavedProblem = z.object({
     x: nonnegativeInt,
     t: z.string().optional(), // Style type, for games with Style color rules.
     m: bit.optional(), // ModTools enabled.
-    c: z.array(z.string()).optional(), // BN6 Mod Cards
+    c: z.array(z.string()).optional(), // Mod Cards
+    hp: z.number().int().positive().optional(), // Initial Base HP (default 1000)
 });
 
 export function emptyProblem(data: Data): Problem {
+    const hasModCards = data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6";
     return {
         requirements: [],
         spinnableColors: data.colors.map(() => true),
         expansionMemories: data.defaultExpansion,
-        ...(data.gameId === "bn6" ? { modCards: [] } : {}),
+        baseHp: 1000,
+        ...(hasModCards ? { modCards: [] } : {}),
         ...(data.styleColorRules ? {
             style: data.styleColorRules.defaultStyle,
             modTools: false,
@@ -93,11 +97,13 @@ export function fromHashString(s: string, data: Data): Problem | null {
     if (data.styleColorRules && !data.styleColorRules.styles.some(option => option.id === style)) {
         throw new Error("Unknown Style.");
     }
+    const hasModCards = data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6";
     return {
         requirements,
         spinnableColors: data.colors.map(color => !!colors[color]),
         expansionMemories: saved.x,
-        ...(data.gameId === "bn6" ? {
+        baseHp: "hp" in saved && typeof saved.hp === "number" ? saved.hp : 1000,
+        ...(hasModCards ? {
             modCards: "c" in saved && Array.isArray(saved.c) ? saved.c : [],
         } : {}),
         ...(data.styleColorRules ? {
@@ -108,6 +114,7 @@ export function fromHashString(s: string, data: Data): Problem | null {
 }
 
 export function toHashString(problem: Problem, data: Data): string {
+    const hasModCards = data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6";
     const saved: z.infer<typeof SavedProblem> = {
         v: 2,
         g: data.gameId,
@@ -121,7 +128,8 @@ export function toHashString(problem: Problem, data: Data): string {
         s: Object.fromEntries(data.colors.map((color, i) => [color, problem.spinnableColors[i] ? 1 as const : 0 as const])),
         x: problem.expansionMemories,
         ...(data.styleColorRules ? { t: problem.style, m: problem.modTools ? 1 as const : 0 as const } : {}),
-        ...(data.gameId === "bn6" && problem.modCards && problem.modCards.length > 0 ? { c: problem.modCards } : {}),
+        ...(hasModCards && problem.modCards && problem.modCards.length > 0 ? { c: problem.modCards } : {}),
+        ...(problem.baseHp !== undefined && problem.baseHp !== 1000 ? { hp: problem.baseHp } : {}),
     };
     return JSON.stringify(SavedProblem.parse(saved));
 }

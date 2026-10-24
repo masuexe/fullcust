@@ -143,13 +143,16 @@ function BuildStatsView({
     problem: Problem;
 }) {
     const { lang } = useLang();
+    const baseHp = problem.baseHp ?? 1000;
     const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
-    const stats = computeBuildStats(data.gameId, partIds, problem.modCards);
+    const stats = computeBuildStats(data.gameId, partIds, problem.modCards, baseHp);
 
-    const hasAnyStats = stats.hp !== 0 || stats.hpPercent !== 0 ||
+    const hasAnyStats = problem.requirements.length > 0 ||
+        (problem.modCards !== undefined && problem.modCards.length > 0) ||
+        stats.hp !== 0 || stats.hpPercent !== 0 ||
         stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
         stats.custom > 5 || stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
-        stats.abilities.length > 0 || (stats.modMbUsed !== undefined && stats.modMbUsed > 0);
+        stats.abilities.length > 0;
     if (!hasAnyStats && problem.requirements.length === 0) return null;
 
     return (
@@ -166,12 +169,21 @@ function BuildStatsView({
             </div>
 
             <div className="d-flex flex-wrap gap-2 small align-items-center">
-                {stats.hp !== 0 || stats.hpPercent !== 0 ? (
-                    <span className={`badge ${stats.hp < 0 || stats.hpPercent < 0 ? "bg-danger" : "bg-success"} py-1 px-2`}>
-                        HP {stats.hp >= 0 ? "+" : ""}{stats.hp}
-                        {stats.hpPercent !== 0 ? ` (${stats.hpPercent >= 0 ? "+" : ""}${stats.hpPercent}%)` : ""}
-                    </span>
-                ) : null}
+                <span
+                    className={`badge ${stats.finalHp < stats.baseHp ? "bg-danger" : "bg-success"} py-1 px-2 fw-semibold`}
+                    title={lang === "zh"
+                        ? `初始 HP: ${stats.baseHp} (可在额外设置中修改) | 修正: ${stats.hp >= 0 ? "+" : ""}${stats.hp}${stats.hpPercent !== 0 ? ` (${stats.hpPercent >= 0 ? "+" : ""}${stats.hpPercent}%)` : ""}`
+                        : lang === "ja"
+                        ? `初期 HP: ${stats.baseHp}（拡張設定で変更可能） | 補正: ${stats.hp >= 0 ? "+" : ""}${stats.hp}${stats.hpPercent !== 0 ? ` (${stats.hpPercent >= 0 ? "+" : ""}${stats.hpPercent}%)` : ""}`
+                        : `Base HP: ${stats.baseHp} (configurable in Extra Settings) | Modifier: ${stats.hp >= 0 ? "+" : ""}${stats.hp}${stats.hpPercent !== 0 ? ` (${stats.hpPercent >= 0 ? "+" : ""}${stats.hpPercent}%)` : ""}`}
+                >
+                    ❤️ {t("finalHp", lang)}: {stats.finalHp}
+                    {stats.finalHp !== stats.baseHp ? (
+                        <span className="opacity-75 ms-1 fw-normal" style={{ fontSize: "0.85em" }}>
+                            ({stats.finalHp >= stats.baseHp ? "+" : ""}{stats.finalHp - stats.baseHp})
+                        </span>
+                    ) : null}
+                </span>
                 <span className={`badge ${stats.attackMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
                     {t("statAttack", lang)}: {stats.attack}{stats.attackMax ? " (MAX)" : ""}
                 </span>
@@ -472,8 +484,8 @@ function ModCardManager({
         const partIds = problem.requirements
             .map(r => data.partMetas[r.partIndex]?.id)
             .filter((id): id is number => id != null);
-        return computeBuildStats(data.gameId, partIds, problem.modCards).abilities;
-    }, [data, problem.requirements, problem.modCards, deck.activeAbilities]);
+        return computeBuildStats(data.gameId, partIds, problem.modCards, problem.baseHp ?? 1000).abilities;
+    }, [data, problem.requirements, problem.modCards, problem.baseHp, deck.activeAbilities]);
 
     const handleAddCard = (cid: string) => {
         if (!cid) return;
@@ -1317,6 +1329,54 @@ function PartSelector({
                                 </div>
                             </div>
 
+                            <div className="row mb-2">
+                                <label
+                                    htmlFor="base-hp"
+                                    className="col-sm-4 col-form-label"
+                                >
+                                    {t("baseHp", lang)}
+                                </label>
+                                <div className="col-sm-8">
+                                    <div className="input-group input-group-sm">
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            id="base-hp"
+                                            min="1"
+                                            max="9999"
+                                            step="20"
+                                            value={problem.baseHp ?? 1000}
+                                            onChange={(e) => {
+                                                const v = parseInt(e.target.value, 10);
+                                                onChange({
+                                                    ...problem,
+                                                    baseHp: isNaN(v) ? 1000 : Math.max(1, v),
+                                                });
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={() => onChange({ ...problem, baseHp: 1000 })}
+                                            title={t("resetBaseHp", lang)}
+                                        >
+                                            1000
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary"
+                                            onClick={() => onChange({ ...problem, baseHp: 100 })}
+                                            title="100 HP"
+                                        >
+                                            100
+                                        </button>
+                                    </div>
+                                    <div className="form-text small text-muted" style={{ fontSize: "0.75rem" }}>
+                                        {t("baseHpHelp", lang)}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="mb-2">
                                 {data.colors.map((color, i) => {
                                     if (i == 0) {
@@ -1802,44 +1862,62 @@ function Results({
             ) : null}
 
             <BuildStatsView data={data} problem={problem} />
-            <div
-                style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                        "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
-                    gap: "1.25rem",
-                }}
-            >
-                {solutions.length > 0 ? (
-                    solutions.map((solution, i) => {
-                        const cells = placeAll(
-                            data.parts,
-                            problem.requirements,
-                            solution as Solution,
-                            gs
-                        );
-                        const analysis = analyzeSolutionBugs(
-                            data.gameId,
-                            data.partMetas,
-                            problem.requirements,
-                            cells,
-                            gs,
-                            lang,
-                            problem.modCards
-                        );
+            {(() => {
+                const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
+                const buildStats = computeBuildStats(data.gameId, partIds, problem.modCards, problem.baseHp ?? 1000);
 
-                        return (
-                            <div
-                                className="card shadow-sm p-3 bg-body-tertiary"
-                                style={{ overflow: "hidden" }}
-                                key={i}
-                            >
-                                <div className="d-flex justify-content-between align-items-center mb-2">
-                                    <span className="fw-bold small text-muted text-uppercase">
-                                        {t("solution", lang)} #{i + 1}
-                                    </span>
-                                    <SolutionBugStatus analysis={analysis} lang={lang} />
-                                </div>
+                return (
+                    <div
+                        style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                                "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
+                            gap: "1.25rem",
+                        }}
+                    >
+                        {solutions.length > 0 ? (
+                            solutions.map((solution, i) => {
+                                const cells = placeAll(
+                                    data.parts,
+                                    problem.requirements,
+                                    solution as Solution,
+                                    gs
+                                );
+                                const analysis = analyzeSolutionBugs(
+                                    data.gameId,
+                                    data.partMetas,
+                                    problem.requirements,
+                                    cells,
+                                    gs,
+                                    lang,
+                                    problem.modCards
+                                );
+
+                                return (
+                                    <div
+                                        className="card shadow-sm p-3 bg-body-tertiary"
+                                        style={{ overflow: "hidden" }}
+                                        key={i}
+                                    >
+                                        <div className="d-flex justify-content-between align-items-center mb-2">
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="fw-bold small text-muted text-uppercase">
+                                                    {t("solution", lang)} #{i + 1}
+                                                </span>
+                                                <span
+                                                    className="badge bg-success-subtle text-success-emphasis border border-success-subtle py-1 px-2"
+                                                    style={{ fontSize: "0.75rem" }}
+                                                    title={lang === "zh"
+                                                        ? `初始 HP: ${buildStats.baseHp} | 最终 HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`
+                                                        : lang === "ja"
+                                                        ? `初期 HP: ${buildStats.baseHp} | 最終 HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`
+                                                        : `Base HP: ${buildStats.baseHp} | Final HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`}
+                                                >
+                                                    ❤️ HP: {buildStats.finalHp}
+                                                </span>
+                                            </div>
+                                            <SolutionBugStatus analysis={analysis} lang={lang} />
+                                        </div>
                                 <div style={{ display: "flex", justifyContent: "center" }}>
                                     <Navicust
                                         parts={data.parts}
@@ -1866,6 +1944,8 @@ function Results({
                 ) : null}
                 {done ? null : <NavicustPlaceholder ref={ref} gridSettings={gs} />}
             </div>
+                );
+            })()}
         </div>
     );
 }

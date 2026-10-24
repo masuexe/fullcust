@@ -18,6 +18,8 @@ export interface PartEffect {
 }
 
 export interface BuildStats {
+    baseHp: number;
+    finalHp: number;
     hp: number;
     hpPercent: number;
     attack: number;
@@ -198,7 +200,8 @@ export function getPartEffect(gameId: string, partId: number): PartEffect | unde
 export function computeBuildStats(
     gameId: string,
     partIds: number[],
-    modCardIds?: string[]
+    modCardIds?: string[],
+    baseHp: number = 1000
 ): BuildStats {
     let hp = 0;
     let attackBonus = 0;
@@ -239,6 +242,8 @@ export function computeBuildStats(
         }
     }
 
+    const ncHp = hp;
+    let runningHp = baseHp + ncHp;
     let hpPercent = 0;
     let modMbUsed: number | undefined;
     let modCardCount: number | undefined;
@@ -297,6 +302,20 @@ export function computeBuildStats(
         repairedBugs = deck.repairedBugs;
     }
 
+    if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
+        for (const cid of modCardIds) {
+            const card = getModCard(cid, gameId);
+            if (!card) continue;
+            if (card.stats.hp) {
+                runningHp += card.stats.hp;
+            }
+            if (card.stats.hpPercent) {
+                runningHp = Math.floor(runningHp * (1 + card.stats.hpPercent / 100));
+            }
+        }
+    }
+    const finalHp = Math.max(1, runningHp);
+
     const attack = Math.max(1, Math.min(5, baseAttack));
     const rapid = Math.max(1, Math.min(5, baseRapid));
     const charge = Math.max(1, Math.min(5, baseCharge));
@@ -305,6 +324,8 @@ export function computeBuildStats(
     const gigaFolder = Math.max(0, 1 + gigaFolderBonus);
 
     return {
+        baseHp,
+        finalHp,
         hp,
         hpPercent,
         attack,

@@ -31,6 +31,8 @@ test("BN6 stat calculation: HP, buster stats, and clamping", () => {
     // Empty build
     const emptyStats = computeBuildStats("bn6", []);
     assert.equal(emptyStats.hp, 0);
+    assert.equal(emptyStats.baseHp, 1000);
+    assert.equal(emptyStats.finalHp, 1000);
     assert.equal(emptyStats.attack, 1);
     assert.equal(emptyStats.rapid, 1);
     assert.equal(emptyStats.charge, 1);
@@ -42,6 +44,13 @@ test("BN6 stat calculation: HP, buster stats, and clamping", () => {
     // Stacking HP parts: HP+500 (46), HP+200 (43)
     const hpStats = computeBuildStats("bn6", [46, 43]);
     assert.equal(hpStats.hp, 700);
+    assert.equal(hpStats.baseHp, 1000);
+    assert.equal(hpStats.finalHp, 1700);
+
+    // Custom base HP (e.g. 500)
+    const customBaseHpStats = computeBuildStats("bn6", [46, 43], [], 500);
+    assert.equal(customBaseHpStats.baseHp, 500);
+    assert.equal(customBaseHpStats.finalHp, 1200);
 
     // Attack+1 (35) twice
     const atkStats = computeBuildStats("bn6", [35, 35]);
