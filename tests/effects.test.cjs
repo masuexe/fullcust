@@ -13,6 +13,11 @@ const {
     BUG_DEFINITIONS,
     CAUSE_DESCRIPTIONS,
     BN6_PART_BUG_TYPES,
+    BN5_PART_BUG_TYPES,
+    BN4_PART_BUG_TYPES,
+    BN3_PART_BUG_TYPES,
+    GAME_BUG_DEFINITIONS,
+    GAME_PART_BUG_TYPES,
 } = require("../effects.ts");
 
 test("BN6 has effects defined for all 46 unique program templates", () => {
@@ -171,4 +176,80 @@ test("analyzeSolutionBugs detects command line, color adjacency, and BugStop", (
     const bugStopAnalysis = analyzeSolutionBugs("bn6", partMetasWithBugStop, reqsWithBugStop, cellsWithBugStop, gridSettings, "zh");
     assert.equal(bugStopAnalysis.bugStopActive, true);
     assert.equal(bugStopAnalysis.hasBugs, true); // Still has bugs detected, but BugStop is active!
+});
+
+test("BN3, BN4, BN5 part bug mappings and definitions are game-specific", () => {
+    // BN3: 50 parts
+    for (let id = 1; id <= 50; id++) {
+        const type = BN3_PART_BUG_TYPES[id];
+        assert(type, `Missing BN3 bug type for ID: ${id}`);
+        assert(GAME_BUG_DEFINITIONS.bn3[type], `Missing BN3 bug def for ${type}`);
+    }
+
+    // BN4: 40 parts (IDs 1-28, 34-39, 41-46)
+    const bn4Ids = [...Array(28).keys()].map(i => i + 1)
+        .concat([34, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46]);
+    for (const id of bn4Ids) {
+        const type = BN4_PART_BUG_TYPES[id];
+        assert(type, `Missing BN4 bug type for ID: ${id}`);
+        assert(GAME_BUG_DEFINITIONS.bn4[type], `Missing BN4 bug def for ${type}`);
+    }
+
+    // BN5: 44 parts
+    const bn5Ids = [...Array(26).keys()].map(i => i + 1)
+        .concat([28, 29, 30, 31, 32, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47]);
+    for (const id of bn5Ids) {
+        const type = BN5_PART_BUG_TYPES[id];
+        assert(type, `Missing BN5 bug type for ID: ${id}`);
+        assert(GAME_BUG_DEFINITIONS.bn5[type], `Missing BN5 bug def for ${type}`);
+    }
+
+    // Verify key historical differences:
+    // SuperArmor:
+    // - In BN6: movement warp
+    assert.equal(BN6_PART_BUG_TYPES[1], "movement");
+    // - In BN5: movement warp
+    assert.equal(BN5_PART_BUG_TYPES[1], "movement");
+    // - In BN4: status bug (no movement warp!)
+    assert.equal(BN4_PART_BUG_TYPES[1], "status");
+    assert.equal(GAME_BUG_DEFINITIONS.bn4.status.title.zh, "状态异常与自动移动 BUG");
+    assert(GAME_BUG_DEFINITIONS.bn4.status.mechanics.zh.includes("无边界瞬移"));
+    // - In BN3: involuntary drift
+    assert.equal(BN3_PART_BUG_TYPES[1], "involuntaryMove");
+    assert.equal(GAME_BUG_DEFINITIONS.bn3.involuntaryMove.title.zh, "自动漂移与混乱 BUG");
+});
+
+test("analyzeSolutionBugs uses game-specific bug types and BugStop across all games", () => {
+    const gridSettings = { width: 7, height: 7, hasOob: false, commandLineRow: 3 };
+
+    // In BN4, misplacing SuperArmor (ID 1) triggers "status" bug (NOT "movement"!)
+    const bn4Metas = [{ id: 1, name: "SprArmr (red)", nameZh: "超级装甲（红色）", isSolid: true, color: 4 }];
+    const cellsOffLine = new Array(49).fill(null);
+    cellsOffLine[1 * 7 + 3] = 0; // row 1, not cmd line
+
+    const bn4Analysis = analyzeSolutionBugs("bn4", bn4Metas, [{ partIndex: 0 }], cellsOffLine, gridSettings, "zh");
+    assert.equal(bn4Analysis.bugs.length, 1);
+    assert.equal(bn4Analysis.bugs[0].bugType, "status");
+    assert.equal(bn4Analysis.bugs[0].bugTitle, "状态异常与自动移动 BUG");
+    assert(bn4Analysis.bugs[0].bugMechanics.includes("无边界瞬移"));
+
+    // In BN4, BugStop is ID 24
+    const bn4WithBugStop = [
+        ...bn4Metas,
+        { id: 24, name: "BugStop (white)", nameZh: "BUG停止器（白色）", isSolid: true, color: 1 },
+    ];
+    const cellsWithBn4BugStop = [...cellsOffLine];
+    cellsWithBn4BugStop[3 * 7 + 3] = 1; // row 3 cmd line
+    const bn4BugStopAnalysis = analyzeSolutionBugs("bn4", bn4WithBugStop, [{ partIndex: 0 }, { partIndex: 1 }], cellsWithBn4BugStop, gridSettings, "zh");
+    assert.equal(bn4BugStopAnalysis.bugStopActive, true);
+
+    // In BN3, BugStop is ID 44
+    const bn3Metas = [
+        { id: 1, name: "SprArmor (red)", nameZh: "超级装甲（红色）", isSolid: true, color: 4 },
+        { id: 44, name: "BugStop (white)", nameZh: "BUG停止器（白色）", isSolid: true, color: 1 },
+    ];
+    const bn3BugStopAnalysis = analyzeSolutionBugs("bn3", bn3Metas, [{ partIndex: 0 }, { partIndex: 1 }], cellsWithBn4BugStop, gridSettings, "zh");
+    assert.equal(bn3BugStopAnalysis.bugStopActive, true);
+    assert.equal(bn3BugStopAnalysis.bugs[0].bugType, "involuntaryMove");
+    assert.equal(bn3BugStopAnalysis.bugs[0].bugTitle, "自动漂移与混乱 BUG");
 });

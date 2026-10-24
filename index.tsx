@@ -249,13 +249,13 @@ function SolutionBugDetails({
                     {analysis.tooManyColors ? (
                         <div className="mb-2 pb-2 border-bottom">
                             <div className="fw-bold">
-                                🎨 {tBugTitle("colorStatus", lang)}
+                                🎨 {analysis.colorBugTitle || tBugTitle("colorStatus", lang)}
                             </div>
                             <div className="text-muted">
                                 {t("bugOrigin", lang)}: {tBugCause("tooManyColors", lang)} ({analysis.distinctColorCount}/4)
                             </div>
                             <div className="mt-1">
-                                {t("bugMechanics", lang)}: {tBugMechanics("colorStatus", lang)}
+                                {t("bugMechanics", lang)}: {analysis.colorBugMechanics || tBugMechanics("colorStatus", lang)}
                             </div>
                         </div>
                     ) : null}
@@ -263,13 +263,13 @@ function SolutionBugDetails({
                     {analysis.bugs.map((b, idx) => (
                         <div key={idx} className={idx < analysis.bugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
                             <div className="fw-bold">
-                                ⚙️ {tBugTitle(b.bugType, lang)}
+                                ⚙️ {b.bugTitle || tBugTitle(b.bugType, lang)}
                             </div>
                             <div className="text-muted">
                                 {t("bugOrigin", lang)}: <span className="fw-semibold">{b.partName}</span> ({b.causes.map(c => tBugCause(c, lang)).join(", ")})
                             </div>
                             <div className="mt-1">
-                                {t("bugMechanics", lang)}: {tBugMechanics(b.bugType, lang)}
+                                {t("bugMechanics", lang)}: {b.bugMechanics || tBugMechanics(b.bugType, lang)}
                             </div>
                         </div>
                     ))}
