@@ -2220,7 +2220,7 @@ function App() {
                     <footer className="mt-4 pt-3 pb-4 border-top text-center text-muted small">
                         <div className="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-1">
                             <a
-                                href="https://github.com/harp/fullcust"
+                                href="https://github.com/masuexe/fullcust"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-decoration-none text-muted"
