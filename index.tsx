@@ -25,7 +25,15 @@ import {
     problemFromHash,
     toHashString,
 } from "./problem";
-import { computeBuildStats, tAbility } from "./effects";
+import {
+    computeBuildStats,
+    tAbility,
+    analyzeSolutionBugs,
+    SolutionBugAnalysis,
+    tBugCause,
+    tBugTitle,
+    tBugMechanics,
+} from "./effects";
 
 const LangContext = React.createContext<{
     lang: Lang;
@@ -177,6 +185,93 @@ function BuildStatsView({
                         <span key={ability} className="badge bg-dark border border-secondary text-light py-1 px-2">
                             ✨ {tAbility(ability, lang)}
                         </span>
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
+function SolutionBugStatus({
+    analysis,
+    lang,
+}: {
+    analysis: SolutionBugAnalysis;
+    lang: Lang;
+}) {
+    const totalBugs = analysis.bugs.length + (analysis.tooManyColors ? 1 : 0);
+    if (!analysis.hasBugs) {
+        return <span className="badge bg-success px-2 py-1">✅ {t("noBugs", lang)}</span>;
+    }
+    if (analysis.bugStopActive) {
+        return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
+    }
+    return (
+        <span className="badge bg-secondary px-2 py-1">
+            ⚙️ {totalBugs} {t("bugsDetected", lang)}
+        </span>
+    );
+}
+
+function SolutionBugDetails({
+    analysis,
+    lang,
+}: {
+    analysis: SolutionBugAnalysis;
+    lang: Lang;
+}) {
+    const [open, setOpen] = React.useState(false);
+    if (!analysis.hasBugs) return null;
+
+    const totalBugs = analysis.bugs.length + (analysis.tooManyColors ? 1 : 0);
+
+    return (
+        <div className="mt-2 text-start">
+            <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary w-100 d-flex justify-content-between align-items-center py-1"
+                onClick={() => setOpen(prev => !prev)}
+            >
+                <span className="small">
+                    ⚙️ {totalBugs} {t("bugsDetected", lang)}
+                    {analysis.bugStopActive ? ` (${t("bugStopActive", lang)})` : ""}
+                </span>
+                <span className="small">{open ? "▲" : "▼"}</span>
+            </button>
+            {open ? (
+                <div className="p-2 border rounded mt-1 bg-body-tertiary small">
+                    {analysis.bugStopActive ? (
+                        <div className="alert alert-info py-1 px-2 mb-2 small">
+                            🛡️ {t("bugStopNeutralizedNotice", lang)}
+                        </div>
+                    ) : null}
+
+                    {analysis.tooManyColors ? (
+                        <div className="mb-2 pb-2 border-bottom">
+                            <div className="fw-bold">
+                                🎨 {tBugTitle("colorStatus", lang)}
+                            </div>
+                            <div className="text-muted">
+                                {t("bugOrigin", lang)}: {tBugCause("tooManyColors", lang)} ({analysis.distinctColorCount}/4)
+                            </div>
+                            <div className="mt-1">
+                                {t("bugMechanics", lang)}: {tBugMechanics("colorStatus", lang)}
+                            </div>
+                        </div>
+                    ) : null}
+
+                    {analysis.bugs.map((b, idx) => (
+                        <div key={idx} className={idx < analysis.bugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
+                            <div className="fw-bold">
+                                ⚙️ {tBugTitle(b.bugType, lang)}
+                            </div>
+                            <div className="text-muted">
+                                {t("bugOrigin", lang)}: <span className="fw-semibold">{b.partName}</span> ({b.causes.map(c => tBugCause(c, lang)).join(", ")})
+                            </div>
+                            <div className="mt-1">
+                                {t("bugMechanics", lang)}: {tBugMechanics(b.bugType, lang)}
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : null}
@@ -1079,22 +1174,43 @@ function Results({
                 }}
             >
                 {solutions.length > 0 ? (
-                    solutions.map((solution, i) => (
-                        <div style={{ textAlign: "center" }} key={i}>
-                            <Navicust
-                                parts={data.parts}
-                                colors={data.colors}
-                                requirements={problem.requirements}
-                                gridSettings={gs}
-                                cells={placeAll(
-                                    data.parts,
-                                    problem.requirements,
-                                    solution as Solution,
-                                    gs
-                                )}
-                            />
-                        </div>
-                    ))
+                    solutions.map((solution, i) => {
+                        const cells = placeAll(
+                            data.parts,
+                            problem.requirements,
+                            solution as Solution,
+                            gs
+                        );
+                        const analysis = analyzeSolutionBugs(
+                            data.gameId,
+                            data.partMetas,
+                            problem.requirements,
+                            cells,
+                            gs,
+                            lang
+                        );
+
+                        return (
+                            <div className="card shadow-sm p-3 bg-body-tertiary" key={i}>
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <span className="fw-bold small text-muted text-uppercase">
+                                        {t("solution", lang)} #{i + 1}
+                                    </span>
+                                    <SolutionBugStatus analysis={analysis} lang={lang} />
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "center" }}>
+                                    <Navicust
+                                        parts={data.parts}
+                                        colors={data.colors}
+                                        requirements={problem.requirements}
+                                        gridSettings={gs}
+                                        cells={cells}
+                                    />
+                                </div>
+                                <SolutionBugDetails analysis={analysis} lang={lang} />
+                            </div>
+                        );
+                    })
                 ) : done ? (
                     problem.requirements.length > 0 ? (
                         <div key="no-results" className="alert alert-danger">

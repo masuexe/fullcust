@@ -216,6 +216,41 @@ export const translations = {
         ja: "ギガ",
         zh: "GIGA",
     },
+    solution: {
+        en: "Solution",
+        ja: "配置案",
+        zh: "方案",
+    },
+    noBugs: {
+        en: "No Bugs",
+        ja: "バグなし",
+        zh: "无 Bug",
+    },
+    bugsDetected: {
+        en: "mechanics change(s)",
+        ja: "件の仕様変更（バグ）",
+        zh: "处 Bug 机制改变",
+    },
+    bugStopActive: {
+        en: "BugStop Active (Neutralized)",
+        ja: "バグストッパー有効（無効化済み）",
+        zh: "已由 BUG停止器 中和",
+    },
+    bugStopNeutralizedNotice: {
+        en: "BugStop is properly installed: all bugs listed below are neutralized in combat.",
+        ja: "バグストッパーが正常に配置されているため、以下のバグ効果はすべて戦闘中に無効化されます。",
+        zh: "已正常安装 BUG停止器，以下所有 Bug 机制在战斗中已被中和消除。",
+    },
+    bugOrigin: {
+        en: "Origin",
+        ja: "原因",
+        zh: "起因",
+    },
+    bugMechanics: {
+        en: "In-game Mechanics",
+        ja: "戦闘仕様・効果",
+        zh: "游戏内机制效果",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {
