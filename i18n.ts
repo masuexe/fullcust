@@ -181,6 +181,41 @@ export const translations = {
         ja: "ダークモードに切り替え",
         zh: "切换为深色模式",
     },
+    buildStats: {
+        en: "Equipped Stats & Abilities",
+        ja: "装備ステータス・能力",
+        zh: "当前配置属性与能力",
+    },
+    statAttack: {
+        en: "Attack",
+        ja: "アタック",
+        zh: "攻击",
+    },
+    statRapid: {
+        en: "Speed",
+        ja: "ラピッド",
+        zh: "连射",
+    },
+    statCharge: {
+        en: "Charge",
+        ja: "チャージ",
+        zh: "集气",
+    },
+    statCustom: {
+        en: "Custom",
+        ja: "カスタム",
+        zh: "芯片选择",
+    },
+    statMega: {
+        en: "Mega",
+        ja: "メガ",
+        zh: "MEGA",
+    },
+    statGiga: {
+        en: "Giga",
+        ja: "ギガ",
+        zh: "GIGA",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

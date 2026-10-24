@@ -25,6 +25,7 @@ import {
     problemFromHash,
     toHashString,
 } from "./problem";
+import { computeBuildStats, tAbility } from "./effects";
 
 const LangContext = React.createContext<{
     lang: Lang;
@@ -114,6 +115,71 @@ function ConstraintDropdown({
                 })}
             </select>
             <label>{title}</label>
+        </div>
+    );
+}
+
+function BuildStatsView({
+    data,
+    problem,
+}: {
+    data: Data;
+    problem: Problem;
+}) {
+    const { lang } = useLang();
+    if (problem.requirements.length === 0) return null;
+    const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
+    const stats = computeBuildStats(data.gameId, partIds);
+
+    const hasAnyStats = stats.hp > 0 || stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
+        stats.custom > 5 || stats.megaFolder > 5 || stats.gigaFolder > 1 || stats.abilities.length > 0;
+    if (!hasAnyStats) return null;
+
+    return (
+        <div className="card mb-3 p-2 bg-body-tertiary">
+            <div className="fw-semibold mb-2 small text-muted text-uppercase">
+                📊 {t("buildStats", lang)}
+            </div>
+            <div className="d-flex flex-wrap gap-2 small align-items-center">
+                {stats.hp > 0 ? (
+                    <span className="badge bg-success py-1 px-2">
+                        HP +{stats.hp}
+                    </span>
+                ) : null}
+                <span className={`badge ${stats.attackMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
+                    {t("statAttack", lang)}: {stats.attack}{stats.attackMax ? " (MAX)" : ""}
+                </span>
+                <span className={`badge ${stats.rapidMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
+                    {t("statRapid", lang)}: {stats.rapid}{stats.rapidMax ? " (MAX)" : ""}
+                </span>
+                <span className={`badge ${stats.chargeMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
+                    {t("statCharge", lang)}: {stats.charge}{stats.chargeMax ? " (MAX)" : ""}
+                </span>
+                {stats.custom > 5 ? (
+                    <span className="badge bg-info text-dark py-1 px-2">
+                        {t("statCustom", lang)}: {stats.custom}
+                    </span>
+                ) : null}
+                {stats.megaFolder > 5 ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        {t("statMega", lang)}: +{stats.megaFolder - 5}
+                    </span>
+                ) : null}
+                {stats.gigaFolder > 1 ? (
+                    <span className="badge bg-secondary py-1 px-2">
+                        {t("statGiga", lang)}: +{stats.gigaFolder - 1}
+                    </span>
+                ) : null}
+            </div>
+            {stats.abilities.length > 0 ? (
+                <div className="d-flex flex-wrap gap-1 mt-2">
+                    {stats.abilities.map(ability => (
+                        <span key={ability} className="badge bg-dark border border-secondary text-light py-1 px-2">
+                            ✨ {tAbility(ability, lang)}
+                        </span>
+                    ))}
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -606,6 +672,8 @@ function PartSelector({
                 </div>
             </div>
 
+            <BuildStatsView data={data} problem={problem} />
+
             <div className="row">
                 <div className="col d-flex justify-content-end">
                     <button
@@ -1002,6 +1070,7 @@ function Results({
                     </button>
                 </div>
             ) : null}
+            <BuildStatsView data={data} problem={problem} />
             <div
                 style={{
                     display: "grid",
