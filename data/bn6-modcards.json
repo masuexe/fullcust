@@ -1812,8 +1812,8 @@
     "id": "137-B006",
     "cardNo": 59,
     "name": "Twisty",
-    "nameZh": "帕拉拉& \t遥控雷鼓",
-    "nameJa": "パララ& \tリモコゴロー",
+    "nameZh": "帕拉拉& 遥控雷鼓",
+    "nameJa": "パララ& リモコゴロー",
     "mb": 9,
     "posRaw": [
       "ElecBody",
@@ -3426,9 +3426,9 @@
   {
     "id": "137-C003",
     "cardNo": 109,
-    "name": "SBatlr's \tCustom",
-    "nameZh": "魂斗士的改装\\n",
-    "nameJa": "ソウルバトラーの \tカスタマイズ",
+    "name": "SBatlr's Custom",
+    "nameZh": "魂斗士的改装",
+    "nameJa": "ソウルバトラーのカスタマイズ",
     "mb": 66,
     "posRaw": [
       "Attack +4",
@@ -3454,9 +3454,9 @@
   {
     "id": "137-C004",
     "cardNo": 110,
-    "name": "Mr.Fam's \tCustom",
-    "nameZh": "名人的超级改装\\n",
-    "nameJa": "名人のちょうぜつ \tカスタマイズ",
+    "name": "Mr.Fam's Custom",
+    "nameZh": "名人的超级改装",
+    "nameJa": "名人のちょうぜつ カスタマイズ",
     "mb": 69,
     "posRaw": [
       "Custom +3",

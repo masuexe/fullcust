@@ -40,6 +40,7 @@ import {
     getCardDisplayName,
     getModCard,
     ModCard,
+    searchModCards,
 } from "./modcards";
 
 const LangContext = React.createContext<{
@@ -385,10 +386,12 @@ function ModCardManager({
     problem,
     onChange,
     lang,
+    data,
 }: {
     problem: Problem;
     onChange: (problem: Problem) => void;
     lang: Lang;
+    data?: Data;
 }) {
     const cardIds = problem.modCards || [];
     const deck = computeDeckStats(cardIds);
@@ -396,23 +399,17 @@ function ModCardManager({
     const [searchQuery, setSearchQuery] = React.useState<string>("");
     const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
 
-    const filteredCards = React.useMemo(() => {
-        const q = searchQuery.trim().toLowerCase();
-        return BN6_MOD_CARDS.filter((c: ModCard) => {
-            if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 53)) return false;
-            if (categoryFilter === "part2" && (c.cardNo < 54 || c.cardNo > 106)) return false;
-            if (categoryFilter === "promo" && c.cardNo < 107) return false;
+    const searchResult = React.useMemo(() => {
+        return searchModCards(searchQuery, categoryFilter, lang);
+    }, [searchQuery, categoryFilter, lang]);
 
-            if (!q) return true;
-            const nameMatch = c.name.toLowerCase().includes(q) ||
-                c.nameZh.toLowerCase().includes(q) ||
-                c.nameJa.toLowerCase().includes(q) ||
-                c.id.toLowerCase().includes(q);
-            const posMatch = c.posRaw.some(p => p.toLowerCase().includes(q));
-            const negMatch = c.negRaw.some(n => n.toLowerCase().includes(q));
-            return nameMatch || posMatch || negMatch;
-        });
-    }, [searchQuery, categoryFilter]);
+    const activeBuildAbilities = React.useMemo(() => {
+        if (!data) return deck.activeAbilities;
+        const partIds = problem.requirements
+            .map(r => data.partMetas[r.partIndex]?.id)
+            .filter((id): id is number => id != null);
+        return computeBuildStats(data.gameId, partIds, problem.modCards).abilities;
+    }, [data, problem.requirements, problem.modCards, deck.activeAbilities]);
 
     const handleAddCard = (cid: string) => {
         if (!cid) return;
@@ -636,21 +633,92 @@ function ModCardManager({
                                 </div>
                             </div>
 
+                            {/* Quick filter chips */}
+                            <div className="d-flex flex-wrap gap-1 mb-2">
+                                {[
+                                    { label: t("quickFilterSuperArmor", lang), q: lang === "zh" ? "超级装甲" : lang === "ja" ? "スーパーアーマー" : "SuperArmor" },
+                                    { label: t("quickFilterAirShoes", lang), q: lang === "zh" ? "飞行鞋" : lang === "ja" ? "エアシューズ" : "AirShoes" },
+                                    { label: t("quickFilterFloatShoes", lang), q: lang === "zh" ? "浮空鞋" : lang === "ja" ? "フロートシューズ" : "FloatShoes" },
+                                    { label: t("quickFilterUnderShirt", lang), q: lang === "zh" ? "危机守护" : lang === "ja" ? "アンダーシャツ" : "UnderShirt" },
+                                ].map(chip => (
+                                    <button
+                                        key={chip.q}
+                                        type="button"
+                                        className={`btn btn-xs py-0 px-2 rounded-pill ${searchQuery === chip.q ? "btn-primary" : "btn-outline-secondary"}`}
+                                        style={{ fontSize: "0.72rem" }}
+                                        onClick={() => setSearchQuery(prev => prev === chip.q ? "" : chip.q)}
+                                    >
+                                        {chip.label}
+                                    </button>
+                                ))}
+                                {searchQuery ? (
+                                    <button
+                                        type="button"
+                                        className="btn btn-xs btn-link py-0 px-1 text-muted text-decoration-none"
+                                        style={{ fontSize: "0.72rem" }}
+                                        onClick={() => setSearchQuery("")}
+                                    >
+                                        ✕ {lang === "zh" ? "清除" : lang === "ja" ? "クリア" : "Clear"}
+                                    </button>
+                                ) : null}
+                            </div>
+
                             <div className="input-group input-group-sm">
                                 <select
                                     className="form-select form-select-sm"
                                     value={selectedCardToAdd}
                                     onChange={e => setSelectedCardToAdd(e.target.value)}
                                 >
-                                    <option value="">-- {t("addModCard", lang)} ({filteredCards.length}) --</option>
-                                    {filteredCards.map(c => {
-                                        const cName = getCardDisplayName(c, lang);
-                                        return (
-                                            <option key={c.id} value={c.id}>
-                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
-                                            </option>
-                                        );
-                                    })}
+                                    <option value="">-- {t("addModCard", lang)} ({searchResult.allCards.length}) --</option>
+                                    {searchResult.matchedAbility ? (
+                                        <>
+                                            {searchResult.grantingCards.length > 0 ? (
+                                                <optgroup label={`${t("grantAbilityGroup", lang)}: ${searchResult.matchedAbility.name} (${searchResult.grantingCards.length})`}>
+                                                    {searchResult.grantingCards.map(c => {
+                                                        const cName = getCardDisplayName(c, lang);
+                                                        return (
+                                                            <option key={c.id} value={c.id}>
+                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id}) 🟢 [ON]
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                            ) : null}
+                                            {searchResult.removingCards.length > 0 ? (
+                                                <optgroup label={`${t("removeAbilityGroup", lang)}: ${searchResult.matchedAbility.name} (${searchResult.removingCards.length})`}>
+                                                    {searchResult.removingCards.map(c => {
+                                                        const cName = getCardDisplayName(c, lang);
+                                                        return (
+                                                            <option key={c.id} value={c.id}>
+                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id}) 🔴 [OFF]
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                            ) : null}
+                                            {searchResult.otherCards.length > 0 ? (
+                                                <optgroup label={`${t("otherMatchingCards", lang)} (${searchResult.otherCards.length})`}>
+                                                    {searchResult.otherCards.map(c => {
+                                                        const cName = getCardDisplayName(c, lang);
+                                                        return (
+                                                            <option key={c.id} value={c.id}>
+                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                            ) : null}
+                                        </>
+                                    ) : (
+                                        searchResult.allCards.map(c => {
+                                            const cName = getCardDisplayName(c, lang);
+                                            return (
+                                                <option key={c.id} value={c.id}>
+                                                    [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
+                                                </option>
+                                            );
+                                        })
+                                    )}
                                 </select>
                                 <button
                                     type="button"
@@ -661,6 +729,34 @@ function ModCardManager({
                                     {t("addModCard", lang)}
                                 </button>
                             </div>
+
+                            {/* Card Details Preview and Overwrite Warnings */}
+                            {selectedCardToAdd ? (() => {
+                                const card = getModCard(selectedCardToAdd);
+                                if (!card) return null;
+                                const conflicts = (card.disabledAbilities || []).filter(a => activeBuildAbilities.includes(a));
+                                return (
+                                    <div className="mt-2 p-2 bg-body rounded border">
+                                        <div className="d-flex flex-wrap gap-1" style={{ fontSize: "0.75rem" }}>
+                                            {card.posRaw.map((p, pidx) => (
+                                                <span key={pidx} className="badge bg-success-subtle text-success-emphasis border border-success-subtle py-0 px-1">
+                                                    +{p}
+                                                </span>
+                                            ))}
+                                            {card.negRaw.map((n, nidx) => (
+                                                <span key={nidx} className="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle py-0 px-1">
+                                                    {n}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        {conflicts.length > 0 ? (
+                                            <div className="alert alert-warning py-1 px-2 mt-2 mb-0 small" style={{ fontSize: "0.75rem" }}>
+                                                ⚠️ {t("removesEquippedAbilityWarning", lang)}: <strong>{conflicts.map(c => tAbility(c, lang)).join("、")}</strong>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                );
+                            })() : null}
                         </div>
                     </div>
                 </div>
@@ -1158,7 +1254,7 @@ function PartSelector({
             </div>
 
             {data.gameId === "bn6" ? (
-                <ModCardManager problem={problem} onChange={onChange} lang={lang} />
+                <ModCardManager problem={problem} onChange={onChange} lang={lang} data={data} />
             ) : null}
 
             <BuildStatsView data={data} problem={problem} />

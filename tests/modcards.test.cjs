@@ -1,7 +1,13 @@
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 
-const { BN6_MOD_CARDS, getModCard, computeDeckStats, getCardDisplayName } = require("../modcards.ts");
+const {
+    BN6_MOD_CARDS,
+    getModCard,
+    computeDeckStats,
+    getCardDisplayName,
+    searchModCards,
+} = require("../modcards.ts");
 const { computeBuildStats, analyzeSolutionBugs } = require("../effects.ts");
 const { emptyProblem, toHashString, fromHashString } = require("../problem.ts");
 const { loadGame, findGame } = require("../games.ts");
@@ -142,4 +148,62 @@ test("Mod Cards serialize and round-trip via URL hash in problem.ts", async () =
     const restored = fromHashString(hashStr, data);
     assert.ok(restored);
     assert.deepEqual(restored.modCards, ["137-A036", "137-A031"]);
+});
+
+test("searchModCards searches abilities bidirectionally (granting vs removing) and multilingual", () => {
+    // 1. Search 超级装甲 (Chinese)
+    const armorZh = searchModCards("超级装甲", "all", "zh");
+    assert.ok(armorZh.matchedAbility);
+    assert.equal(armorZh.matchedAbility.key, "superArmor");
+    assert.equal(armorZh.matchedAbility.name, "超级装甲");
+    assert.equal(armorZh.grantingCards.length, 10);
+    assert.equal(armorZh.removingCards.length, 3);
+
+    // Verify key granting cards: Heavy, KnightMan, StoneMan
+    assert.ok(armorZh.grantingCards.some(c => c.nameZh === "重哑铃"));
+    assert.ok(armorZh.grantingCards.some(c => c.nameZh === "骑士人"));
+    assert.ok(armorZh.grantingCards.some(c => c.nameZh === "石头人"));
+
+    // Verify key removing cards: Sunglasses, FreezeMan, Marina
+    assert.ok(armorZh.removingCards.some(c => c.nameZh === "墨镜"));
+    assert.ok(armorZh.removingCards.some(c => c.nameZh === "冰冻人"));
+    assert.ok(armorZh.removingCards.some(c => c.nameZh === "马力纳"));
+
+    // 2. Search 霸体 (synonym for SuperArmor)
+    const armorBati = searchModCards("霸体", "all", "zh");
+    assert.equal(armorBati.matchedAbility.key, "superArmor");
+    assert.equal(armorBati.grantingCards.length, 10);
+    assert.equal(armorBati.removingCards.length, 3);
+
+    // 3. Search SuperArmor (English)
+    const armorEn = searchModCards("SuperArmor", "all", "en");
+    assert.equal(armorEn.matchedAbility.key, "superArmor");
+    assert.equal(armorEn.matchedAbility.name, "SuperArmor");
+    assert.equal(armorEn.grantingCards.length, 10);
+    assert.equal(armorEn.removingCards.length, 3);
+
+    // 4. Search 飞行鞋 (AirShoes)
+    const airZh = searchModCards("飞行鞋", "all", "zh");
+    assert.equal(airZh.matchedAbility.key, "airShoes");
+    assert.ok(airZh.grantingCards.length > 0);
+    assert.ok(airZh.removingCards.length > 0);
+    // KillerEye (杀手植物) removes AirShoes
+    assert.ok(airZh.removingCards.some(c => c.nameZh === "杀手植物"));
+
+    // 5. Search 浮空鞋 (FloatShoes)
+    const floatZh = searchModCards("浮空鞋", "all", "zh");
+    assert.equal(floatZh.matchedAbility.key, "floatShoes");
+    assert.ok(floatZh.grantingCards.length > 0);
+    assert.ok(floatZh.removingCards.length > 0);
+    // BlizzardMan (暴风雪人) removes FloatShoes
+    assert.ok(floatZh.removingCards.some(c => c.nameZh === "暴风雪人"));
+
+    // 6. Element and gauge query matching
+    const waterCards = searchModCards("水属性", "all", "zh");
+    assert.ok(waterCards.allCards.length >= 10);
+    assert.ok(waterCards.allCards.every(c => c.body === "Aqua"));
+
+    const fastGauge = searchModCards("快速量表", "all", "zh");
+    assert.ok(fastGauge.allCards.length > 0);
+    assert.ok(fastGauge.allCards.every(c => c.gauge === "fast"));
 });

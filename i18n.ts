@@ -356,6 +356,46 @@ export const translations = {
         ja: "改造カードバグ",
         zh: "改造卡 BUG",
     },
+    grantAbilityGroup: {
+        en: "🟢 Grants / Provides (ON)",
+        ja: "🟢 アビリティ付与 (ON)",
+        zh: "🟢 提供 / 赋予能力 (ON)",
+    },
+    removeAbilityGroup: {
+        en: "🔴 Disables / Removes (OFF)",
+        ja: "🔴 アビリティ消失・解除 (OFF)",
+        zh: "🔴 移除 / 禁用能力 (OFF)",
+    },
+    otherMatchingCards: {
+        en: "Other Matching Cards",
+        ja: "その他の一致カード",
+        zh: "其它匹配卡片",
+    },
+    removesEquippedAbilityWarning: {
+        en: "Warning: Equipping this card will remove your active",
+        ja: "注意：このカードを装備すると現在有効なアビリティが消失します：",
+        zh: "注意：装备此卡将移除你当前生效的",
+    },
+    quickFilterSuperArmor: {
+        en: "SuperArmor",
+        ja: "Sアーマー",
+        zh: "超级装甲",
+    },
+    quickFilterAirShoes: {
+        en: "AirShoes",
+        ja: "エアシューズ",
+        zh: "飞行鞋",
+    },
+    quickFilterFloatShoes: {
+        en: "FloatShoes",
+        ja: "フロート",
+        zh: "浮空鞋",
+    },
+    quickFilterUnderShirt: {
+        en: "UnderShirt",
+        ja: "Uシャツ",
+        zh: "危机守护",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

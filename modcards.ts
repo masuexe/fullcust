@@ -248,3 +248,278 @@ export function computeDeckStats(cardIds: string[]): DeckStats {
         tripleBuster,
     };
 }
+
+export interface AbilitySearchDefinition {
+    key: string;
+    name: { en: string; ja: string; zh: string };
+    synonyms: string[];
+    grants: (card: ModCard) => boolean;
+    removes: (card: ModCard) => boolean;
+}
+
+export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
+    {
+        key: "superArmor",
+        name: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" },
+        synonyms: [
+            "superarmor",
+            "super armor",
+            "armor",
+            "超级装甲",
+            "超甲",
+            "霸体",
+            "无硬直",
+            "スーパーアーマー",
+            "アーマー",
+        ],
+        grants: c => (c.abilities || []).includes("superArmor") || (c.posRaw || []).some(p => p.toLowerCase().includes("superarmor")),
+        removes: c => (c.disabledAbilities || []).includes("superArmor") || (c.negRaw || []).some(n => n.toLowerCase().includes("superarmor")),
+    },
+    {
+        key: "floatShoes",
+        name: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" },
+        synonyms: [
+            "floatshoes",
+            "float shoes",
+            "float",
+            "漂浮鞋",
+            "浮空鞋",
+            "浮空",
+            "フロートシューズ",
+            "フロート",
+        ],
+        grants: c => (c.abilities || []).includes("floatShoes") || (c.posRaw || []).some(p => p.toLowerCase().includes("floatshoes")),
+        removes: c => (c.disabledAbilities || []).includes("floatShoes") || (c.negRaw || []).some(n => n.toLowerCase().includes("floatshoes")),
+    },
+    {
+        key: "airShoes",
+        name: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" },
+        synonyms: [
+            "airshoes",
+            "air shoes",
+            "飞行鞋",
+            "空中鞋",
+            "飞鞋",
+            "エアシューズ",
+        ],
+        grants: c => (c.abilities || []).includes("airShoes") || (c.posRaw || []).some(p => p.toLowerCase().includes("airshoes")),
+        removes: c => (c.disabledAbilities || []).includes("airShoes") || (c.negRaw || []).some(n => n.toLowerCase().includes("airshoes")),
+    },
+    {
+        key: "underShirt",
+        name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "危机守护(锁血)" },
+        synonyms: [
+            "undershirt",
+            "under shirt",
+            "紧身衣",
+            "锁血",
+            "危机守护",
+            "不死",
+            "アンダーシャツ",
+        ],
+        grants: c => (c.abilities || []).includes("underShirt") || (c.posRaw || []).some(p => p.toLowerCase().includes("undershirt")),
+        removes: c => (c.disabledAbilities || []).includes("underShirt") || (c.negRaw || []).some(n => n.toLowerCase().includes("undershirt")),
+    },
+    {
+        key: "statusGuard",
+        name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" },
+        synonyms: [
+            "statusguard",
+            "status guard",
+            "状态守护",
+            "异常防护",
+            "防状态",
+            "ステータスガード",
+        ],
+        grants: c => (c.abilities || []).includes("statusGuard") || (c.posRaw || []).some(p => p.toLowerCase().includes("statusguard")),
+        removes: c => (c.disabledAbilities || []).includes("statusGuard") || (c.negRaw || []).some(n => n.toLowerCase().includes("statusguard")),
+    },
+    {
+        key: "firstBarrier",
+        name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" },
+        synonyms: [
+            "firstbarrier",
+            "first barrier",
+            "barrier",
+            "初始防护罩",
+            "开局护盾",
+            "防护罩",
+            "ファーストバリア",
+            "バリア",
+            "泡泡膜",
+            "bubblewrap",
+        ],
+        grants: c =>
+            (c.abilities || []).includes("firstBarrier") ||
+            (c.abilities || []).includes("firstBarrier200") ||
+            !!c.firstBarrier ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("firstbarrier") || p.toLowerCase().includes("firstbubblewrap") || p.toLowerCase().includes("first lifeaura")),
+        removes: c => (c.disabledAbilities || []).includes("firstBarrier") || (c.negRaw || []).some(n => n.toLowerCase().includes("firstbarrier")),
+    },
+    {
+        key: "busterAddition",
+        name: { en: "Buster Addition", ja: "バスター追加", zh: "普通射击追加" },
+        synonyms: [
+            "buster addition",
+            "busteraddition",
+            "普通射击追加",
+            "射击追加",
+            "バスター追加",
+        ],
+        grants: c => !!c.busterAddition || (c.posRaw || []).some(p => p.toLowerCase().includes("buster addition")),
+        removes: c => !!c.disabledBusterAddition || (c.negRaw || []).some(n => n.toLowerCase().includes("buster addition")),
+    },
+    {
+        key: "chargeAddition",
+        name: { en: "Charge Addition", ja: "チャージ追加", zh: "蓄力追加" },
+        synonyms: [
+            "charge addition",
+            "chargeaddition",
+            "chargeshot addition",
+            "蓄力追加",
+            "集气追加",
+            "チャージ追加",
+        ],
+        grants: c => !!c.chargeAddition || (c.posRaw || []).some(p => p.toLowerCase().includes("charge addition") || p.toLowerCase().includes("chargeshot addition")),
+        removes: c => !!c.disabledChargeAddition || (c.negRaw || []).some(n => n.toLowerCase().includes("charge addition") || n.toLowerCase().includes("chargeshot addition")),
+    },
+    {
+        key: "bLeft",
+        name: { en: "B+Left", ja: "B+左", zh: "B+左" },
+        synonyms: ["b+left", "b+左", "b左"],
+        grants: c => !!c.bLeft || (c.posRaw || []).some(p => p.toLowerCase().includes("b+left")),
+        removes: c => !!c.disabledBLeft || (c.negRaw || []).some(n => n.toLowerCase().includes("b+left")),
+    },
+    {
+        key: "chipRecovery",
+        name: { en: "Chip Recovery", ja: "チップリカバリー", zh: "芯片回复" },
+        synonyms: ["chip recovery", "chiprecovery", "芯片回复", "チップリカバリー"],
+        grants: c => !!c.chipRecovery || (c.posRaw || []).some(p => p.toLowerCase().includes("chip recovery")),
+        removes: c => !!c.disabledChipRecovery || (c.negRaw || []).some(n => n.toLowerCase().includes("chip recovery")),
+    },
+];
+
+export interface ModCardSearchResult {
+    matchedAbility?: {
+        key: string;
+        name: string;
+    };
+    grantingCards: ModCard[];
+    removingCards: ModCard[];
+    otherCards: ModCard[];
+    allCards: ModCard[];
+}
+
+export function searchModCards(
+    query: string,
+    categoryFilter: string,
+    lang: Lang = "zh"
+): ModCardSearchResult {
+    const q = (query || "").trim().toLowerCase();
+
+    // 1. Filter by category
+    const baseCards = BN6_MOD_CARDS.filter(c => {
+        if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 53)) return false;
+        if (categoryFilter === "part2" && (c.cardNo < 54 || c.cardNo > 106)) return false;
+        if (categoryFilter === "promo" && c.cardNo < 107) return false;
+        return true;
+    });
+
+    if (!q) {
+        return {
+            allCards: baseCards,
+            grantingCards: [],
+            removingCards: [],
+            otherCards: baseCards,
+        };
+    }
+
+    // 2. Check if query matches a known ability definition
+    const matchedDef = ABILITY_SEARCH_DEFS.find(def =>
+        def.synonyms.some(s => {
+            const ls = s.toLowerCase();
+            return ls === q || q.includes(ls) || ls.includes(q);
+        })
+    );
+
+    if (matchedDef) {
+        const grantingCards: ModCard[] = [];
+        const removingCards: ModCard[] = [];
+        const otherCards: ModCard[] = [];
+
+        baseCards.forEach(c => {
+            const isGrant = matchedDef.grants(c);
+            const isRemove = matchedDef.removes(c);
+
+            if (isGrant) {
+                grantingCards.push(c);
+            } else if (isRemove) {
+                removingCards.push(c);
+            } else {
+                const nameMatch =
+                    (c.name || "").toLowerCase().includes(q) ||
+                    (c.nameZh || "").toLowerCase().includes(q) ||
+                    (c.nameJa || "").toLowerCase().includes(q) ||
+                    (c.id || "").toLowerCase().includes(q);
+                if (nameMatch) {
+                    otherCards.push(c);
+                }
+            }
+        });
+
+        const allCards = [...grantingCards, ...removingCards, ...otherCards];
+        return {
+            matchedAbility: {
+                key: matchedDef.key,
+                name: matchedDef.name[lang] || matchedDef.name.en,
+            },
+            grantingCards,
+            removingCards,
+            otherCards,
+            allCards,
+        };
+    }
+
+    // 3. General query matching
+    const allCards = baseCards.filter(c => {
+        const nameMatch =
+            (c.name || "").toLowerCase().includes(q) ||
+            (c.nameZh || "").toLowerCase().includes(q) ||
+            (c.nameJa || "").toLowerCase().includes(q) ||
+            (c.id || "").toLowerCase().includes(q);
+        const posMatch = (c.posRaw || []).some(p => p.toLowerCase().includes(q));
+        const negMatch = (c.negRaw || []).some(n => n.toLowerCase().includes(q));
+
+        // Elements
+        let elemMatch = false;
+        if (["水", "水属性", "aqua"].includes(q) && c.body === "Aqua") elemMatch = true;
+        if (["火", "火属性", "fire"].includes(q) && c.body === "Fire") elemMatch = true;
+        if (["木", "木属性", "wood"].includes(q) && c.body === "Wood") elemMatch = true;
+        if (["电", "电属性", "雷", "雷属性", "elec"].includes(q) && c.body === "Elec") elemMatch = true;
+
+        // Gauges
+        let gaugeMatch = false;
+        if (["快速量表", "快量表", "fastgauge"].includes(q) && c.gauge === "fast") gaugeMatch = true;
+        if (["慢速量表", "慢量表", "slowgauge", "重力量表"].includes(q) && c.gauge === "slow") gaugeMatch = true;
+
+        // Bugs & Repairs
+        const bugMatch = (c.bugs || []).some(
+            b =>
+                (b.name.zh && b.name.zh.toLowerCase().includes(q)) ||
+                (b.name.en && b.name.en.toLowerCase().includes(q)) ||
+                (b.name.ja && b.name.ja.toLowerCase().includes(q))
+        );
+        const repairMatch =
+            (c.repairs || []).some(r => r.toLowerCase().includes(q)) ||
+            (["修复", "修bug", "repair"].includes(q) && (c.repairs || []).length > 0);
+
+        return nameMatch || posMatch || negMatch || elemMatch || gaugeMatch || bugMatch || repairMatch;
+    });
+
+    return {
+        allCards,
+        grantingCards: [],
+        removingCards: [],
+        otherCards: allCards,
+    };
+}
