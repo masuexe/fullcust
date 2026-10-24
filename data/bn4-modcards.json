@@ -1,0 +1,3348 @@
+[
+  {
+    "id": "134-001",
+    "cardNo": 1,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+100)",
+    "nameZh": "强化HP (HP+100)",
+    "nameJa": "マックスHPを強化 (HP+100)",
+    "posRaw": [
+      "HP+100"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-002",
+    "cardNo": 2,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+100)",
+    "nameZh": "强化HP (HP+100)",
+    "nameJa": "マックスHPを強化 (HP+100)",
+    "posRaw": [
+      "HP+100"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-003",
+    "cardNo": 3,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+150)",
+    "nameZh": "强化HP (HP+150)",
+    "nameJa": "マックスHPを強化 (HP+150)",
+    "posRaw": [
+      "HP+150"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-004",
+    "cardNo": 4,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+150)",
+    "nameZh": "强化HP (HP+150)",
+    "nameJa": "マックスHPを強化 (HP+150)",
+    "posRaw": [
+      "HP+150"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-005",
+    "cardNo": 5,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+200)",
+    "nameZh": "强化HP (HP+200)",
+    "nameJa": "マックスHPを強化 (HP+200)",
+    "posRaw": [
+      "HP+200"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 200
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-006",
+    "cardNo": 6,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+200)",
+    "nameZh": "强化HP (HP+200)",
+    "nameJa": "マックスHPを強化 (HP+200)",
+    "posRaw": [
+      "HP+200"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 200
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-007",
+    "cardNo": 7,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+250)",
+    "nameZh": "强化HP (HP+250)",
+    "nameJa": "マックスHPを強化 (HP+250)",
+    "posRaw": [
+      "HP+250"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 250
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-008",
+    "cardNo": 8,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+250)",
+    "nameZh": "强化HP (HP+250)",
+    "nameJa": "マックスHPを強化 (HP+250)",
+    "posRaw": [
+      "HP+250"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 250
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-009",
+    "cardNo": 9,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+300)",
+    "nameZh": "强化HP (HP+300)",
+    "nameJa": "マックスHPを強化 (HP+300)",
+    "posRaw": [
+      "HP+300"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-010",
+    "cardNo": 10,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part1",
+    "name": "HP Boost (HP+300)",
+    "nameZh": "强化HP (HP+300)",
+    "nameJa": "マックスHPを強化 (HP+300)",
+    "posRaw": [
+      "HP+300"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-011",
+    "cardNo": 11,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part1",
+    "name": "FirstBarrier 100",
+    "nameZh": "初始防护罩100",
+    "nameJa": "ファーストバリア100",
+    "posRaw": [
+      "戦闘開始時にファーストバリア100を展開する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [
+      "firstBarrier"
+    ],
+    "disabledAbilities": [],
+    "firstBarrier": 100,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-012",
+    "cardNo": 12,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "Buster Mod: Blind",
+    "nameZh": "洛克炮改造: 失明",
+    "nameJa": "バスター改造: ブラインド",
+    "posRaw": [
+      "バスターにブラインド効果が付く"
+    ],
+    "negRaw": [
+      "ただし、常にエリアの手前に移動するようになる"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "Blind",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、常にエリアの手前に移動するようになる",
+        "type": "player",
+        "level": 2,
+        "name": {
+          "en": "Always Moves Forward Bug",
+          "ja": "前進バグ",
+          "zh": "前行 BUG"
+        },
+        "description": {
+          "en": "MegaMan constantly slides towards the front of the area automatically.",
+          "ja": "ロックマンが自動的にエリアの前方へ前進し続けます。",
+          "zh": "战斗中洛克人会自动持续向前走（移动至最前排）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-013",
+    "cardNo": 13,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "Buster Mod: Grass Panel",
+    "nameZh": "洛克炮改造: 草地面板",
+    "nameJa": "バスター改造: 草地面板",
+    "posRaw": [
+      "バスターにクサムラパネル効果が付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "Grass Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-014",
+    "cardNo": 14,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part1",
+    "name": "Metal Panel Walk",
+    "nameZh": "金属地面行走",
+    "nameJa": "メタルパネル歩行",
+    "posRaw": [
+      "歩いた所をメタルパネルにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "movePanel": "Metal Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-015",
+    "cardNo": 15,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part1",
+    "name": "Cracked Panel Walk",
+    "nameZh": "裂地行走",
+    "nameJa": "ヒビパネル歩行",
+    "posRaw": [
+      "歩いた所をヒビパネルにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "movePanel": "Cracked Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-016",
+    "cardNo": 16,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part1",
+    "name": "Hole Panel Walk",
+    "nameZh": "空洞地面行走",
+    "nameJa": "穴パネル歩行",
+    "posRaw": [
+      "歩いた所を穴にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "movePanel": "Hole Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-017",
+    "cardNo": 17,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "Custom +2",
+    "nameZh": "改装视窗+2",
+    "nameJa": "カスタム+2",
+    "posRaw": [
+      "カスタム+2"
+    ],
+    "negRaw": [
+      "ただし、カスタム画面でHPが減っていく"
+    ],
+    "stats": {
+      "custom": 2
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、カスタム画面でHPが減っていく",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-018",
+    "cardNo": 18,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part1",
+    "name": "MegaFolder +2",
+    "nameZh": "MEGA文件+2",
+    "nameJa": "メガフォルダ+2",
+    "posRaw": [
+      "メガフォルダ+2"
+    ],
+    "negRaw": [
+      "ただし、カスタム画面で選択できるチップの枚数が-1になる"
+    ],
+    "stats": {
+      "megaFolder": 2,
+      "custom": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-019",
+    "cardNo": 19,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part1",
+    "name": "Buster Attack 10",
+    "nameZh": "洛克炮攻击力10",
+    "nameJa": "バスター攻撃力10",
+    "posRaw": [
+      "バスターの攻撃力が10になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "attack": 10
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-020",
+    "cardNo": 20,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: Guts MachineGun",
+    "nameZh": "蓄力射击: 气力机关枪",
+    "nameJa": "チャージショット: ガッツマシンガン",
+    "posRaw": [
+      "チャージショットを「ガッツソウル」のマシンガンにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-021",
+    "cardNo": 21,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: Cannon",
+    "nameZh": "蓄力射击: 加农炮",
+    "nameJa": "チャージショット: キャノン",
+    "posRaw": [
+      "チャージショットを「キャノン」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Cannon",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-022",
+    "cardNo": 22,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: MiniBomb",
+    "nameZh": "蓄力射击: 小型炸弹",
+    "nameJa": "チャージショット: ミニボム",
+    "posRaw": [
+      "チャージショットを「ミニボム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "MiniBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-023",
+    "cardNo": 23,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: HeatShot",
+    "nameZh": "蓄力射击: 热量射击",
+    "nameJa": "チャージショット: ヒートショット",
+    "posRaw": [
+      "チャージショットを「ヒートショット」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "HeatShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-024",
+    "cardNo": 24,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: BubbleShot",
+    "nameZh": "蓄力射击: 水泡射击",
+    "nameJa": "チャージショット: バブルショット",
+    "posRaw": [
+      "チャージショットを「バブルショット」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "BubbleShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-025",
+    "cardNo": 25,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: ThunderBall",
+    "nameZh": "蓄力射击: 雷球1",
+    "nameJa": "チャージショット: サンダーボール",
+    "posRaw": [
+      "チャージショットを「サンダーボール」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "ThunderBall",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-026",
+    "cardNo": 26,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: Sword",
+    "nameZh": "蓄力射击: 剑",
+    "nameJa": "チャージショット: ソード",
+    "posRaw": [
+      "チャージショットを「ソード」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Sword",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-027",
+    "cardNo": 27,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part1",
+    "name": "ChargeShot: SpreadGun",
+    "nameZh": "蓄力射击: 扩散枪",
+    "nameJa": "チャージショット: スプレッドガン",
+    "posRaw": [
+      "チャージショットを「スプレッドガン」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "SpreadGun",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-028",
+    "cardNo": 28,
+    "slot": "0F",
+    "mb": 0,
+    "part": "part1",
+    "name": "PET Color: Blue",
+    "nameZh": "PET颜色: 蓝色",
+    "nameJa": "PETカラー: ブルー",
+    "posRaw": [
+      "PET画面のカラーをブルーにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-029",
+    "cardNo": 29,
+    "slot": "0F",
+    "mb": 0,
+    "part": "part1",
+    "name": "PET Color: Pink",
+    "nameZh": "PET颜色: 粉色",
+    "nameJa": "PETカラー: ピンク",
+    "posRaw": [
+      "PET画面のカラーをピンクにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-030",
+    "cardNo": 30,
+    "slot": "0F",
+    "mb": 0,
+    "part": "part1",
+    "name": "PET Color: Green",
+    "nameZh": "PET颜色: 绿色",
+    "nameJa": "PETカラー: グリーン",
+    "posRaw": [
+      "PET画面のカラーをグリーンにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-031",
+    "cardNo": 31,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+350)",
+    "nameZh": "强化HP (HP+350)",
+    "nameJa": "マックスHPを強化 (HP+350)",
+    "posRaw": [
+      "HP+350"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 350
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-032",
+    "cardNo": 32,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+350)",
+    "nameZh": "强化HP (HP+350)",
+    "nameJa": "マックスHPを強化 (HP+350)",
+    "posRaw": [
+      "HP+350"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 350
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-033",
+    "cardNo": 33,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+400)",
+    "nameZh": "强化HP (HP+400)",
+    "nameJa": "マックスHPを強化 (HP+400)",
+    "posRaw": [
+      "HP+400"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 400
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-034",
+    "cardNo": 34,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+400)",
+    "nameZh": "强化HP (HP+400)",
+    "nameJa": "マックスHPを強化 (HP+400)",
+    "posRaw": [
+      "HP+400"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 400
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-035",
+    "cardNo": 35,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+450)",
+    "nameZh": "强化HP (HP+450)",
+    "nameJa": "マックスHPを強化 (HP+450)",
+    "posRaw": [
+      "HP+450"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 450
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-036",
+    "cardNo": 36,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+450)",
+    "nameZh": "强化HP (HP+450)",
+    "nameJa": "マックスHPを強化 (HP+450)",
+    "posRaw": [
+      "HP+450"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 450
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-037",
+    "cardNo": 37,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+500)",
+    "nameZh": "强化HP (HP+500)",
+    "nameJa": "マックスHPを強化 (HP+500)",
+    "posRaw": [
+      "HP+500"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 500
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-038",
+    "cardNo": 38,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "HP Boost (HP+500)",
+    "nameZh": "强化HP (HP+500)",
+    "nameJa": "マックスHPを強化 (HP+500)",
+    "posRaw": [
+      "HP+500"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 500
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-039",
+    "cardNo": 39,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part2",
+    "name": "B+Left: AirShot",
+    "nameZh": "B+左: 空气枪",
+    "nameJa": "B+左: エアシュート",
+    "posRaw": [
+      "B+左で「エアシュート」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "AirShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-040",
+    "cardNo": 40,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part2",
+    "name": "B+Left: ????",
+    "nameZh": "B+左: ？？？？",
+    "nameJa": "B+左: ？？？？",
+    "posRaw": [
+      "B+左で「？？？？」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "????",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-041",
+    "cardNo": 41,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part2",
+    "name": "B+Left: BugBomb",
+    "nameZh": "B+左: BUG炸弹",
+    "nameJa": "B+左: バグボム",
+    "posRaw": [
+      "B+左で「バグボム」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "BugBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-042",
+    "cardNo": 42,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part2",
+    "name": "B+Left: CrackOut",
+    "nameZh": "B+左: 砸裂地面",
+    "nameJa": "B+左: クラックアウト",
+    "posRaw": [
+      "B+左で「クラックアウト」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "CrackOut",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-043",
+    "cardNo": 43,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "Buster Mod: CrackOut",
+    "nameZh": "洛克炮改造: 砸裂地面",
+    "nameJa": "バスター改造: 砸裂",
+    "posRaw": [
+      "バスターにクラックアウト効果が付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "CrackOut",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-044",
+    "cardNo": 44,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "Buster Mod: Poison",
+    "nameZh": "洛克炮改造: 毒素效果",
+    "nameJa": "バスター改造: 毒素",
+    "posRaw": [
+      "バスターに毒効果が付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "Poison",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-045",
+    "cardNo": 45,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "Default FullSynchro",
+    "nameZh": "开局完全同步",
+    "nameJa": "デフォルトフルシンクロ",
+    "posRaw": [
+      "戦闘開始時にフルシンクロ状態になる"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [
+      "fullSynchro"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-046",
+    "cardNo": 46,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "FirstBarrier 200",
+    "nameZh": "初始防护罩200",
+    "nameJa": "ファーストバリア200",
+    "posRaw": [
+      "戦闘開始時にファーストバリア200を展開する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [
+      "firstBarrier200"
+    ],
+    "disabledAbilities": [],
+    "firstBarrier": 200,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-047",
+    "cardNo": 47,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "B Button: MetGuard",
+    "nameZh": "B键: 安全帽护盾",
+    "nameJa": "Bボタン: メットガード",
+    "posRaw": [
+      "Bボタンで「メットガード」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "MetGuard",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-048",
+    "cardNo": 48,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "B Button: CrackOut",
+    "nameZh": "B键: 砸裂地面",
+    "nameJa": "Bボタン: クラックアウト",
+    "posRaw": [
+      "Bボタンで「クラックアウト」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "CrackOut",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-049",
+    "cardNo": 49,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part2",
+    "name": "Buster Attack 15",
+    "nameZh": "洛克炮攻击力15",
+    "nameJa": "バスター攻撃力15",
+    "posRaw": [
+      "バスターの攻撃力が15になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていき、混乱状態になる"
+    ],
+    "stats": {
+      "attack": 15
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていき、混乱状態になる",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      },
+      {
+        "raw": "ただし、戦闘中にHPが減っていき、混乱状態になる",
+        "type": "status",
+        "name": {
+          "en": "Confusion Bug",
+          "ja": "混乱バグ",
+          "zh": "混乱状态 BUG"
+        },
+        "description": {
+          "en": "In combat, MegaMan suffers from confusion disorder.",
+          "ja": "戦闘中に混乱状態になります。",
+          "zh": "战斗中陷入混乱异常状态，方向操控颠倒。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-050",
+    "cardNo": 50,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part2",
+    "name": "GigaFolder +1",
+    "nameZh": "GIGA文件+1",
+    "nameJa": "ギガフォルダ+1",
+    "posRaw": [
+      "ギガフォルダ+1"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "gigaFolder": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-051",
+    "cardNo": 51,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: CopyDamage",
+    "nameZh": "蓄力射击: 复制伤害",
+    "nameJa": "チャージショット: コピーダメージ",
+    "posRaw": [
+      "チャージショットを「コピーダメージ」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "CopyDamage",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-052",
+    "cardNo": 52,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: WideShot",
+    "nameZh": "蓄力射击: 广域射击1",
+    "nameJa": "チャージショット: ワイドショット",
+    "posRaw": [
+      "チャージショットを「ワイドショット」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-053",
+    "cardNo": 53,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: Blizzard",
+    "nameZh": "蓄力射击: 暴风雪",
+    "nameJa": "チャージショット: ブリザード",
+    "posRaw": [
+      "チャージショットを「ブリザード」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Blizzard",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-054",
+    "cardNo": 54,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: HeatBreath",
+    "nameZh": "蓄力射击: 烈焰吐息",
+    "nameJa": "チャージショット: ヒートブレス",
+    "posRaw": [
+      "チャージショットを「ヒートブレス」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "HeatBreath",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-055",
+    "cardNo": 55,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: ElecShock",
+    "nameZh": "蓄力射击: 电击",
+    "nameJa": "チャージショット: エレキショック",
+    "posRaw": [
+      "チャージショットを「エレキショック」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "ElecShock",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-056",
+    "cardNo": 56,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: WoodPowder",
+    "nameZh": "蓄力射击: 树木粉末",
+    "nameJa": "チャージショット: ウッディパウダー",
+    "posRaw": [
+      "チャージショットを「ウッディパウダー」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WoodPowder",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-057",
+    "cardNo": 57,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: PanelReturn",
+    "nameZh": "蓄力射击: 面板复原",
+    "nameJa": "チャージショット: パネルリターン",
+    "posRaw": [
+      "チャージショットを「パネルリターン」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "PanelReturn",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-058",
+    "cardNo": 58,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part2",
+    "name": "ChargeShot: WideSword",
+    "nameZh": "蓄力射击: 宽剑",
+    "nameJa": "チャージショット: ワイドソード",
+    "posRaw": [
+      "チャージショットを「ワイドソード」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideSword",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-059",
+    "cardNo": 59,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "MegaMan Color: Red",
+    "nameZh": "洛克人颜色: 红色",
+    "nameJa": "ロックマンカラー: レッド",
+    "posRaw": [
+      "ロックマンのカラーをレッドにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-060",
+    "cardNo": 60,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part2",
+    "name": "MegaMan Color: Yellow",
+    "nameZh": "洛克人颜色: 黄色",
+    "nameJa": "ロックマンカラー: イエロー",
+    "posRaw": [
+      "ロックマンのカラーをイエローにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-061",
+    "cardNo": 61,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+550)",
+    "nameZh": "强化HP (HP+550)",
+    "nameJa": "マックスHPを強化 (HP+550)",
+    "posRaw": [
+      "HP+550"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 550
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-062",
+    "cardNo": 62,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+550)",
+    "nameZh": "强化HP (HP+550)",
+    "nameJa": "マックスHPを強化 (HP+550)",
+    "posRaw": [
+      "HP+550"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 550
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-063",
+    "cardNo": 63,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+600)",
+    "nameZh": "强化HP (HP+600)",
+    "nameJa": "マックスHPを強化 (HP+600)",
+    "posRaw": [
+      "HP+600"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 600
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-064",
+    "cardNo": 64,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+600)",
+    "nameZh": "强化HP (HP+600)",
+    "nameJa": "マックスHPを強化 (HP+600)",
+    "posRaw": [
+      "HP+600"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 600
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-065",
+    "cardNo": 65,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+650)",
+    "nameZh": "强化HP (HP+650)",
+    "nameJa": "マックスHPを強化 (HP+650)",
+    "posRaw": [
+      "HP+650"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 650
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-066",
+    "cardNo": 66,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+650)",
+    "nameZh": "强化HP (HP+650)",
+    "nameJa": "マックスHPを強化 (HP+650)",
+    "posRaw": [
+      "HP+650"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "hp": 650
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-067",
+    "cardNo": 67,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part3",
+    "name": "HP Boost (HP+700)",
+    "nameZh": "强化HP (HP+700)",
+    "nameJa": "マックスHPを強化 (HP+700)",
+    "posRaw": [
+      "HP+700"
+    ],
+    "negRaw": [
+      "ただし、戦闘中に混乱状態になる"
+    ],
+    "stats": {
+      "hp": 700
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中に混乱状態になる",
+        "type": "status",
+        "name": {
+          "en": "Confusion Bug",
+          "ja": "混乱バグ",
+          "zh": "混乱状态 BUG"
+        },
+        "description": {
+          "en": "In combat, MegaMan suffers from confusion disorder.",
+          "ja": "戦闘中に混乱状態になります。",
+          "zh": "战斗中陷入混乱异常状态，方向操控颠倒。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-068",
+    "cardNo": 68,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: MegaEnergyBomb",
+    "nameZh": "B+左: 大型能量炸弹",
+    "nameJa": "B+左: メガエナジーボム",
+    "posRaw": [
+      "B+左で「メガエナジーボム」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "MegaEnergyBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-069",
+    "cardNo": 69,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: Recover10",
+    "nameZh": "B+左: 回复10",
+    "nameJa": "B+左: リカバリー10",
+    "posRaw": [
+      "B+左で「リカバリー10」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "Recover10",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-070",
+    "cardNo": 70,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: PanelReturn",
+    "nameZh": "B+左: 面板复原",
+    "nameJa": "B+左: パネルリターン",
+    "posRaw": [
+      "B+左で「パネルリターン」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "PanelReturn",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-071",
+    "cardNo": 71,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: NorthWind",
+    "nameZh": "B+左: 北风",
+    "nameJa": "B+左: スーパーキタカゼ",
+    "posRaw": [
+      "B+左で「スーパーキタカゼ」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "NorthWind",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-072",
+    "cardNo": 72,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: BambooLance",
+    "nameZh": "B+左: 竹枪",
+    "nameJa": "B+左: バンブーランス",
+    "posRaw": [
+      "B+左で「バンブーランス」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "BambooLance",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-073",
+    "cardNo": 73,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "B+Left: DoubleCrack",
+    "nameZh": "B+左: 双重砸裂",
+    "nameJa": "B+左: ダブルクラック",
+    "posRaw": [
+      "B+左で「ダブルクラック」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "DoubleCrack",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-074",
+    "cardNo": 74,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part3",
+    "name": "Triple Support",
+    "nameZh": "三重支援",
+    "nameJa": "トリプルサポーター",
+    "posRaw": [
+      "「トリプルサポーター2/2」と同時に読み込む事で発動する",
+      "「ラッシュサポート」等の3種類のサポートが付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [
+      "rush",
+      "beat",
+      "tango"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-075",
+    "cardNo": 75,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "Triple Support",
+    "nameZh": "三重支援",
+    "nameJa": "トリプルサポーター",
+    "posRaw": [
+      "「トリプルサポーター1/2」と同時に読み��む事で発動する",
+      "「ラッシュサポート」等の3種類のサポートが付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [
+      "rush",
+      "beat",
+      "tango"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-076",
+    "cardNo": 76,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "All Guard",
+    "nameZh": "全御防御",
+    "nameJa": "オールガード",
+    "posRaw": [
+      "「オールガード2/2」と同時に読み込む事で発動する",
+      "特殊系以外の攻撃を無効する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [
+      "allGuard"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-077",
+    "cardNo": 77,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part3",
+    "name": "All Guard",
+    "nameZh": "全御防御",
+    "nameJa": "オールガード",
+    "posRaw": [
+      "「オールガード1/2」と同時に読み込む事で発動する",
+      "特殊系以外の攻撃を無効する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [
+      "allGuard"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-078",
+    "cardNo": 78,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "First DreamAura",
+    "nameZh": "初始梦幻气场",
+    "nameJa": "ファーストドリームオーラ",
+    "posRaw": [
+      "戦闘開始時にドリームオーラを展開する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "firstBarrier": "DreamAura",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-079",
+    "cardNo": 79,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: DarkHole",
+    "nameZh": "蓄力射击: 暗黑洞",
+    "nameJa": "チャージショット: ダークホール",
+    "posRaw": [
+      "チャージショットを「ダークホール」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "DarkHole",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-080",
+    "cardNo": 80,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: WideShot2",
+    "nameZh": "蓄力射击: 广域射击2",
+    "nameJa": "チャージショット: ワイドショット2",
+    "posRaw": [
+      "チャージショットを「ワイドショット2」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideShot2",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-081",
+    "cardNo": 81,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: RabidRing",
+    "nameZh": "蓄力射击: 兔耳光环",
+    "nameJa": "チャージショット: ラビリング",
+    "posRaw": [
+      "チャージショットを「ラビリング」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "RabidRing",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-082",
+    "cardNo": 82,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: SandRing",
+    "nameZh": "蓄力射击: 沙之环",
+    "nameJa": "チャージショット: サンドリング",
+    "posRaw": [
+      "チャージショットを「サンドリング」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "SandRing",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-083",
+    "cardNo": 83,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: EnergyBomb",
+    "nameZh": "蓄力射击: 能量炸弹",
+    "nameJa": "チャージショット: エナジーボム",
+    "posRaw": [
+      "チャージショットを「エナジーボム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "EnergyBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-084",
+    "cardNo": 84,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: ThunderBall2",
+    "nameZh": "蓄力射击: 雷球2",
+    "nameJa": "チャージショット: サンダーボール2",
+    "posRaw": [
+      "チャージショットを「サンダーボール2」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "ThunderBall2",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-085",
+    "cardNo": 85,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: PanelRepair",
+    "nameZh": "蓄力射击: 地面修复",
+    "nameJa": "チャージショット: リペアー",
+    "posRaw": [
+      "チャージショットを「リペアー」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "PanelRepair",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-086",
+    "cardNo": 86,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: TripleCrack",
+    "nameZh": "蓄力射击: 三重砸裂",
+    "nameJa": "チャージショット: トリプルクラック",
+    "posRaw": [
+      "チャージショットを「トリプルクラック」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "TripleCrack",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-087",
+    "cardNo": 87,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ChargeShot: LongSword",
+    "nameZh": "蓄力射击: 长剑",
+    "nameJa": "チャージショット: ロングソード",
+    "posRaw": [
+      "チャージショットを「ロングソード」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "LongSword",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-088",
+    "cardNo": 88,
+    "slot": "0F",
+    "mb": 0,
+    "part": "part3",
+    "name": "PET Color: Black",
+    "nameZh": "PET颜色: 黑色",
+    "nameJa": "PETカラー: ブラック",
+    "posRaw": [
+      "PET画面のカラーをブラックにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-089",
+    "cardNo": 89,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "MegaMan Color: Gray",
+    "nameZh": "洛克人颜色: 灰色",
+    "nameJa": "ロックマンカラー: グレー",
+    "posRaw": [
+      "ロックマンのカラーをグレーにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-090",
+    "cardNo": 90,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part3",
+    "name": "MegaMan Color: Green",
+    "nameZh": "洛克人颜色: 绿色",
+    "nameJa": "ロックマンカラー: グリーン",
+    "posRaw": [
+      "ロックマンのカラーをグリーンにする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-G002",
+    "cardNo": 91,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "GutsSoul",
+    "nameZh": "气力灵魂",
+    "nameJa": "ガッツソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ガッツソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "GutsSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G003",
+    "cardNo": 92,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "WindSoul",
+    "nameZh": "旋风灵魂",
+    "nameJa": "ウインドソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ウインドソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "WindSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G005",
+    "cardNo": 93,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "FireSoul",
+    "nameZh": "火焰灵魂",
+    "nameJa": "ファイアソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ファイアソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "FireSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G007",
+    "cardNo": 94,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "ProtoSoul",
+    "nameZh": "布鲁斯灵魂",
+    "nameJa": "ブルースソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ブルースソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "ProtoSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G010",
+    "cardNo": 95,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "JunkSoul",
+    "nameZh": "废铁灵魂",
+    "nameJa": "ジャンクソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ジャンクソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "JunkSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G011",
+    "cardNo": 96,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part3",
+    "name": "AquaSoul",
+    "nameZh": "流水灵魂",
+    "nameJa": "アクアソウル",
+    "posRaw": [
+      "戦闘開始時から常に「アクアソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "AquaSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-091",
+    "cardNo": 97,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+700)",
+    "nameZh": "强化HP (HP+700)",
+    "nameJa": "マックスHPを強化 (HP+700)",
+    "posRaw": [
+      "HP+700"
+    ],
+    "negRaw": [
+      "ただし、歩いたパネルが毒パネルになる"
+    ],
+    "stats": {
+      "hp": 700
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、歩いたパネルが毒パネルになる",
+        "type": "panel",
+        "name": {
+          "en": "Poison Walk Bug",
+          "ja": "毒歩行バグ",
+          "zh": "移动生成毒沼 BUG"
+        },
+        "description": {
+          "en": "Panels stepped on immediately transform into poison swamp panels.",
+          "ja": "歩いた足元のパネルが毒パネルに変化します。",
+          "zh": "走过的面板立即转变为毒沼地面。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-092",
+    "cardNo": 98,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+750)",
+    "nameZh": "强化HP (HP+750)",
+    "nameJa": "マックスHPを強化 (HP+750)",
+    "posRaw": [
+      "HP+750"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 750
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-093",
+    "cardNo": 99,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+750)",
+    "nameZh": "强化HP (HP+750)",
+    "nameJa": "マックスHPを強化 (HP+750)",
+    "posRaw": [
+      "HP+750"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "hp": 750
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-094",
+    "cardNo": 100,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+800)",
+    "nameZh": "强化HP (HP+800)",
+    "nameJa": "マックスHPを強化 (HP+800)",
+    "posRaw": [
+      "HP+800"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 800
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-095",
+    "cardNo": 101,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+800)",
+    "nameZh": "强化HP (HP+800)",
+    "nameJa": "マックスHPを強化 (HP+800)",
+    "posRaw": [
+      "HP+800"
+    ],
+    "negRaw": [
+      "ただし、歩いたパネルが毒パネルになる"
+    ],
+    "stats": {
+      "hp": 800
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、歩いたパネルが毒パネルになる",
+        "type": "panel",
+        "name": {
+          "en": "Poison Walk Bug",
+          "ja": "毒歩行バグ",
+          "zh": "移动生成毒沼 BUG"
+        },
+        "description": {
+          "en": "Panels stepped on immediately transform into poison swamp panels.",
+          "ja": "歩いた足元のパネルが毒パネルに変化します。",
+          "zh": "走过的面板立即转变为毒沼地面。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-096",
+    "cardNo": 102,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+850)",
+    "nameZh": "强化HP (HP+850)",
+    "nameJa": "マックスHPを強化 (HP+850)",
+    "posRaw": [
+      "HP+850"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 850
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-097",
+    "cardNo": 103,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+850)",
+    "nameZh": "强化HP (HP+850)",
+    "nameJa": "マックスHPを強化 (HP+850)",
+    "posRaw": [
+      "HP+850"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "hp": 850
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-098",
+    "cardNo": 104,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+900)",
+    "nameZh": "强化HP (HP+900)",
+    "nameJa": "マックスHPを強化 (HP+900)",
+    "posRaw": [
+      "HP+900"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 900
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-099",
+    "cardNo": 105,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+900)",
+    "nameZh": "强化HP (HP+900)",
+    "nameJa": "マックスHPを強化 (HP+900)",
+    "posRaw": [
+      "HP+900"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "hp": 900
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-100",
+    "cardNo": 106,
+    "slot": "0B",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+950)",
+    "nameZh": "强化HP (HP+950)",
+    "nameJa": "マックスHPを強化 (HP+950)",
+    "posRaw": [
+      "HP+950"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {
+      "hp": 950
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-101",
+    "cardNo": 107,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "HP Boost (HP+1000)",
+    "nameZh": "强化HP (HP+1000)",
+    "nameJa": "マックスHPを強化 (HP+1000)",
+    "posRaw": [
+      "HP+1000"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 1000
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-102",
+    "cardNo": 108,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "Buster Mod: Ice Panel",
+    "nameZh": "洛克炮改造: 冰地面板",
+    "nameJa": "バスター改造: 冰面",
+    "posRaw": [
+      "バスターにアイスパネル効果が付く"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "Ice Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-103",
+    "cardNo": 109,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part4",
+    "name": "Charge FullCustom",
+    "nameZh": "蓄力完全客制化",
+    "nameJa": "チャージフルカスタム",
+    "posRaw": [
+      "「チャージフルカスタム 2/2」と同時に読み込む事で発動する",
+      "チャージショットを「フルカスタム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "FullCustom",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-104",
+    "cardNo": 110,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "Charge FullCustom",
+    "nameZh": "蓄力完全客制化",
+    "nameJa": "チャージフルカスタム",
+    "posRaw": [
+      "「チャージフルカスタム 2/2」と同時に読み込む事で発動する",
+      "チャージショットを「フルカスタム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "FullCustom",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-105",
+    "cardNo": 111,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part4",
+    "name": "Holy Panel Walk",
+    "nameZh": "圣灵地面行走",
+    "nameJa": "ホーリーパネル歩行",
+    "posRaw": [
+      "歩いた所をホーリーパネルにする"
+    ],
+    "negRaw": [
+      "ただし、カスタム画面と戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "movePanel": "Holy Panel",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、カスタム画面と戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      },
+      {
+        "raw": "ただし、カスタム画面と戦闘中にHPが減っていく",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-106",
+    "cardNo": 112,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "B Button: Reflect",
+    "nameZh": "B键: 反射盾",
+    "nameJa": "Bボタン: リフレクト",
+    "posRaw": [
+      "Bボタンで「リフレクト」を発動する"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "Reflect",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-107",
+    "cardNo": 113,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "B Button: Flower",
+    "nameZh": "B键: 鲜花",
+    "nameJa": "Bボタン: フラワー",
+    "posRaw": [
+      "Bボタンで「フラワー」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "Flower",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-108",
+    "cardNo": 114,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "B Button: WaterGun",
+    "nameZh": "B键: 水枪",
+    "nameJa": "Bボタン: 水鉄砲",
+    "posRaw": [
+      "Bボタンで「水鉄砲」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "WaterGun",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-109",
+    "cardNo": 115,
+    "slot": "0C",
+    "mb": 0,
+    "part": "part4",
+    "name": "MegaFolder +3",
+    "nameZh": "MEGA文件+3",
+    "nameJa": "メガフォルダ+3",
+    "posRaw": [
+      "メガフォルダ+3"
+    ],
+    "negRaw": [
+      "ただし、カスタム画面で選択できるチップの枚数が-1になる"
+    ],
+    "stats": {
+      "megaFolder": 3,
+      "custom": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-110",
+    "cardNo": 116,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part4",
+    "name": "Custom +3",
+    "nameZh": "改装视窗+3",
+    "nameJa": "カスタム+3",
+    "posRaw": [
+      "カスタム+3"
+    ],
+    "negRaw": [
+      "ただし、カスタム画面でHPが減っていく"
+    ],
+    "stats": {
+      "custom": 3
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、カスタム画面でHPが減っていく",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-111",
+    "cardNo": 117,
+    "slot": "0A",
+    "mb": 0,
+    "part": "part4",
+    "name": "GigaFolder +1",
+    "nameZh": "GIGA文件+1",
+    "nameJa": "ギガフォルダ+1",
+    "posRaw": [
+      "ギガフォルダ+1"
+    ],
+    "negRaw": [],
+    "stats": {
+      "gigaFolder": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-112",
+    "cardNo": 118,
+    "slot": "0D",
+    "mb": 0,
+    "part": "part4",
+    "name": "B+Left: TripleCrack",
+    "nameZh": "B+左: 三重砸裂",
+    "nameJa": "B+左: トリプルクラック",
+    "posRaw": [
+      "B+左で「トリプルクラック」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "TripleCrack",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-113",
+    "cardNo": 119,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: WideShot3",
+    "nameZh": "蓄力射击: 广域射击3",
+    "nameJa": "チャージショット: ワイドショット3",
+    "posRaw": [
+      "チャージショットを「ワイドショット3」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideShot3",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-114",
+    "cardNo": 120,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: ThunderBall3",
+    "nameZh": "蓄力射击: 雷球3",
+    "nameJa": "チャージショット: サンダーボール3",
+    "posRaw": [
+      "チャージショットを「サンダーボール3」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "ThunderBall3",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-115",
+    "cardNo": 121,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: WindRacket",
+    "nameZh": "蓄力射击: 风神球拍",
+    "nameJa": "チャージショット: フウジンラケット",
+    "posRaw": [
+      "チャージショットを「フウジンラケット」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WindRacket",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-116",
+    "cardNo": 122,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: MegaEnergyBomb",
+    "nameZh": "蓄力射击: 大型能量炸弹",
+    "nameJa": "チャージショット: メガエナジーボム",
+    "posRaw": [
+      "チャージショットを「メガエナジーボム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "MegaEnergyBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-117",
+    "cardNo": 123,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: CannonBall",
+    "nameZh": "蓄力射击: 炮丸",
+    "nameJa": "チャージショット: ホウガン",
+    "posRaw": [
+      "チャージショットを「ホウガン」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "CannonBall",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-118",
+    "cardNo": 124,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: BugBomb",
+    "nameZh": "蓄力射击: BUG炸弹",
+    "nameJa": "チャージショット: バグボム",
+    "posRaw": [
+      "チャージショットを「バグボム」にする"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "BugBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "134-119",
+    "cardNo": 125,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: WideBlade",
+    "nameZh": "蓄力射击: 宽刃剑",
+    "nameJa": "チャージショット: ワイドブレード",
+    "posRaw": [
+      "チャージショットを「ワイドブレード」にする"
+    ],
+    "negRaw": [
+      "ただし、常にエリアの手前に移動するようになる"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideBlade",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、常にエリアの手前に移動するようになる",
+        "type": "player",
+        "level": 2,
+        "name": {
+          "en": "Always Moves Forward Bug",
+          "ja": "前進バグ",
+          "zh": "前行 BUG"
+        },
+        "description": {
+          "en": "MegaMan constantly slides towards the front of the area automatically.",
+          "ja": "ロックマンが自動的にエリアの前方へ前進し続けます。",
+          "zh": "战斗中洛克人会自动持续向前走（移动至最前排）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-120",
+    "cardNo": 126,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ChargeShot: LongBlade",
+    "nameZh": "蓄力射击: 长刃剑",
+    "nameJa": "チャージショット: ロングブレード",
+    "posRaw": [
+      "チャージショットを「ロングブレード」にする"
+    ],
+    "negRaw": [
+      "ただし、常にエリアの手前に移動するようになる"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "LongBlade",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、常にエリアの手前に移動するようになる",
+        "type": "player",
+        "level": 2,
+        "name": {
+          "en": "Always Moves Forward Bug",
+          "ja": "前進バグ",
+          "zh": "前行 BUG"
+        },
+        "description": {
+          "en": "MegaMan constantly slides towards the front of the area automatically.",
+          "ja": "ロックマンが自動的にエリアの前方へ前進し続けます。",
+          "zh": "战斗中洛克人会自动持续向前走（移动至最前排）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G001",
+    "cardNo": 127,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "RollSoul",
+    "nameZh": "萝露灵魂",
+    "nameJa": "ロールソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ロールソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "RollSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G004",
+    "cardNo": 128,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "SearchSoul",
+    "nameZh": "搜寻灵魂",
+    "nameJa": "サーチソウル",
+    "posRaw": [
+      "戦闘開始時から常に「サーチソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "SearchSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G006",
+    "cardNo": 129,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "ThunderSoul",
+    "nameZh": "雷电灵魂",
+    "nameJa": "サンダーソウル",
+    "posRaw": [
+      "戦闘開始時から常に「サンダーソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "ThunderSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G008",
+    "cardNo": 130,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "NumberSoul",
+    "nameZh": "数字灵魂",
+    "nameJa": "ナンバーソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ナンバーソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "NumberSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G009",
+    "cardNo": 131,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "MetalSoul",
+    "nameZh": "金属灵魂",
+    "nameJa": "メタルソウル",
+    "posRaw": [
+      "戦闘開始時から常に「メタルソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "MetalSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-G012",
+    "cardNo": 132,
+    "slot": "0E",
+    "mb": 0,
+    "part": "part4",
+    "name": "WoodSoul",
+    "nameZh": "树木灵魂",
+    "nameJa": "ウッドソウル",
+    "posRaw": [
+      "戦闘開始時から常に「ウッドソウル」になる"
+    ],
+    "negRaw": [
+      "ただし、戦闘中にHPが減っていく"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "soul": "WoodSoul",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ただし、戦闘中にHPが減っていく",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "134-000",
+    "cardNo": 133,
+    "slot": "0A",
+    "mb": 0,
+    "part": "promo",
+    "name": "B Button: MiniBomb",
+    "nameZh": "B键: 小型炸弹",
+    "nameJa": "Bボタン: ミニボム",
+    "posRaw": [
+      "Bボタンで「ミニボム」を発動する"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "MiniBomb",
+    "repairs": [],
+    "bugs": []
+  }
+]

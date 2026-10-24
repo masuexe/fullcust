@@ -1,0 +1,3307 @@
+[
+  {
+    "id": "136-A001",
+    "cardNo": 1,
+    "name": "Mettaur",
+    "nameZh": "钢盔怪",
+    "nameJa": "メットール",
+    "mb": 7,
+    "posRaw": [
+      "HP+40",
+      "B+左でメットガード"
+    ],
+    "negRaw": [
+      "フロートシューズをOFF"
+    ],
+    "stats": {
+      "hp": 40
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "floatShoes"
+    ],
+    "bLeft": "MetGuard",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A002",
+    "cardNo": 2,
+    "name": "VolGear",
+    "nameZh": "火轮怪",
+    "nameJa": "ボルケルギア",
+    "mb": 12,
+    "posRaw": [
+      "HP+60",
+      "バスター空撃ちバグを修正",
+      "ファイアボディ",
+      "アタック+1"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 60,
+      "attack": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "repairs": [
+      "Buster Blank Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-A003",
+    "cardNo": 3,
+    "name": "Ghost",
+    "nameZh": "幽灵怪",
+    "nameJa": "ゴースラー",
+    "mb": 15,
+    "posRaw": [
+      "フロートシューズ",
+      "Bためうちでインビジブル"
+    ],
+    "negRaw": [
+      "HP-80"
+    ],
+    "stats": {
+      "hp": -80
+    },
+    "abilities": [
+      "floatShoes"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "Invisible",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A004",
+    "cardNo": 4,
+    "name": "Swordy",
+    "nameZh": "剑士怪",
+    "nameJa": "スウォーデン",
+    "mb": 10,
+    "posRaw": [
+      "Bためうちでロングソード"
+    ],
+    "negRaw": [
+      "アタック-1",
+      "チャージ-1",
+      "ラピッド-1"
+    ],
+    "stats": {
+      "attack": -1,
+      "charge": -1,
+      "rapid": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "LongSword",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A005",
+    "cardNo": 5,
+    "name": "Fishy",
+    "nameZh": "飞鱼怪",
+    "nameJa": "キオルシン",
+    "mb": 18,
+    "posRaw": [
+      "フロートシューズ",
+      "エアシューズ"
+    ],
+    "negRaw": [
+      "端まで移動バグ"
+    ],
+    "stats": {},
+    "abilities": [
+      "floatShoes",
+      "airShoes"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "端まで移動バグ",
+        "type": "movement",
+        "name": {
+          "en": "Movement Warp Bug",
+          "ja": "移動バグ",
+          "zh": "边界移动 BUG"
+        },
+        "description": {
+          "en": "Moving in combat immediately warps MegaMan to the furthest edge of that direction.",
+          "ja": "移動時にその方向の最端マスへワープ移動します。",
+          "zh": "战斗中移动时直接瞬移至该移动方向的最边缘格子。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A006",
+    "cardNo": 6,
+    "name": "Piranha",
+    "nameZh": "食人鱼",
+    "nameJa": "アーバルボーイ",
+    "mb": 10,
+    "posRaw": [
+      "アイムフィッシュ",
+      "アクアボディ",
+      "ラピッド+5",
+      "HP+100"
+    ],
+    "negRaw": [
+      "タンゴサポートをOFF"
+    ],
+    "stats": {
+      "rapid": 5,
+      "hp": 100
+    },
+    "abilities": [
+      "fish"
+    ],
+    "disabledAbilities": [
+      "tango"
+    ],
+    "body": "Aqua",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A007",
+    "cardNo": 7,
+    "name": "Ratty",
+    "nameZh": "老鼠怪",
+    "nameJa": "チュートン",
+    "mb": 10,
+    "posRaw": [
+      "クイックゲージ"
+    ],
+    "negRaw": [
+      "HP-20%"
+    ],
+    "stats": {
+      "hpPercent": -20
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "gauge": "fast",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A008",
+    "cardNo": 8,
+    "name": "Billy",
+    "nameZh": "雷球怪",
+    "nameJa": "ビリー",
+    "mb": 5,
+    "posRaw": [
+      "エレキボディ",
+      "Bためうちでサンダーボール"
+    ],
+    "negRaw": [
+      "アンダーシャツをOFF"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [
+      "underShirt"
+    ],
+    "body": "Elec",
+    "bPwrAtk": "ThunderBall",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A009",
+    "cardNo": 9,
+    "name": "Candevil",
+    "nameZh": "烛火怪",
+    "nameJa": "キャンデービル",
+    "mb": 9,
+    "posRaw": [
+      "ファイアボディ",
+      "セルフリカバリー"
+    ],
+    "negRaw": [
+      "B+左をOFF"
+    ],
+    "stats": {},
+    "abilities": [
+      "autoHeal"
+    ],
+    "disabledAbilities": [],
+    "disabledBLeft": true,
+    "body": "Fire",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A010",
+    "cardNo": 10,
+    "name": "Anaconda",
+    "nameZh": "海蛇怪",
+    "nameJa": "ダイジャン",
+    "mb": 12,
+    "posRaw": [
+      "HP+130",
+      "ウッドボディ"
+    ],
+    "negRaw": [
+      "ビートサポートをOFF",
+      "ラッシュサポートをOFF",
+      "タンゴサポートをOFF"
+    ],
+    "stats": {
+      "hp": 130
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "beat",
+      "rush",
+      "tango"
+    ],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A011",
+    "cardNo": 11,
+    "name": "Cragger",
+    "nameZh": "岩石魔",
+    "nameJa": "チャマッシュ",
+    "mb": 15,
+    "posRaw": [
+      "ウッドボディ",
+      "チャージショットに混乱"
+    ],
+    "negRaw": [
+      "端まで移動バグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "chargeAddition": "Confusion",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "端まで移動バグ",
+        "type": "movement",
+        "name": {
+          "en": "Movement Warp Bug",
+          "ja": "移動バグ",
+          "zh": "边界移动 BUG"
+        },
+        "description": {
+          "en": "Moving in combat immediately warps MegaMan to the furthest edge of that direction.",
+          "ja": "移動時にその方向の最端マスへワープ移動します。",
+          "zh": "战斗中移动时直接瞬移至该移动方向的最边缘格子。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A012",
+    "cardNo": 12,
+    "name": "GreenGrumble",
+    "nameZh": "绿怪兽",
+    "nameJa": "ガルー",
+    "mb": 6,
+    "posRaw": [
+      "Bためうちでヒートショット",
+      "ファイアボディ"
+    ],
+    "negRaw": [
+      "ラピッド-1",
+      "チャージ-1"
+    ],
+    "stats": {
+      "rapid": -1,
+      "charge": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "bPwrAtk": "HeatShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A013",
+    "cardNo": 13,
+    "name": "Puffy",
+    "nameZh": "河豚怪",
+    "nameJa": "バジリコ",
+    "mb": 16,
+    "posRaw": [
+      "Bためうちでシールド",
+      "ウッドボディ"
+    ],
+    "negRaw": [
+      "バトル中HPバグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "bPwrAtk": "Shield",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A014",
+    "cardNo": 14,
+    "name": "Marina",
+    "nameZh": "海妖怪",
+    "nameJa": "ヨーヨット",
+    "mb": 17,
+    "posRaw": [
+      "Bためうちでヨーヨー",
+      "HP+30"
+    ],
+    "negRaw": [
+      "B+左をOFF"
+    ],
+    "stats": {
+      "hp": 30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledBLeft": true,
+    "bPwrAtk": "Yo-Yo",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A015",
+    "cardNo": 15,
+    "name": "Cactikil",
+    "nameZh": "仙人掌",
+    "nameJa": "カーズ",
+    "mb": 18,
+    "posRaw": [
+      "B+左でカースシールド"
+    ],
+    "negRaw": [
+      "HP-50"
+    ],
+    "stats": {
+      "hp": -50
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bLeft": "CurseShield",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A016",
+    "cardNo": 16,
+    "name": "Null",
+    "nameZh": "水滴怪",
+    "nameJa": "ヌール",
+    "mb": 13,
+    "posRaw": [
+      "HP+150",
+      "セルフリカバリー",
+      "アクアボディ"
+    ],
+    "negRaw": [
+      "Bためうちでチャージショット",
+      "スーパーアーマーをOFF"
+    ],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [
+      "autoHeal"
+    ],
+    "disabledAbilities": [
+      "superArmor"
+    ],
+    "body": "Aqua",
+    "bPwrAtk": "ChargeShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A017",
+    "cardNo": 17,
+    "name": "Lark",
+    "nameZh": "水鸟怪",
+    "nameJa": "フデロー",
+    "mb": 19,
+    "posRaw": [
+      "バスターで毒沼パネル",
+      "移動時に床がホーリーパネルに"
+    ],
+    "negRaw": [
+      "HP-30%"
+    ],
+    "stats": {
+      "hpPercent": -30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "busterAddition": "Poison Panel",
+    "movePanel": "Holy Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A018",
+    "cardNo": 18,
+    "name": "Draggin",
+    "nameZh": "火龙怪",
+    "nameJa": "ドリームビット",
+    "mb": 20,
+    "posRaw": [
+      "ファーストバリア100"
+    ],
+    "negRaw": [
+      "カスタム-1",
+      "カスタムダメージバグ"
+    ],
+    "stats": {
+      "custom": -1
+    },
+    "abilities": [
+      "firstBarrier"
+    ],
+    "disabledAbilities": [],
+    "firstBarrier": 100,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "カスタムダメージバグ",
+        "type": "custom",
+        "name": {
+          "en": "Custom Damage Bug",
+          "ja": "カスタムダメージバグ",
+          "zh": "改装伤害 BUG"
+        },
+        "description": {
+          "en": "Opening the Custom Screen costs HP each time.",
+          "ja": "カスタム画面を開くたびにHPを失います。",
+          "zh": "每次打开自定义视窗扣除 HP。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A019",
+    "cardNo": 19,
+    "name": "Boomer",
+    "nameZh": "回旋镖怪",
+    "nameJa": "スーンハーク",
+    "mb": 17,
+    "posRaw": [
+      "Bためうちでスイコミ",
+      "HP+120"
+    ],
+    "negRaw": [
+      "ヘビーゲージ"
+    ],
+    "stats": {
+      "hp": 120
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "gauge": "slow",
+    "bPwrAtk": "Vacuum",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A020",
+    "cardNo": 20,
+    "name": "Whirly",
+    "nameZh": "风水母",
+    "nameJa": "キラーズアイ",
+    "mb": 21,
+    "posRaw": [
+      "チャージショットにマヒ",
+      "エレキボディ"
+    ],
+    "negRaw": [
+      "バトル中HPバグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Elec",
+    "chargeAddition": "Paralyze",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A021",
+    "cardNo": 21,
+    "name": "Quaker",
+    "nameZh": "震地怪",
+    "nameJa": "クエイカー",
+    "mb": 15,
+    "posRaw": [
+      "HP+150",
+      "カスタム中HPバグを修正"
+    ],
+    "negRaw": [
+      "チップ使用時にリカバリーをOFF"
+    ],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledChipRecovery": true,
+    "repairs": [
+      "Custom Screen HP Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-A022",
+    "cardNo": 22,
+    "name": "WindBox",
+    "nameZh": "吹风机",
+    "nameJa": "ラウンダ",
+    "mb": 18,
+    "posRaw": [
+      "Bためうちでブーメラン",
+      "B+左でシールド"
+    ],
+    "negRaw": [
+      "Bボタンでバスター",
+      "カスタム中HPバグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "Buster",
+    "bPwrAtk": "Boomerang",
+    "bLeft": "Shield",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "カスタム中HPバグ",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A023",
+    "cardNo": 23,
+    "name": "VacuumFan",
+    "nameZh": "吸尘机",
+    "nameJa": "ゲイラーク",
+    "mb": 17,
+    "posRaw": [
+      "アクアボディ",
+      "Bためうちでワイドショット",
+      "HP+100"
+    ],
+    "negRaw": [
+      "ダメージ時に盲目発生バグ"
+    ],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "bPwrAtk": "WideShot",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ダメージ時に盲目発生バグ",
+        "type": "damage",
+        "name": {
+          "en": "Damage Blind Bug",
+          "ja": "被ダメージ時盲目バグ",
+          "zh": "受创失明 BUG"
+        },
+        "description": {
+          "en": "Taking damage triggers blindness status.",
+          "ja": "ダメージを受けると盲目状態になります。",
+          "zh": "受到伤害时短暂陷入失明状态。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A024",
+    "cardNo": 24,
+    "name": "RedUFO",
+    "nameZh": "红飞碟",
+    "nameJa": "マルモコ",
+    "mb": 5,
+    "posRaw": [
+      "ファーストバリア"
+    ],
+    "negRaw": [
+      "チャージショットの追加効果をOFF"
+    ],
+    "stats": {},
+    "abilities": [
+      "firstBarrier"
+    ],
+    "disabledAbilities": [],
+    "disabledChargeAddition": true,
+    "firstBarrier": "Barrier",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A025",
+    "cardNo": 25,
+    "name": "Catack",
+    "nameZh": "坦克怪",
+    "nameJa": "プルメロ",
+    "mb": 15,
+    "posRaw": [
+      "端まで移動バグを修正",
+      "HP+90"
+    ],
+    "negRaw": [
+      "スーパーアーマーをOFF"
+    ],
+    "stats": {
+      "hp": 90
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "superArmor"
+    ],
+    "repairs": [
+      "Movement Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-A026",
+    "cardNo": 26,
+    "name": "Champy",
+    "nameZh": "拳击怪",
+    "nameJa": "ザエモン",
+    "mb": 20,
+    "posRaw": [
+      "HP+60",
+      "Bためうちでサムライソード"
+    ],
+    "negRaw": [
+      "バスター空撃ちバグ"
+    ],
+    "stats": {
+      "hp": 60
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "SamuraiSword",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バスター空撃ちバグ",
+        "type": "buster",
+        "name": {
+          "en": "Buster Blank Bug",
+          "ja": "空撃ちバグ",
+          "zh": "空包弹 BUG"
+        },
+        "description": {
+          "en": "Normal buster shots have a chance of firing blanks.",
+          "ja": "通常バスターが不発（空撃ち）になります。",
+          "zh": "普通射击有几率卡壳不发射子弹（空包弹）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A027",
+    "cardNo": 27,
+    "name": "AppleCheek",
+    "nameZh": "苹果腮",
+    "nameJa": "キャタック",
+    "mb": 20,
+    "posRaw": [
+      "HP+100",
+      "スーパーアーマー"
+    ],
+    "negRaw": [
+      "エアシューズをOFF"
+    ],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [
+      "superArmor"
+    ],
+    "disabledAbilities": [
+      "airShoes"
+    ],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A028",
+    "cardNo": 28,
+    "name": "WoodMan",
+    "nameZh": "树木人",
+    "nameJa": "チャンプル",
+    "mb": 15,
+    "posRaw": [
+      "チャージ+1",
+      "ラピッド+1",
+      "HP+100",
+      "ファイアボディ"
+    ],
+    "negRaw": [
+      "チャージショットの追加効果をOFF"
+    ],
+    "stats": {
+      "charge": 1,
+      "rapid": 1,
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledChargeAddition": true,
+    "body": "Fire",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A029",
+    "cardNo": 29,
+    "name": "ElecMan",
+    "nameZh": "电力人",
+    "nameJa": "ウズリム",
+    "mb": 20,
+    "posRaw": [
+      "バスターで水パネル",
+      "HP+80",
+      "アクアボディ"
+    ],
+    "negRaw": [
+      "移動時に床が水パネルに"
+    ],
+    "stats": {
+      "hp": 80
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "busterAddition": "Sea Panel",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時に床が水パネルに",
+        "type": "panel",
+        "name": {
+          "en": "Panel Sea Bug",
+          "ja": "移動時水パネルバグ",
+          "zh": "移动生成水面 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into sea panels.",
+          "ja": "移動した足元のパネルが水パネルに変化します。",
+          "zh": "移动离开面板时面板变成水属性面板。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A030",
+    "cardNo": 30,
+    "name": "ProtoMan",
+    "nameZh": "布鲁斯",
+    "nameJa": "サボテコロン",
+    "mb": 16,
+    "posRaw": [
+      "スーパーアーマー",
+      "ウッドボディ",
+      "HP+60"
+    ],
+    "negRaw": [
+      "フロートシューズをOFF"
+    ],
+    "stats": {
+      "hp": 60
+    },
+    "abilities": [
+      "superArmor"
+    ],
+    "disabledAbilities": [
+      "floatShoes"
+    ],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A031",
+    "cardNo": 31,
+    "name": "BombMan",
+    "nameZh": "炸弹人",
+    "nameJa": "ロール",
+    "mb": 40,
+    "posRaw": [
+      "チャージショットにチップ破壊",
+      "ファーストバリア",
+      "バトル中HPバグを修正"
+    ],
+    "negRaw": [
+      "HP-5%"
+    ],
+    "stats": {
+      "hpPercent": -5
+    },
+    "abilities": [
+      "firstBarrier"
+    ],
+    "disabledAbilities": [],
+    "chargeAddition": "Chip Destruction",
+    "firstBarrier": "Barrier",
+    "repairs": [
+      "Battle HP Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-A032",
+    "cardNo": 32,
+    "name": "MagicMan",
+    "nameZh": "魔术人",
+    "nameJa": "ガッツマン",
+    "mb": 35,
+    "posRaw": [
+      "アンダーシャツ",
+      "HP+300"
+    ],
+    "negRaw": [
+      "ファーストバリアをOFF"
+    ],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [
+      "underShirt"
+    ],
+    "disabledAbilities": [
+      "firstBarrier"
+    ],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A033",
+    "cardNo": 33,
+    "name": "HeatMan",
+    "nameZh": "热量人",
+    "nameJa": "ファイアマン",
+    "mb": 43,
+    "posRaw": [
+      "Bためうちでファイアアーム",
+      "ファイアボディHP+30%"
+    ],
+    "negRaw": [
+      "バスターの追加効果をOFF"
+    ],
+    "stats": {
+      "hpPercent": 30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledBusterAddition": true,
+    "body": "Fire",
+    "bPwrAtk": "FireArm",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A034",
+    "cardNo": 34,
+    "name": "MetalMan",
+    "nameZh": "金属人",
+    "nameJa": "フォルテ",
+    "mb": 45,
+    "posRaw": [
+      "チャージ+5",
+      "アタック+5",
+      "HP+200",
+      "ラピッド+5"
+    ],
+    "negRaw": [
+      "ソウルタイム-2"
+    ],
+    "stats": {
+      "charge": 5,
+      "attack": 5,
+      "hp": 200,
+      "rapid": 5,
+      "soulTime": -2
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A035",
+    "cardNo": 35,
+    "name": "King",
+    "nameZh": "棋王",
+    "nameJa": "クイックマン",
+    "mb": 38,
+    "posRaw": [
+      "クイックゲージ",
+      "ラピッド+5",
+      "チャージ+5"
+    ],
+    "negRaw": [
+      "HP-10%"
+    ],
+    "stats": {
+      "rapid": 5,
+      "charge": 5,
+      "hpPercent": -10
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "gauge": "fast",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A036",
+    "cardNo": 36,
+    "name": "MistMan",
+    "nameZh": "雾人",
+    "nameJa": "スネークマン",
+    "mb": 40,
+    "posRaw": [
+      "ウッドボディ",
+      "HP+25%",
+      "ミリオネア"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hpPercent": 25
+    },
+    "abilities": [
+      "millions"
+    ],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A037",
+    "cardNo": 37,
+    "name": "BowlMan",
+    "nameZh": "保龄球人",
+    "nameJa": "バブルマン",
+    "mb": 37,
+    "posRaw": [
+      "ファーストバブルラップ",
+      "アクアボディ",
+      "シノビダッシュ"
+    ],
+    "negRaw": [
+      "HP-50"
+    ],
+    "stats": {
+      "hp": -50
+    },
+    "abilities": [
+      "firstBarrier",
+      "sneakRun"
+    ],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "firstBarrier": "BubbleWrap",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A038",
+    "cardNo": 38,
+    "name": "Dark MegaMan",
+    "nameZh": "黑暗洛克人",
+    "nameJa": "フレイムマン",
+    "mb": 45,
+    "posRaw": [
+      "HP+10%",
+      "ファイアボディ",
+      "チップ使用時にリカバリー"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hpPercent": 10
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "chipRecovery": 20,
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A039",
+    "cardNo": 39,
+    "name": "ShadeMan",
+    "nameZh": "蝙蝠人",
+    "nameJa": "メタルマン",
+    "mb": 46,
+    "posRaw": [
+      "スーパーアーマー",
+      "HP+300",
+      "アタック×2",
+      "チャージショットにブレイク"
+    ],
+    "negRaw": [
+      "カスタム-2"
+    ],
+    "stats": {
+      "hp": 300,
+      "attackMult": 2,
+      "custom": -2
+    },
+    "abilities": [
+      "superArmor"
+    ],
+    "disabledAbilities": [],
+    "chargeAddition": "Break",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A040",
+    "cardNo": 40,
+    "name": "BurnerMan",
+    "nameZh": "燃气人",
+    "nameJa": "シェードマン",
+    "mb": 43,
+    "posRaw": [
+      "フロートシューズ",
+      "エアーシューズ",
+      "Bためうちでパルスビーム"
+    ],
+    "negRaw": [
+      "HP-70",
+      "ソウルタイム-1"
+    ],
+    "stats": {
+      "hp": -70,
+      "soulTime": -1
+    },
+    "abilities": [
+      "floatShoes",
+      "airShoes"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "PulseBeam",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A041",
+    "cardNo": 41,
+    "name": "ColdMan",
+    "nameZh": "冷气人",
+    "nameJa": "スパークマン",
+    "mb": 43,
+    "posRaw": [
+      "チャージショットに盲目",
+      "HP+140",
+      "エレキボディ"
+    ],
+    "negRaw": [
+      "ノーマルゲージ"
+    ],
+    "stats": {
+      "hp": 140
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Elec",
+    "gauge": "normal",
+    "chargeAddition": "Blind",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A042",
+    "cardNo": 42,
+    "name": "JunkMan",
+    "nameZh": "废铁人",
+    "nameJa": "ジャンクマン",
+    "mb": 40,
+    "posRaw": [
+      "HP+150",
+      "Bためうちでポルターガイスト"
+    ],
+    "negRaw": [
+      "バスター空撃ちバグ"
+    ],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Poltergeist",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バスター空撃ちバグ",
+        "type": "buster",
+        "name": {
+          "en": "Buster Blank Bug",
+          "ja": "空撃ちバグ",
+          "zh": "空包弹 BUG"
+        },
+        "description": {
+          "en": "Normal buster shots have a chance of firing blanks.",
+          "ja": "通常バスターが不発（空撃ち）になります。",
+          "zh": "普通射击有几率卡壳不发射子弹（空包弹）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A043",
+    "cardNo": 43,
+    "name": "GyroMan",
+    "nameZh": "旋翼人",
+    "nameJa": "ジャイロマン",
+    "mb": 45,
+    "posRaw": [
+      "エアシューズ",
+      "ビートサポート",
+      "フロートシューズ"
+    ],
+    "negRaw": [
+      "HP-5%"
+    ],
+    "stats": {
+      "hpPercent": -5
+    },
+    "abilities": [
+      "airShoes",
+      "beat",
+      "floatShoes"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A044",
+    "cardNo": 44,
+    "name": "Meddy",
+    "nameZh": "治愈人",
+    "nameJa": "メディ",
+    "mb": 45,
+    "posRaw": [
+      "タンゴサポート",
+      "チップ使用時にリカバリー",
+      "ダメージ時異常発生バグを修正"
+    ],
+    "negRaw": [
+      "カスタム中HPバグ"
+    ],
+    "stats": {},
+    "abilities": [
+      "tango"
+    ],
+    "disabledAbilities": [],
+    "chipRecovery": 20,
+    "repairs": [
+      "Damage Bug"
+    ],
+    "bugs": [
+      {
+        "raw": "カスタム中HPバグ",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-A045",
+    "cardNo": 45,
+    "name": "ToadMan",
+    "nameZh": "青蛙人",
+    "nameJa": "コスモマン",
+    "mb": 44,
+    "posRaw": [
+      "メガフォルダ+1",
+      "ギガフォルダ+1"
+    ],
+    "negRaw": [
+      "HP-20%"
+    ],
+    "stats": {
+      "megaFolder": 1,
+      "gigaFolder": 1,
+      "hpPercent": -20
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A046",
+    "cardNo": 46,
+    "name": "Mayl's Custom",
+    "nameZh": "美露的客制化",
+    "nameJa": "炎山\n            の\n            カスタマイズ",
+    "mb": 35,
+    "posRaw": [
+      "Bボタンでソード",
+      "カスタム+1",
+      "Bためうちでワイドソード"
+    ],
+    "negRaw": [],
+    "stats": {
+      "custom": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bButton": "Sword",
+    "bPwrAtk": "WideSword",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A047",
+    "cardNo": 47,
+    "name": "Yai's Custom",
+    "nameZh": "亚依的客制化",
+    "nameJa": "ヒノケン\n            の\n            カスタマイズ",
+    "mb": 35,
+    "posRaw": [
+      "HP+300",
+      "ファイアボディ"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A048",
+    "cardNo": 48,
+    "name": "Chaud's Custom",
+    "nameZh": "炎山的主题客制化",
+    "nameJa": "エレキ伯爵\n            の\n            カスタマイズ",
+    "mb": 35,
+    "posRaw": [
+      "HP+300",
+      "エレキボディ"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Elec",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A049",
+    "cardNo": 49,
+    "name": "Raika's Custom",
+    "nameZh": "莱卡的客制化",
+    "nameJa": "アネッタ\n            の\n            カスタマイズ",
+    "mb": 47,
+    "posRaw": [
+      "HP+30%",
+      "ウッドボディ"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hpPercent": 30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-A050",
+    "cardNo": 50,
+    "name": "Charlie's Custom",
+    "nameZh": "查理的客制化",
+    "nameJa": "コオリスキー\n            の\n            カスタマイズ",
+    "mb": 47,
+    "posRaw": [
+      "HP+30%",
+      "アクアボディ"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hpPercent": 30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B001",
+    "cardNo": 51,
+    "name": "Bunny",
+    "nameZh": "电兔怪",
+    "nameJa": "カブタンク",
+    "mb": 7,
+    "posRaw": [
+      "HP+80",
+      "Bためうちでミニボム"
+    ],
+    "negRaw": [
+      "カスタムダメージバグ"
+    ],
+    "stats": {
+      "hp": 80
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "MiniBomb",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "カスタムダメージバグ",
+        "type": "custom",
+        "name": {
+          "en": "Custom Damage Bug",
+          "ja": "カスタムダメージバグ",
+          "zh": "改装伤害 BUG"
+        },
+        "description": {
+          "en": "Opening the Custom Screen costs HP each time.",
+          "ja": "カスタム画面を開くたびにHPを失います。",
+          "zh": "每次打开自定义视窗扣除 HP。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B002",
+    "cardNo": 52,
+    "name": "Spikey",
+    "nameZh": "火狗怪",
+    "nameJa": "ポワルド",
+    "mb": 10,
+    "posRaw": [
+      "HP+50",
+      "チャージショットでパネルにあな"
+    ],
+    "negRaw": [
+      "ココロウインドウバ���"
+    ],
+    "stats": {
+      "hp": 50
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "chargeAddition": "Panel Hole",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B003",
+    "cardNo": 53,
+    "name": "Canodumb",
+    "nameZh": "炮台怪",
+    "nameJa": "プロシェル",
+    "mb": 16,
+    "posRaw": [
+      "HP+140",
+      "Bボタンでミニボム"
+    ],
+    "negRaw": [
+      "ファーストバリアをOFF"
+    ],
+    "stats": {
+      "hp": 140
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "firstBarrier"
+    ],
+    "bButton": "MiniBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B004",
+    "cardNo": 54,
+    "name": "Powie",
+    "nameZh": "重压锤",
+    "nameJa": "ハルドボルズ",
+    "mb": 10,
+    "posRaw": [
+      "ココロウインドウバグを修正",
+      "Bためうちでホウガン"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "CannonBall",
+    "repairs": [
+      "Emotion Window Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-B005",
+    "cardNo": 55,
+    "name": "MimeMega",
+    "nameZh": "假面怪",
+    "nameJa": "クモンペ",
+    "mb": 10,
+    "posRaw": [
+      "カスタムダメージバグを修正",
+      "カスタム中HPバグを修正",
+      "アクアボディ"
+    ],
+    "negRaw": [
+      "スーパーアーマ��をOFF"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "repairs": [
+      "Custom Damage Bug",
+      "Custom Screen HP Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-B006",
+    "cardNo": 56,
+    "name": "Flashy",
+    "nameZh": "闪光球",
+    "nameJa": "ガイアント",
+    "mb": 15,
+    "posRaw": [
+      "HP+100",
+      "バスターでパネルヒビ"
+    ],
+    "negRaw": [
+      "エアシューズをOFF",
+      "フロートシューズをOFF"
+    ],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "airShoes",
+      "floatShoes"
+    ],
+    "busterAddition": "Cracked Panel",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B007",
+    "cardNo": 57,
+    "name": "KillPlant",
+    "nameZh": "食人花",
+    "nameJa": "ミノゴロモン",
+    "mb": 20,
+    "posRaw": [
+      "チップ使用時にリカバリー",
+      "ウッドボディ"
+    ],
+    "negRaw": [
+      "移動時にパネルクサムラ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "chipRecovery": 20,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルクサムラ",
+        "type": "panel",
+        "name": {
+          "en": "Panel Grass Bug",
+          "ja": "移動時パネル草バグ",
+          "zh": "移动生成草地 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into grass panels.",
+          "ja": "移動した足元のパネルがクサムラパネルに変化します。",
+          "zh": "移动离开面板时面板变成草地面板。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B008",
+    "cardNo": 58,
+    "name": "DethFire",
+    "nameZh": "烈火怪",
+    "nameJa": "ファンカー",
+    "mb": 15,
+    "posRaw": [
+      "Bためうちでトルネード"
+    ],
+    "negRaw": [
+      "HP-50"
+    ],
+    "stats": {
+      "hp": -50
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Tornado",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B009",
+    "cardNo": 59,
+    "name": "Trumpy",
+    "nameZh": "喇叭怪",
+    "nameJa": "チクリート",
+    "mb": 18,
+    "posRaw": [
+      "バトル中HPバグを修正",
+      "チップ使用時にリカバリー"
+    ],
+    "negRaw": [
+      "HP-80"
+    ],
+    "stats": {
+      "hp": -80
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "chipRecovery": 20,
+    "repairs": [
+      "Battle HP Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-B010",
+    "cardNo": 60,
+    "name": "PoofBall",
+    "nameZh": "毒烟怪",
+    "nameJa": "ラッシュ",
+    "mb": 11,
+    "posRaw": [
+      "ラッシュサポート"
+    ],
+    "negRaw": [
+      "ビートサポートをOFF",
+      "タンゴサポートをOFF"
+    ],
+    "stats": {},
+    "abilities": [
+      "rush"
+    ],
+    "disabledAbilities": [
+      "beat",
+      "tango"
+    ],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B011",
+    "cardNo": 61,
+    "name": "Momogra",
+    "nameZh": "地鼠怪",
+    "nameJa": "ラビリー",
+    "mb": 8,
+    "posRaw": [
+      "エレキボディ",
+      "Bためうちでラビリング"
+    ],
+    "negRaw": [
+      "スーパーアーマーをOFF",
+      "ステータスガードをOFF"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [
+      "superArmor",
+      "statusGuard"
+    ],
+    "body": "Elec",
+    "bPwrAtk": "RabidRing",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B012",
+    "cardNo": 62,
+    "name": "Fan",
+    "nameZh": "风扇怪",
+    "nameJa": "フレイボー",
+    "mb": 20,
+    "posRaw": [
+      "HP+160",
+      "Bボタンでクラックアウト",
+      "ファイアボディ"
+    ],
+    "negRaw": [
+      "移動時にパネルあな"
+    ],
+    "stats": {
+      "hp": 160
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "bButton": "CrackOut",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルあな",
+        "type": "panel",
+        "name": {
+          "en": "Panel Hole Bug",
+          "ja": "移動時パネルあなバグ",
+          "zh": "移动生成空洞 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into holes.",
+          "ja": "移動した足元のパネルにあなが開きます。",
+          "zh": "移动离开面板时面板变成空洞。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B013",
+    "cardNo": 63,
+    "name": "Drain",
+    "nameZh": "蚊子怪",
+    "nameJa": "エビロン",
+    "mb": 10,
+    "posRaw": [
+      "アクアボディ",
+      "Bためうちでバブルショット"
+    ],
+    "negRaw": [
+      "アタック-1"
+    ],
+    "stats": {
+      "attack": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "bPwrAtk": "Bubbler",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B014",
+    "cardNo": 64,
+    "name": "AirMan",
+    "nameZh": "空气人",
+    "nameJa": "UFOサニー",
+    "mb": 20,
+    "posRaw": [
+      "チャージショットにチップ破壊"
+    ],
+    "negRaw": [
+      "チップ使用時にリカバリーをOFF",
+      "端まで移動バグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledChipRecovery": true,
+    "chargeAddition": "Chip Destruction",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "端まで移動バグ",
+        "type": "movement",
+        "name": {
+          "en": "Movement Warp Bug",
+          "ja": "移動バグ",
+          "zh": "边界移动 BUG"
+        },
+        "description": {
+          "en": "Moving in combat immediately warps MegaMan to the furthest edge of that direction.",
+          "ja": "移動時にその方向の最端マスへワープ移動します。",
+          "zh": "战斗中移动时直接瞬移至该移动方向的最边缘格子。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B015",
+    "cardNo": 65,
+    "name": "Z-Mon-Mon",
+    "nameZh": "骨爪怪",
+    "nameJa": "ゲニン",
+    "mb": 18,
+    "posRaw": [
+      "Bためうちでエンゲツクナイ",
+      "シノビダッシュ"
+    ],
+    "negRaw": [
+      "HP-10%"
+    ],
+    "stats": {
+      "hpPercent": -10
+    },
+    "abilities": [
+      "sneakRun"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "CrescentKunai",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B016",
+    "cardNo": 66,
+    "name": "MagmaDragon",
+    "nameZh": "熔岩龙",
+    "nameJa": "マグマドラゴン",
+    "mb": 20,
+    "posRaw": [
+      "エアシューズ",
+      "ファイアボディ",
+      "HP+150"
+    ],
+    "negRaw": [
+      "ファーストバリアをOFF",
+      "移動時にパネルあな"
+    ],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [
+      "airShoes"
+    ],
+    "disabledAbilities": [
+      "firstBarrier"
+    ],
+    "body": "Fire",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルあな",
+        "type": "panel",
+        "name": {
+          "en": "Panel Hole Bug",
+          "ja": "移動時パネルあなバグ",
+          "zh": "移动生成空洞 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into holes.",
+          "ja": "移動した足元のパネルにあなが開きます。",
+          "zh": "移动离开面板时面板变成空洞。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B017",
+    "cardNo": 67,
+    "name": "Zomon",
+    "nameZh": "木妖怪",
+    "nameJa": "プロテクト",
+    "mb": 23,
+    "posRaw": [
+      "ギガフォルダ+1"
+    ],
+    "negRaw": [
+      "B+左をOFF",
+      "Bためうちでチャージショット",
+      "アンダーシャツをOFF"
+    ],
+    "stats": {
+      "gigaFolder": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "underShirt"
+    ],
+    "disabledBLeft": true,
+    "bPwrAtk": "ChargeShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B018",
+    "cardNo": 68,
+    "name": "Batty",
+    "nameZh": "蝙蝠怪",
+    "nameJa": "ドゴーン",
+    "mb": 20,
+    "posRaw": [
+      "ア���ック+1",
+      "ファイアボディ",
+      "チャージショットでパネルあな"
+    ],
+    "negRaw": [
+      "ラピッド-3"
+    ],
+    "stats": {
+      "rapid": -3
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "chargeAddition": "Panel Hole",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B019",
+    "cardNo": 69,
+    "name": "Coripen",
+    "nameZh": "小企鹅",
+    "nameJa": "コリペン",
+    "mb": 18,
+    "posRaw": [
+      "HP+150",
+      "アクアボディ"
+    ],
+    "negRaw": [
+      "移動時にパネルこおり"
+    ],
+    "stats": {
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Aqua",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルこおり",
+        "type": "panel",
+        "name": {
+          "en": "Panel Ice Bug",
+          "ja": "移動時パネル氷バグ",
+          "zh": "移动生成冰面 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into ice panels.",
+          "ja": "移動した足元のパネルが氷パネルに変化します。",
+          "zh": "移动离开面板时面板变成冰面。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B020",
+    "cardNo": 70,
+    "name": "Heady",
+    "nameZh": "头部怪",
+    "nameJa": "スパークビー",
+    "mb": 20,
+    "posRaw": [
+      "エレキボディ",
+      "チャージショットに盲目"
+    ],
+    "negRaw": [
+      "ファーストバリアをOFF",
+      "Bためうちでチャージショット"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [
+      "firstBarrier"
+    ],
+    "body": "Elec",
+    "bPwrAtk": "ChargeShot",
+    "chargeAddition": "Blind",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B021",
+    "cardNo": 71,
+    "name": "Eellect",
+    "nameZh": "电鳗怪",
+    "nameJa": "プロトバグ",
+    "mb": 16,
+    "posRaw": [
+      "チップ使用時にリカバリー"
+    ],
+    "negRaw": [
+      "バトル中HPバグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "chipRecovery": 20,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B022",
+    "cardNo": 72,
+    "name": "Snapper",
+    "nameZh": "乌龟怪",
+    "nameJa": "N.O",
+    "mb": 13,
+    "posRaw": [
+      "バトル中HPバグを修正",
+      "セルフリカバリー",
+      "HP+100"
+    ],
+    "negRaw": [
+      "ステータスバグ"
+    ],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [
+      "autoHeal"
+    ],
+    "disabledAbilities": [],
+    "repairs": [
+      "Battle HP Bug"
+    ],
+    "bugs": [
+      {
+        "raw": "ステータスバグ",
+        "type": "status",
+        "name": {
+          "en": "Player Status Bug",
+          "ja": "プレイヤーバグ",
+          "zh": "状态异常 BUG"
+        },
+        "description": {
+          "en": "Starts battle with status disorder or confusion.",
+          "ja": "戦闘開始時に状態異常になります。",
+          "zh": "战斗开始时短暂陷入状态异常。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B023",
+    "cardNo": 73,
+    "name": "Zapper",
+    "nameZh": "雷云怪",
+    "nameJa": "パラボール",
+    "mb": 14,
+    "posRaw": [
+      "バッテリーモード",
+      "エレキボディ",
+      "フロートシューズ"
+    ],
+    "negRaw": [
+      "バスターの追加効果をOFF"
+    ],
+    "stats": {},
+    "abilities": [
+      "batteryMode",
+      "floatShoes"
+    ],
+    "disabledAbilities": [],
+    "disabledBusterAddition": true,
+    "body": "Elec",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B024",
+    "cardNo": 74,
+    "name": "Apparun",
+    "nameZh": "白幽灵",
+    "nameJa": "ダーマ",
+    "mb": 22,
+    "posRaw": [
+      "アンダーシャツ",
+      "Bためうちでエアホッケー"
+    ],
+    "negRaw": [
+      "HP-15%"
+    ],
+    "stats": {
+      "hpPercent": -15
+    },
+    "abilities": [
+      "underShirt"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "AirHockey",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B025",
+    "cardNo": 75,
+    "name": "Curling",
+    "nameZh": "冰壶怪",
+    "nameJa": "ウェザース",
+    "mb": 19,
+    "posRaw": [
+      "バスターでクサムラ",
+      "チャージショットでパネルマグマ"
+    ],
+    "negRaw": [
+      "移動時にパネルこおり"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "chargeAddition": "Panel Magma",
+    "busterAddition": "Grass Panel",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルこおり",
+        "type": "panel",
+        "name": {
+          "en": "Panel Ice Bug",
+          "ja": "移動時パネル氷バグ",
+          "zh": "移动生成冰面 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into ice panels.",
+          "ja": "移動した足元のパネルが氷パネルに変化します。",
+          "zh": "移动离开面板时面板变成冰面。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B026",
+    "cardNo": 76,
+    "name": "Skurg",
+    "nameZh": "刺头怪",
+    "nameJa": "エレンプラ",
+    "mb": 20,
+    "posRaw": [
+      "チャージショットでパネル毒沼",
+      "ステータスバグを修正"
+    ],
+    "negRaw": [
+      "バスターの追加効果をOFF"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledBusterAddition": true,
+    "chargeAddition": "Poison Panel",
+    "repairs": [
+      "Status Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-B027",
+    "cardNo": 77,
+    "name": "Roll",
+    "nameZh": "萝露",
+    "nameJa": "サーキラー",
+    "mb": 18,
+    "posRaw": [
+      "Bためうちでサークルガン"
+    ],
+    "negRaw": [
+      "端まで移動バグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "CircleGun",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "端まで移動バグ",
+        "type": "movement",
+        "name": {
+          "en": "Movement Warp Bug",
+          "ja": "移動バグ",
+          "zh": "边界移动 BUG"
+        },
+        "description": {
+          "en": "Moving in combat immediately warps MegaMan to the furthest edge of that direction.",
+          "ja": "移動時にその方向の最端マスへワープ移動します。",
+          "zh": "战斗中移动时直接瞬移至该移动方向的最边缘格子。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B028",
+    "cardNo": 78,
+    "name": "GutsMan",
+    "nameZh": "气力人",
+    "nameJa": "ドリクロール",
+    "mb": 17,
+    "posRaw": [
+      "Bためうちでドリルアーム",
+      "ラピッド+3",
+      "チャージ+3"
+    ],
+    "negRaw": [
+      "ダメージ時に混乱発生バグ"
+    ],
+    "stats": {
+      "rapid": 3,
+      "charge": 3
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "DrillArm",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ダメージ時に混乱発生バグ",
+        "type": "damage",
+        "name": {
+          "en": "Damage Confusion Bug",
+          "ja": "被ダメージ時混乱バグ",
+          "zh": "受创混乱 BUG"
+        },
+        "description": {
+          "en": "Taking damage triggers confusion status.",
+          "ja": "ダメージを受けると混乱状態になります。",
+          "zh": "受到伤害时短暂陷入混乱状态。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B029",
+    "cardNo": 79,
+    "name": "NumberMan",
+    "nameZh": "数字人",
+    "nameJa": "パルスバット",
+    "mb": 25,
+    "posRaw": [
+      "Bためうちでパルスビーム",
+      "エアシューズ"
+    ],
+    "negRaw": [
+      "HP-5%"
+    ],
+    "stats": {
+      "hpPercent": -5
+    },
+    "abilities": [
+      "airShoes"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "PulseBeam",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B030",
+    "cardNo": 80,
+    "name": "FireMan",
+    "nameZh": "火焰人",
+    "nameJa": "アップルサム",
+    "mb": 24,
+    "posRaw": [
+      "ウッドボディ",
+      "ステータスガード"
+    ],
+    "negRaw": [
+      "ココロウインドウバグ",
+      "バスター空撃ちバグ"
+    ],
+    "stats": {},
+    "abilities": [
+      "statusGuard"
+    ],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ココロウインドウバグ",
+        "type": "emotion",
+        "name": {
+          "en": "Emotion Window Bug",
+          "ja": "ココロバグ",
+          "zh": "心灵之窗 BUG"
+        },
+        "description": {
+          "en": "Emotion window rapidly fluctuates between emotional states.",
+          "ja": "ココロウィンドウの状態が激しく変動します。",
+          "zh": "心灵状态随机剧烈波动。"
+        }
+      },
+      {
+        "raw": "バスター空撃ちバグ",
+        "type": "buster",
+        "name": {
+          "en": "Buster Blank Bug",
+          "ja": "空撃ちバグ",
+          "zh": "空包弹 BUG"
+        },
+        "description": {
+          "en": "Normal buster shots have a chance of firing blanks.",
+          "ja": "通常バスターが不発（空撃ち）になります。",
+          "zh": "普通射击有几率卡壳不发射子弹（空包弹）。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B031",
+    "cardNo": 81,
+    "name": "ColorMan",
+    "nameZh": "彩斗人",
+    "nameJa": "ウッドマン",
+    "mb": 45,
+    "posRaw": [
+      "ウッドボディ",
+      "HP+25%",
+      "ステータスガード"
+    ],
+    "negRaw": [
+      "Bためうちでチャージショット",
+      "バスターの追加効果をOFF"
+    ],
+    "stats": {
+      "hpPercent": 25
+    },
+    "abilities": [
+      "statusGuard"
+    ],
+    "disabledAbilities": [],
+    "disabledBusterAddition": true,
+    "body": "Wood",
+    "bPwrAtk": "ChargeShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B032",
+    "cardNo": 82,
+    "name": "SkullMan",
+    "nameZh": "骷髅人",
+    "nameJa": "エレキマン",
+    "mb": 35,
+    "posRaw": [
+      "HP+200",
+      "エレキボディ",
+      "セルフリカバリー"
+    ],
+    "negRaw": [
+      "B+左をOFF"
+    ],
+    "stats": {
+      "hp": 200
+    },
+    "abilities": [
+      "autoHeal"
+    ],
+    "disabledAbilities": [],
+    "disabledBLeft": true,
+    "body": "Elec",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B033",
+    "cardNo": 83,
+    "name": "SharkMan",
+    "nameZh": "鲨鱼人",
+    "nameJa": "ブルース",
+    "mb": 45,
+    "posRaw": [
+      "HP+100",
+      "Bためうちでワイドブレード",
+      "B+左でシールド"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 100
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "WideBlade",
+    "bLeft": "Shield",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B034",
+    "cardNo": 84,
+    "name": "BombMan (Classic)",
+    "nameZh": "炸弹人 (经典)",
+    "nameJa": "ボンバーマン",
+    "mb": 43,
+    "posRaw": [
+      "ファイアボディ",
+      "HP+150",
+      "Bためうちでブラックボム"
+    ],
+    "negRaw": [
+      "カスタム-1"
+    ],
+    "stats": {
+      "hp": 150,
+      "custom": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "bPwrAtk": "BlackBomb",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B035",
+    "cardNo": 85,
+    "name": "SnakeMan",
+    "nameZh": "蛇人",
+    "nameJa": "マジックマン",
+    "mb": 44,
+    "posRaw": [
+      "カスタム+1",
+      "ソウルタイム+2"
+    ],
+    "negRaw": [
+      "HP-200"
+    ],
+    "stats": {
+      "custom": 1,
+      "soulTime": 2,
+      "hp": -200
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B036",
+    "cardNo": 86,
+    "name": "PharaohMan",
+    "nameZh": "法老王人",
+    "nameJa": "ヒートマン",
+    "mb": 45,
+    "posRaw": [
+      "HP+100",
+      "チャージショットでパネルマグマ",
+      "アタック+2",
+      "ファイアボディ"
+    ],
+    "negRaw": [
+      "Bためうちでチャージショット"
+    ],
+    "stats": {
+      "hp": 100,
+      "attack": 2
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Fire",
+    "bPwrAtk": "ChargeShot",
+    "chargeAddition": "Panel Magma",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B037",
+    "cardNo": 87,
+    "name": "GateMan",
+    "nameZh": "大门人",
+    "nameJa": "ゲートマン",
+    "mb": 46,
+    "posRaw": [
+      "HP+150",
+      "カスタム+2"
+    ],
+    "negRaw": [
+      "ノーマルゲージ"
+    ],
+    "stats": {
+      "hp": 150,
+      "custom": 2
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "gauge": "normal",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B038",
+    "cardNo": 88,
+    "name": "PlanetMan",
+    "nameZh": "行星人",
+    "nameJa": "フラッシュマン",
+    "mb": 46,
+    "posRaw": [
+      "チャージショットにマヒ",
+      "エレキボディ",
+      "HP+20%"
+    ],
+    "negRaw": [
+      "B+左をOFF"
+    ],
+    "stats": {
+      "hpPercent": 20
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "disabledBLeft": true,
+    "body": "Elec",
+    "chargeAddition": "Paralyze",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B039",
+    "cardNo": 89,
+    "name": "DesertMan",
+    "nameZh": "沙漠人",
+    "nameJa": "ドリルマン",
+    "mb": 47,
+    "posRaw": [
+      "HP+200",
+      "エアシューズ",
+      "Bためうちでドリルアーム"
+    ],
+    "negRaw": [
+      "移動時にパネルあな"
+    ],
+    "stats": {
+      "hp": 200
+    },
+    "abilities": [
+      "airShoes"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "DrillArm",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "移動時にパネルあな",
+        "type": "panel",
+        "name": {
+          "en": "Panel Hole Bug",
+          "ja": "移動時パネルあなバグ",
+          "zh": "移动生成空洞 BUG"
+        },
+        "description": {
+          "en": "Moving off panels turns them into holes.",
+          "ja": "移動した足元のパネルにあなが開きます。",
+          "zh": "移动离开面板时面板变成空洞。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B040",
+    "cardNo": 90,
+    "name": "KingMan",
+    "nameZh": "国王人",
+    "nameJa": "キングマン",
+    "mb": 45,
+    "posRaw": [
+      "メガフォルダ+1",
+      "カスタム+2"
+    ],
+    "negRaw": [
+      "HP+150"
+    ],
+    "stats": {
+      "megaFolder": 1,
+      "custom": 2,
+      "hp": -150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B041",
+    "cardNo": 91,
+    "name": "FlashMan",
+    "nameZh": "闪光人",
+    "nameJa": "アクアマン",
+    "mb": 40,
+    "posRaw": [
+      "HP+170",
+      "アクアボディ",
+      "Bためうちでオーシャンシード"
+    ],
+    "negRaw": [
+      "アンダーシャツをOFF"
+    ],
+    "stats": {
+      "hp": 170
+    },
+    "abilities": [],
+    "disabledAbilities": [
+      "underShirt"
+    ],
+    "body": "Aqua",
+    "bPwrAtk": "OceanSeed",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B042",
+    "cardNo": 92,
+    "name": "BeastMan",
+    "nameZh": "野兽人",
+    "nameJa": "ウインドマン",
+    "mb": 46,
+    "posRaw": [
+      "HP+120",
+      "チャージショットにバリア除去",
+      "エアシューズ"
+    ],
+    "negRaw": [
+      "アタック-2"
+    ],
+    "stats": {
+      "hp": 120,
+      "attack": -2
+    },
+    "abilities": [
+      "airShoes"
+    ],
+    "disabledAbilities": [],
+    "chargeAddition": "Barrier Removal",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B043",
+    "cardNo": 93,
+    "name": "PlantMan",
+    "nameZh": "植物人",
+    "nameJa": "レーザーマン",
+    "mb": 47,
+    "posRaw": [
+      "HP+250",
+      "チャージショットにナビカスリセット"
+    ],
+    "negRaw": [
+      "ソウルタイム-1"
+    ],
+    "stats": {
+      "hp": 250,
+      "soulTime": -1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "chargeAddition": "NaviCust Reset",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B044",
+    "cardNo": 94,
+    "name": "Serenade",
+    "nameZh": "小夜曲",
+    "nameJa": "カーネル",
+    "mb": 42,
+    "posRaw": [
+      "Bためうちでカーネルキャノン",
+      "HP+280"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hp": 280
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "ColonelCannon",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B045",
+    "cardNo": 95,
+    "name": "Bass",
+    "nameZh": "佛鲁迪",
+    "nameJa": "トマホークマン",
+    "mb": 40,
+    "posRaw": [
+      "アタック+3",
+      "ウッドボディ",
+      "HP+200",
+      "スーパーアーマー"
+    ],
+    "negRaw": [
+      "メガフォルダ-1"
+    ],
+    "stats": {
+      "attack": 3,
+      "hp": 200,
+      "megaFolder": -1
+    },
+    "abilities": [
+      "superArmor"
+    ],
+    "disabledAbilities": [],
+    "body": "Wood",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B046",
+    "cardNo": 96,
+    "name": "Lan's Custom",
+    "nameZh": "热斗的客制化",
+    "nameJa": "熱斗\n            の\n            カスタマイズ",
+    "mb": 25,
+    "posRaw": [
+      "メガフォルダ+2",
+      "ノーマルボディ"
+    ],
+    "negRaw": [
+      "Bボタンでバスター",
+      "Bためうちでチャージショット"
+    ],
+    "stats": {
+      "megaFolder": 2
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "body": "Normal",
+    "bButton": "Buster",
+    "bPwrAtk": "ChargeShot",
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B047",
+    "cardNo": 97,
+    "name": "Dex's Custom",
+    "nameZh": "太朗的客制化",
+    "nameJa": "デカオ\n            の\n            カスタマイズ",
+    "mb": 40,
+    "posRaw": [
+      "アタック+5",
+      "HP+150"
+    ],
+    "negRaw": [],
+    "stats": {
+      "attack": 5,
+      "hp": 150
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-B048",
+    "cardNo": 98,
+    "name": "Higgsville's Custom",
+    "nameZh": "日暮的主题客制化",
+    "nameJa": "まどい\n            の\n            カスタマイズ",
+    "mb": 5,
+    "posRaw": [],
+    "negRaw": [
+      "ステータスバグ",
+      "ココロウインドウバグ"
+    ],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ステータスバグ",
+        "type": "status",
+        "name": {
+          "en": "Player Status Bug",
+          "ja": "プレイヤーバグ",
+          "zh": "状态异常 BUG"
+        },
+        "description": {
+          "en": "Starts battle with status disorder or confusion.",
+          "ja": "戦闘開始時に状態異常になります。",
+          "zh": "战斗开始时短暂陷入状态异常。"
+        }
+      },
+      {
+        "raw": "ココロウインドウバグ",
+        "type": "emotion",
+        "name": {
+          "en": "Emotion Window Bug",
+          "ja": "ココロバグ",
+          "zh": "心灵之窗 BUG"
+        },
+        "description": {
+          "en": "Emotion window rapidly fluctuates between emotional states.",
+          "ja": "ココロウィンドウの状態が激しく変動します。",
+          "zh": "心灵状态随机剧烈波动。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-B049",
+    "cardNo": 99,
+    "name": "Jasmine's Custom",
+    "nameZh": "茉莉的客制化",
+    "nameJa": "マハ・ジャラマ\n            の\n            カスタマイズ",
+    "mb": 17,
+    "posRaw": [
+      "移動後のパネル変化バグを修正",
+      "端まで移動バグを修正"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [
+      "Panel Bug",
+      "Movement Bug"
+    ],
+    "bugs": []
+  },
+  {
+    "id": "136-B050",
+    "cardNo": 100,
+    "name": "Fyrefox's Custom",
+    "nameZh": "火野健一的客制化",
+    "nameJa": "虎吉\n            の\n            カスタマイズ",
+    "mb": 64,
+    "posRaw": [
+      "ビートサポート",
+      "タンゴサポート",
+      "ラッシュサポート"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [
+      "beat",
+      "tango",
+      "rush"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-C001",
+    "cardNo": 101,
+    "name": "LifeVirus",
+    "nameZh": "梦幻病毒",
+    "nameJa": "ドリームウイルス",
+    "mb": 55,
+    "posRaw": [
+      "HP+10%",
+      "ファーストドリームオーラ"
+    ],
+    "negRaw": [
+      "カスタムダメージバグ"
+    ],
+    "stats": {
+      "hpPercent": 10
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "firstBarrier": "DreamAura",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "カスタムダメージバグ",
+        "type": "custom",
+        "name": {
+          "en": "Custom Damage Bug",
+          "ja": "カスタムダメージバグ",
+          "zh": "改装伤害 BUG"
+        },
+        "description": {
+          "en": "Opening the Custom Screen costs HP each time.",
+          "ja": "カスタム画面を開くたびにHPを失います。",
+          "zh": "每次打开自定义视窗扣除 HP。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-C002",
+    "cardNo": 102,
+    "name": "Gospel",
+    "nameZh": "福音兽",
+    "nameJa": "ゴスペル",
+    "mb": 60,
+    "posRaw": [
+      "HP+600"
+    ],
+    "negRaw": [
+      "ステータスバグ",
+      "ココロウインドウバグ",
+      "バトル中HPバグ",
+      "カスタム中HPバグ"
+    ],
+    "stats": {
+      "hp": 600
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ステータスバグ",
+        "type": "status",
+        "name": {
+          "en": "Player Status Bug",
+          "ja": "プレイヤーバグ",
+          "zh": "状态异常 BUG"
+        },
+        "description": {
+          "en": "Starts battle with status disorder or confusion.",
+          "ja": "戦闘開始時に状態異常になります。",
+          "zh": "战斗开始时短暂陷入状态异常。"
+        }
+      },
+      {
+        "raw": "ココロウインドウバグ",
+        "type": "emotion",
+        "name": {
+          "en": "Emotion Window Bug",
+          "ja": "ココロバグ",
+          "zh": "心灵之窗 BUG"
+        },
+        "description": {
+          "en": "Emotion window rapidly fluctuates between emotional states.",
+          "ja": "ココロウィンドウの状態が激しく変動します。",
+          "zh": "心灵状态随机剧烈波动。"
+        }
+      },
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      },
+      {
+        "raw": "カスタム中HPバグ",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-C003",
+    "cardNo": 103,
+    "name": "Serenade (Rare)",
+    "nameZh": "小夜曲 (特典)",
+    "nameJa": "セレナード",
+    "mb": 50,
+    "posRaw": [
+      "チップ使用時にリカバリー",
+      "Bボタンためうちでリフレク"
+    ],
+    "negRaw": [
+      "HP-20%"
+    ],
+    "stats": {
+      "hpPercent": -20
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "Reflect",
+    "chipRecovery": 20,
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-C004",
+    "cardNo": 104,
+    "name": "Alpha",
+    "nameZh": "原生体",
+    "nameJa": "プロト",
+    "mb": 55,
+    "posRaw": [
+      "HP+100",
+      "ギガフォルダ+2"
+    ],
+    "negRaw": [
+      "カスタム-3"
+    ],
+    "stats": {
+      "hp": 100,
+      "gigaFolder": 2,
+      "custom": -3
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-C005",
+    "cardNo": 105,
+    "name": "Bass GS",
+    "nameZh": "佛鲁迪GS",
+    "nameJa": "フォルテGS",
+    "mb": 59,
+    "posRaw": [
+      "チャージショットにHPバグ",
+      "HP+300"
+    ],
+    "negRaw": [
+      "ステータスバグ"
+    ],
+    "stats": {
+      "hp": 300
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "chargeAddition": "HP Bug",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "ステータスバグ",
+        "type": "status",
+        "name": {
+          "en": "Player Status Bug",
+          "ja": "プレイヤーバグ",
+          "zh": "状态异常 BUG"
+        },
+        "description": {
+          "en": "Starts battle with status disorder or confusion.",
+          "ja": "戦闘開始時に状態異常になります。",
+          "zh": "战斗开始时短暂陷入状态异常。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-C006",
+    "cardNo": 106,
+    "name": "Duo",
+    "nameZh": "杜奥",
+    "nameJa": "デューオ",
+    "mb": 70,
+    "posRaw": [
+      "HP+40%",
+      "ギガフォルダ+1",
+      "メガフォルダ+1"
+    ],
+    "negRaw": [],
+    "stats": {
+      "hpPercent": 40,
+      "gigaFolder": 1,
+      "megaFolder": 1
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-C007",
+    "cardNo": 107,
+    "name": "Bass XX",
+    "nameZh": "佛鲁迪XX",
+    "nameJa": "フォルテXX",
+    "mb": 70,
+    "posRaw": [
+      "HP+400",
+      "エアシューズ",
+      "フロートシューズ",
+      "ファーストバリア200"
+    ],
+    "negRaw": [
+      "バトル中HPバグ"
+    ],
+    "stats": {
+      "hp": 400
+    },
+    "abilities": [
+      "airShoes",
+      "floatShoes",
+      "firstBarrier200"
+    ],
+    "disabledAbilities": [],
+    "firstBarrier": 200,
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-C008",
+    "cardNo": 108,
+    "name": "NebulaGray",
+    "nameZh": "星云灰烬",
+    "nameJa": "ネビュラグレイ",
+    "mb": 70,
+    "posRaw": [
+      "Bためうちでダークソード"
+    ],
+    "negRaw": [
+      "バトル中HPバグ",
+      "HP-30%",
+      "カスタム中HPバグ"
+    ],
+    "stats": {
+      "hpPercent": -30
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "bPwrAtk": "DarkSword",
+    "repairs": [],
+    "bugs": [
+      {
+        "raw": "バトル中HPバグ",
+        "type": "battleHp",
+        "name": {
+          "en": "Battle HP Bug",
+          "ja": "HP減少バグ",
+          "zh": "战斗HP BUG"
+        },
+        "description": {
+          "en": "HP steadily drains during battle.",
+          "ja": "戦闘中にHPが減少し続けます。",
+          "zh": "战斗中 HP 持续流失。"
+        }
+      },
+      {
+        "raw": "カスタム中HPバグ",
+        "type": "customHp",
+        "name": {
+          "en": "Custom Screen HP Bug",
+          "ja": "カスタム中HP減少バグ",
+          "zh": "改装界面HP流失 BUG"
+        },
+        "description": {
+          "en": "HP steadily drops while in Custom Screen selecting chips.",
+          "ja": "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+          "zh": "打开自定义视窗选芯片时，HP持续快速流失扣减。"
+        }
+      }
+    ]
+  },
+  {
+    "id": "136-C009",
+    "cardNo": 109,
+    "name": "Dad's Repair Program",
+    "nameZh": "爸爸的修复程序",
+    "nameJa": "パパの修正プログラム",
+    "mb": 50,
+    "posRaw": [
+      "バグストッパー"
+    ],
+    "negRaw": [],
+    "stats": {},
+    "abilities": [
+      "bugStop"
+    ],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-C010",
+    "cardNo": 110,
+    "name": "Hub Hikari",
+    "nameZh": "光彩斗",
+    "nameJa": "光 彩斗",
+    "mb": 80,
+    "posRaw": [
+      "アタック×2",
+      "メガフォルダ+2",
+      "ギガフォルダ+1",
+      "カスタム+3"
+    ],
+    "negRaw": [
+      "HP-50%"
+    ],
+    "stats": {
+      "attackMult": 2,
+      "megaFolder": 2,
+      "gigaFolder": 1,
+      "custom": 3,
+      "hpPercent": -50
+    },
+    "abilities": [],
+    "disabledAbilities": [],
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-D001-P",
+    "cardNo": 111,
+    "name": "BassCross MegaMan (ProtoMan)",
+    "nameZh": "佛鲁迪交错洛克人 (布鲁斯版)",
+    "nameJa": "フォルテクロス ロックマン (ブルース版)",
+    "mb": 70,
+    "posRaw": [
+      "HP+200",
+      "スーパーアーマー",
+      "Bボタンでトリプルバスター",
+      "Bためうちでシューティングバスター",
+      "ロックマンの姿がFCR（金）に変化"
+    ],
+    "negRaw": [
+      "メガフォルダ-2"
+    ],
+    "stats": {
+      "hp": 200,
+      "megaFolder": -2
+    },
+    "abilities": [
+      "superArmor"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "ShootingBuster",
+    "tripleBuster": true,
+    "repairs": [],
+    "bugs": []
+  },
+  {
+    "id": "136-D001-C",
+    "cardNo": 111,
+    "name": "BassCross MegaMan (Colonel)",
+    "nameZh": "佛鲁迪交错洛克人 (卡奈尔版)",
+    "nameJa": "フォルテクロス ロックマン (カーネル版)",
+    "mb": 70,
+    "posRaw": [
+      "HP+20%",
+      "フロートシューズ",
+      "Bボタンでトリプルバスター",
+      "Bためうちでヘルズローリング",
+      "ロックマンの姿がFCR（銀）に変化"
+    ],
+    "negRaw": [
+      "メガフォルダ-2"
+    ],
+    "stats": {
+      "hpPercent": 20,
+      "megaFolder": -2
+    },
+    "abilities": [
+      "floatShoes"
+    ],
+    "disabledAbilities": [],
+    "bPwrAtk": "HellsRolling",
+    "tripleBuster": true,
+    "repairs": [],
+    "bugs": []
+  }
+]

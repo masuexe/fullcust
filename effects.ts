@@ -41,6 +41,8 @@ export interface BuildStats {
     modChipRecovery?: number;
     modFirstBarrier?: number | string;
     modTripleBuster?: boolean;
+    modSoul?: string;
+    modSlotsUsed?: string[];
     repairedBugs?: string[];
 }
 
@@ -93,7 +95,98 @@ export const BN6_PART_EFFECTS: Record<number, PartEffect> = {
     46: { hp: 500 },
 };
 
+export const BN5_PART_EFFECTS: Record<number, PartEffect> = {
+    1: { abilities: ["superArmor"] },
+    2: { custom: 1 },
+    3: { custom: 2 },
+    4: { megaFolder: 1 },
+    5: { megaFolder: 2 },
+    6: { gigaFolder: 1 },
+    7: { abilities: ["firstBarrier"] },
+    8: { abilities: ["shield"] },
+    9: { abilities: ["reflect"] },
+    10: { abilities: ["antiDamage"] },
+    11: { abilities: ["floatShoes"] },
+    12: { abilities: ["airShoes"] },
+    13: { abilities: ["underShirt"] },
+    14: { abilities: ["sneakRun"] },
+    15: { abilities: ["oilBody"] },
+    16: { abilities: ["fish"] },
+    17: { abilities: ["battery"] },
+    18: { abilities: ["jungle"] },
+    19: { abilities: ["collect"] },
+    20: { abilities: ["millions"] },
+    21: { abilities: ["humor"] },
+    22: { abilities: ["poem"] },
+    23: { abilities: ["slipRunner"] },
+    24: { abilities: ["autoHeal"] },
+    25: { attack: 3, rapid: 3, charge: 3 },
+    26: { abilities: ["superArmor", "underShirt", "floatShoes", "airShoes"] },
+    28: { abilities: ["bugStop"] },
+    29: { abilities: ["soulClean"] },
+    30: { abilities: ["rush"] },
+    31: { abilities: ["beat"] },
+    32: { abilities: ["tango"] },
+    35: { attack: 1 },
+    36: { rapid: 1 },
+    37: { charge: 1 },
+    39: { attackMax: true },
+    40: { rapidMax: true },
+    41: { chargeMax: true },
+    42: { hp: 50 },
+    43: { hp: 100 },
+    44: { hp: 200 },
+    45: { hp: 300 },
+    46: { hp: 400 },
+    47: { hp: 500 },
+};
+
+export const BN4_PART_EFFECTS: Record<number, PartEffect> = {
+    1: { abilities: ["superArmor"] },
+    2: { custom: 1 },
+    3: { custom: 2 },
+    4: { megaFolder: 1 },
+    5: { megaFolder: 2 },
+    6: { gigaFolder: 1 },
+    7: { abilities: ["firstBarrier"] },
+    8: { abilities: ["shield"] },
+    9: { abilities: ["reflect"] },
+    10: { abilities: ["antiDamage"] },
+    11: { abilities: ["floatShoes"] },
+    12: { abilities: ["airShoes"] },
+    13: { abilities: ["underShirt"] },
+    14: { abilities: ["sneakRun"] },
+    15: { abilities: ["oilBody"] },
+    16: { abilities: ["fish"] },
+    17: { abilities: ["battery"] },
+    18: { abilities: ["jungle"] },
+    19: { abilities: ["collect"] },
+    20: { abilities: ["humor"] },
+    21: { attack: 3, rapid: 3, charge: 3 },
+    22: { abilities: ["superArmor", "underShirt", "floatShoes", "airShoes"] },
+    23: { abilities: ["superArmor", "underShirt", "floatShoes", "airShoes", "shield"], custom: 1, megaFolder: 1 },
+    24: { abilities: ["bugStop"] },
+    25: { abilities: ["soulClean"] },
+    26: { abilities: ["rush"] },
+    27: { abilities: ["beat"] },
+    28: { abilities: ["tango"] },
+    34: { attack: 1 },
+    35: { rapid: 1 },
+    36: { charge: 1 },
+    37: { attackMax: true },
+    38: { rapidMax: true },
+    39: { chargeMax: true },
+    41: { hp: 50 },
+    42: { hp: 100 },
+    43: { hp: 200 },
+    44: { hp: 300 },
+    45: { hp: 400 },
+    46: { hp: 500 },
+};
+
 export const GAME_EFFECTS: Record<string, Record<number, PartEffect>> = {
+    bn4: BN4_PART_EFFECTS,
+    bn5: BN5_PART_EFFECTS,
     bn6: BN6_PART_EFFECTS,
 };
 
@@ -156,14 +249,16 @@ export function computeBuildStats(
     let modChipRecovery: number | undefined;
     let modFirstBarrier: number | string | undefined;
     let modTripleBuster: boolean | undefined;
+    let modSoul: string | undefined;
+    let modSlotsUsed: string[] | undefined;
     let repairedBugs: string[] | undefined;
 
     let baseAttack = attackMax ? 5 : (1 + attackBonus);
     let baseRapid = rapidMax ? 5 : (1 + rapidBonus);
     let baseCharge = chargeMax ? 5 : (1 + chargeBonus);
 
-    if (gameId === "bn6" && modCardIds && modCardIds.length > 0) {
-        const deck = computeDeckStats(modCardIds);
+    if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
+        const deck = computeDeckStats(modCardIds, gameId);
         modMbUsed = deck.totalMb;
         modCardCount = modCardIds.length;
         hp += deck.stats.hp;
@@ -194,6 +289,8 @@ export function computeBuildStats(
         modChipRecovery = deck.chipRecovery;
         modFirstBarrier = deck.firstBarrier;
         modTripleBuster = deck.tripleBuster;
+        modSoul = deck.soul;
+        modSlotsUsed = deck.slotsUsed;
         repairedBugs = deck.repairedBugs;
     }
 
@@ -227,11 +324,19 @@ export function computeBuildStats(
         modChipRecovery,
         modFirstBarrier,
         modTripleBuster,
+        modSoul,
+        modSlotsUsed,
         repairedBugs,
     };
 }
 
 export const ABILITY_NAMES: Record<string, { en: string; ja: string; zh: string }> = {
+    allGuard: { en: "All Guard", ja: "オールガード", zh: "全御防御" },
+    fullSynchro: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" },
+    statusGuard: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" },
+    firstBarrier200: { en: "FirstBarrier200", ja: "ファーストバリア200", zh: "初始防护罩200" },
+    batteryMode: { en: "Battery", ja: "バッテリーモード", zh: "电池模式" },
+    soulClean: { en: "SoulCleaner", ja: "ソウルクリーナー", zh: "灵魂净化" },
     superArmor: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" },
     floatShoes: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" },
     airShoes: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" },
@@ -1679,8 +1784,8 @@ export function analyzeSolutionBugs(
     let modCardBugsList: { cardId: string; cardName: string; bug: ModCardBug }[] | undefined;
     let repairedBugsNotice: string[] | undefined;
 
-    if (gameId === "bn6" && modCardIds && modCardIds.length > 0) {
-        const deck = computeDeckStats(modCardIds);
+    if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
+        const deck = computeDeckStats(modCardIds, gameId);
         repairedBugsNotice = deck.repairedBugs;
 
         // If card has Repair, remove corresponding NaviCust active bugs
@@ -1697,6 +1802,7 @@ export function analyzeSolutionBugs(
                     if (normRep.includes("panel") && bType === "panel") return false;
                     if (normRep.includes("status") && bType === "status") return false;
                     if (normRep.includes("emotion") && bType === "emotion") return false;
+                    if (normRep.includes("damage") && bType.includes("damage")) return false;
                 }
                 return true;
             });
@@ -1706,7 +1812,7 @@ export function analyzeSolutionBugs(
         if (deck.activeBugs.length > 0) {
             modCardBugsList = [];
             for (const entry of deck.activeBugs) {
-                const card = getModCard(entry.sourceCardId);
+                const card = getModCard(entry.sourceCardId, gameId);
                 const cardDisplayName = card ? getCardDisplayName(card, lang) : entry.sourceCardId;
                 modCardBugsList.push({
                     cardId: entry.sourceCardId,

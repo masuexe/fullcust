@@ -3,6 +3,8 @@ const { test } = require("node:test");
 
 const {
     BN6_MOD_CARDS,
+    BN5_MOD_CARDS,
+    BN4_MOD_CARDS,
     getModCard,
     computeDeckStats,
     getCardDisplayName,
@@ -206,4 +208,190 @@ test("searchModCards searches abilities bidirectionally (granting vs removing) a
     const fastGauge = searchModCards("快速量表", "all", "zh");
     assert.ok(fastGauge.allCards.length > 0);
     assert.ok(fastGauge.allCards.every(c => c.gauge === "fast"));
+});
+
+test("BN5 has all 112 patch card entries (111 unique cards) with complete translations and valid parameters", () => {
+    assert.equal(BN5_MOD_CARDS.length, 112);
+    for (const card of BN5_MOD_CARDS) {
+        assert.ok(card.id, `Card has id`);
+        assert.ok(card.cardNo >= 1 && card.cardNo <= 111, `Card ${card.id} has valid cardNo`);
+        assert.ok(card.mb > 0 && card.mb <= 80, `Card ${card.id} has valid MB`);
+        assert.ok(card.name, `Card ${card.id} has English name`);
+        assert.ok(card.nameZh, `Card ${card.id} has Chinese name`);
+        assert.ok(card.nameJa, `Card ${card.id} has Japanese name`);
+        assert.ok(Array.isArray(card.posRaw), `Card ${card.id} has posRaw`);
+        assert.ok(Array.isArray(card.negRaw), `Card ${card.id} has negRaw`);
+    }
+
+    // Verify key iconic cards
+    const kingMan = getModCard("136-B040", "bn5");
+    assert.ok(kingMan);
+    assert.equal(kingMan.nameZh, "国王人");
+    assert.equal(kingMan.mb, 45);
+    assert.equal(kingMan.stats.custom, 2);
+    assert.equal(kingMan.stats.megaFolder, 1);
+    assert.equal(kingMan.stats.hp, -150); // negative stat verified from Japanese reference
+
+    const bassProto = getModCard("136-D001-P", "bn5");
+    assert.ok(bassProto);
+    assert.equal(bassProto.nameZh, "佛鲁迪交错洛克人 (布鲁斯版)");
+    assert.equal(bassProto.mb, 70);
+    assert.equal(bassProto.stats.hp, 200);
+    assert.equal(bassProto.stats.megaFolder, -2);
+    assert.ok(bassProto.abilities.includes("superArmor"));
+    assert.equal(bassProto.bPwrAtk, "ShootingBuster");
+    assert.equal(bassProto.tripleBuster, true);
+
+    const bassColonel = getModCard("136-D001-C", "bn5");
+    assert.ok(bassColonel);
+    assert.equal(bassColonel.nameZh, "佛鲁迪交错洛克人 (卡奈尔版)");
+    assert.equal(bassColonel.mb, 70);
+    assert.equal(bassColonel.stats.hpPercent, 20);
+    assert.equal(bassColonel.stats.megaFolder, -2);
+    assert.ok(bassColonel.abilities.includes("floatShoes"));
+    assert.equal(bassColonel.bPwrAtk, "HellsRolling");
+    assert.equal(bassColonel.tripleBuster, true);
+});
+
+test("BN5 computeDeckStats accurately accumulates stats, capacity, and repairs", () => {
+    // 1. Mettaur (7 MB) + BassProto (70 MB) = 77 MB
+    const deck = computeDeckStats(["136-A001", "136-D001-P"], "bn5");
+    assert.equal(deck.totalMb, 77);
+    assert.equal(deck.isOverCapacity, false);
+    assert.equal(deck.stats.hp, 240); // 40 + 200
+    assert.equal(deck.stats.megaFolder, -2);
+    assert.ok(deck.activeAbilities.includes("superArmor"));
+    assert.ok(deck.disabledAbilities.includes("floatShoes")); // Mettaur disables FloatShoes
+    assert.equal(deck.bPwrAtk, "ShootingBuster");
+    assert.equal(deck.tripleBuster, true);
+
+    // 2. Over capacity (> 80 MB): Hub Hikari (80 MB) + Mettaur (7 MB) = 87 MB
+    const overDeck = computeDeckStats(["136-C010", "136-A001"], "bn5");
+    assert.equal(overDeck.totalMb, 87);
+    assert.equal(overDeck.isOverCapacity, true);
+    assert.equal(overDeck.stats.attackMult, 2);
+    assert.equal(overDeck.stats.hpPercent, -50);
+    assert.equal(overDeck.stats.custom, 3);
+    assert.equal(overDeck.stats.gigaFolder, 1);
+});
+
+test("BN5 computeBuildStats and searchModCards function properly", () => {
+    // NaviCust BN5: Part 1 (SuperArmor, id 1), Part 43 (HP+100, id 43)
+    // Mod Card: 136-A001 (Mettaur: HP+40, bLeft: MetGuard, disables floatShoes)
+    const stats = computeBuildStats("bn5", [1, 43], ["136-A001"]);
+    assert.equal(stats.hp, 140); // 100 + 40
+    assert.ok(stats.abilities.includes("superArmor"));
+    assert.ok(!stats.abilities.includes("floatShoes"));
+    assert.equal(stats.modBLeft, "MetGuard");
+    assert.equal(stats.modMbUsed, 7);
+
+    // Search SuperArmor in BN5
+    const armorResult = searchModCards("超级装甲", "all", "zh", "bn5");
+    assert.ok(armorResult.matchedAbility);
+    assert.equal(armorResult.matchedAbility.key, "superArmor");
+    assert.ok(armorResult.grantingCards.length > 0);
+    assert.ok(armorResult.removingCards.length > 0);
+    // BassCross ProtoMan grants SuperArmor in BN5
+    assert.ok(armorResult.grantingCards.some(c => c.id === "136-D001-P"));
+    // Null (水滴怪, 136-A016) removes SuperArmor in BN5
+    assert.ok(armorResult.removingCards.some(c => c.id === "136-A016"));
+});
+
+test("BN4 has all 133 patch cards defined with 5 functional slots (0A~0E) and color slot (0F)", () => {
+    assert.equal(BN4_MOD_CARDS.length, 133);
+    for (const card of BN4_MOD_CARDS) {
+        assert.ok(card.id, `Card has id`);
+        assert.ok(card.cardNo >= 1 && card.cardNo <= 133, `Card ${card.id} has valid cardNo`);
+        assert.ok(card.slot, `Card ${card.id} has slot`);
+        assert.ok(["0A", "0B", "0C", "0D", "0E", "0F"].includes(card.slot), `Card ${card.id} has valid slot`);
+        assert.ok(card.name, `Card ${card.id} has English name`);
+        assert.ok(card.nameZh, `Card ${card.id} has Chinese name`);
+        assert.ok(card.nameJa, `Card ${card.id} has Japanese name`);
+        assert.ok(Array.isArray(card.posRaw), `Card ${card.id} has posRaw`);
+        assert.ok(Array.isArray(card.negRaw), `Card ${card.id} has negRaw`);
+    }
+
+    // Verify key iconic cards
+    const card1 = getModCard("134-001", "bn4");
+    assert.ok(card1);
+    assert.equal(card1.slot, "0A");
+    assert.equal(card1.stats.hp, 100);
+
+    const fullSynchroCard = getModCard("134-045", "bn4");
+    assert.ok(fullSynchroCard);
+    assert.equal(fullSynchroCard.slot, "0C");
+    assert.ok(fullSynchroCard.abilities.includes("fullSynchro"));
+
+    const tripleSupportCard = getModCard("134-074", "bn4");
+    assert.ok(tripleSupportCard);
+    assert.equal(tripleSupportCard.slot, "0B");
+    assert.ok(tripleSupportCard.abilities.includes("rush"));
+    assert.ok(tripleSupportCard.abilities.includes("beat"));
+    assert.ok(tripleSupportCard.abilities.includes("tango"));
+
+    const rollSoul = getModCard("134-G001", "bn4");
+    assert.ok(rollSoul);
+    assert.equal(rollSoul.nameZh, "萝露灵魂");
+    assert.equal(rollSoul.slot, "0E");
+    assert.equal(rollSoul.soul, "RollSoul");
+    assert.ok(rollSoul.bugs.some(b => b.type === "battleHp"));
+
+    // Slot 0F palette card
+    const paletteBlue = getModCard("134-028", "bn4");
+    assert.ok(paletteBlue);
+    assert.equal(paletteBlue.slot, "0F");
+});
+
+test("BN4 computeDeckStats handles 5-slot architecture and slot conflicts", () => {
+    // 1. Valid 5-card loadout across distinct slots 0A ~ 0E
+    // 0A: 134-001 (HP+100)
+    // 0B: 134-003 (HP+150)
+    // 0C: 134-045 (Full Synchro)
+    // 0D: 134-014 (Metal panel walk)
+    // 0E: 134-G001 (RollSoul)
+    const deck = computeDeckStats(
+        ["134-001", "134-003", "134-045", "134-014", "134-G001"],
+        "bn4"
+    );
+    assert.equal(deck.slotsUsed.length, 5);
+    assert.equal(deck.hasSlotConflict, false);
+    assert.equal(deck.isOverCapacity, false);
+    assert.equal(deck.soul, "RollSoul");
+    assert.equal(deck.stats.hp, 250); // 100 + 150
+    assert.ok(deck.activeAbilities.includes("fullSynchro"));
+    assert.ok(deck.activeBugs.some(b => b.bug.type === "battleHp"));
+
+    // 2. Slot conflict: two cards with slot 0A (134-001 and 134-004)
+    const conflictDeck = computeDeckStats(
+        ["134-001", "134-004"],
+        "bn4"
+    );
+    assert.equal(conflictDeck.hasSlotConflict, true);
+    assert.equal(conflictDeck.isOverCapacity, true);
+});
+
+test("BN4 computeBuildStats and searchModCards function properly", () => {
+    // NaviCust BN4 + BN4 Mod Card
+    // Part 1 (SuperArmor in BN4) + 134-045 (FullSynchro) + 134-G001 (RollSoul)
+    const stats = computeBuildStats("bn4", [1], ["134-045", "134-G001"]);
+    assert.equal(stats.modSoul, "RollSoul");
+    assert.equal(stats.modCardCount, 2);
+    assert.equal(stats.modSlotsUsed.length, 2);
+    assert.ok(stats.abilities.includes("superArmor"));
+    assert.ok(stats.abilities.includes("fullSynchro"));
+
+    // Search by slot
+    const slot0A = searchModCards("", "slot0A", "zh", "bn4");
+    assert.equal(slot0A.allCards.length, 27);
+    assert.ok(slot0A.allCards.every(c => c.slot === "0A"));
+
+    // Search by soul unisons
+    const souls = searchModCards("", "souls", "zh", "bn4");
+    assert.equal(souls.allCards.length, 12);
+    assert.ok(souls.allCards.every(c => c.soul != null));
+
+    // Search by ability in BN4 (e.g. 完全同步 / fullSynchro)
+    const synchroResult = searchModCards("完全同步", "all", "zh", "bn4");
+    assert.ok(synchroResult.allCards.length > 0);
+    assert.ok(synchroResult.allCards.some(c => c.id === "134-045"));
 });

@@ -1,4 +1,6 @@
-import rawCards from "./data/bn6-modcards.json";
+import bn6Cards from "./data/bn6-modcards.json";
+import bn5Cards from "./data/bn5-modcards.json";
+import bn4Cards from "./data/bn4-modcards.json";
 import { Lang } from "./i18n";
 
 export interface ModCardStats {
@@ -11,6 +13,7 @@ export interface ModCardStats {
     custom?: number;
     megaFolder?: number;
     gigaFolder?: number;
+    soulTime?: number;
 }
 
 export interface ModCardBug {
@@ -28,6 +31,9 @@ export interface ModCard {
     nameZh: string;
     nameJa: string;
     mb: number;
+    slot?: "0A" | "0B" | "0C" | "0D" | "0E" | "0F" | string;
+    part?: string;
+    soul?: string;
     posRaw: string[];
     negRaw: string[];
     stats: ModCardStats;
@@ -52,15 +58,35 @@ export interface ModCard {
     bugs: ModCardBug[];
 }
 
-export const BN6_MOD_CARDS: ModCard[] = rawCards as ModCard[];
+export const BN6_MOD_CARDS: ModCard[] = bn6Cards as ModCard[];
 export const BN6_MOD_CARDS_MAP = new Map<string, ModCard>(
     BN6_MOD_CARDS.map(c => [c.id, c])
 );
 
-export const BN6_MAX_MOD_MB = 80;
+export const BN5_MOD_CARDS: ModCard[] = bn5Cards as ModCard[];
+export const BN5_MOD_CARDS_MAP = new Map<string, ModCard>(
+    BN5_MOD_CARDS.map(c => [c.id, c])
+);
 
-export function getModCard(id: string): ModCard | undefined {
-    return BN6_MOD_CARDS_MAP.get(id);
+export const BN4_MOD_CARDS: ModCard[] = bn4Cards as ModCard[];
+export const BN4_MOD_CARDS_MAP = new Map<string, ModCard>(
+    BN4_MOD_CARDS.map(c => [c.id, c])
+);
+
+export const BN6_MAX_MOD_MB = 80;
+export const BN5_MAX_MOD_MB = 80;
+
+export function getModCards(gameId: string = "bn6"): ModCard[] {
+    if (gameId === "bn4") return BN4_MOD_CARDS;
+    if (gameId === "bn5") return BN5_MOD_CARDS;
+    return BN6_MOD_CARDS;
+}
+
+export function getModCard(id: string, gameId?: string): ModCard | undefined {
+    if (gameId === "bn4") return BN4_MOD_CARDS_MAP.get(id);
+    if (gameId === "bn5") return BN5_MOD_CARDS_MAP.get(id);
+    if (gameId === "bn6") return BN6_MOD_CARDS_MAP.get(id);
+    return BN6_MOD_CARDS_MAP.get(id) || BN5_MOD_CARDS_MAP.get(id) || BN4_MOD_CARDS_MAP.get(id);
 }
 
 export function getCardDisplayName(card: ModCard, lang: Lang): string {
@@ -72,6 +98,9 @@ export function getCardDisplayName(card: ModCard, lang: Lang): string {
 export interface DeckStats {
     totalMb: number;
     isOverCapacity: boolean;
+    slotsUsed?: string[];
+    hasSlotConflict?: boolean;
+    soul?: string;
     stats: {
         hp: number;
         hpPercent: number;
@@ -82,6 +111,7 @@ export interface DeckStats {
         custom: number;
         megaFolder: number;
         gigaFolder: number;
+        soulTime?: number;
     };
     activeAbilities: string[];
     disabledAbilities: string[];
@@ -104,9 +134,9 @@ export interface DeckStats {
     tripleBuster?: boolean;
 }
 
-export function computeDeckStats(cardIds: string[]): DeckStats {
+export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): DeckStats {
     let totalMb = 0;
-    const stats = {
+    const stats: DeckStats["stats"] = {
         hp: 0,
         hpPercent: 0,
         attack: 0,
@@ -116,10 +146,15 @@ export function computeDeckStats(cardIds: string[]): DeckStats {
         custom: 0,
         megaFolder: 0,
         gigaFolder: 0,
+        soulTime: 0,
     };
 
     const abilitiesSet = new Set<string>();
     const disabledSet = new Set<string>();
+    const slotsUsed: string[] = [];
+    const seenSlots = new Set<string>();
+    let hasSlotConflict = false;
+    let soul: string | undefined;
 
     type DeckBugEntry = {
         sourceCardId: string;
@@ -143,10 +178,18 @@ export function computeDeckStats(cardIds: string[]): DeckStats {
     let tripleBuster: boolean | undefined;
 
     for (const cid of cardIds) {
-        const card = BN6_MOD_CARDS_MAP.get(cid);
+        const card = getModCard(cid, gameId);
         if (!card) continue;
 
         totalMb += card.mb;
+        if (card.slot) {
+            slotsUsed.push(card.slot);
+            if (seenSlots.has(card.slot)) {
+                hasSlotConflict = true;
+            }
+            seenSlots.add(card.slot);
+        }
+        if (card.soul) soul = card.soul;
 
         // Stats accumulate
         if (card.stats.hp) stats.hp += card.stats.hp;
@@ -158,6 +201,7 @@ export function computeDeckStats(cardIds: string[]): DeckStats {
         if (card.stats.custom) stats.custom += card.stats.custom;
         if (card.stats.megaFolder) stats.megaFolder += card.stats.megaFolder;
         if (card.stats.gigaFolder) stats.gigaFolder += card.stats.gigaFolder;
+        if (card.stats.soulTime) stats.soulTime = (stats.soulTime || 0) + card.stats.soulTime;
 
         // Abilities
         if (card.abilities) {
@@ -227,9 +271,16 @@ export function computeDeckStats(cardIds: string[]): DeckStats {
         }
     }
 
+    const isOverCapacity = gameId === "bn4"
+        ? hasSlotConflict || cardIds.length > 5
+        : totalMb > 80;
+
     return {
         totalMb,
-        isOverCapacity: totalMb > BN6_MAX_MOD_MB,
+        isOverCapacity,
+        slotsUsed,
+        hasSlotConflict,
+        soul,
         stats,
         activeAbilities: Array.from(abilitiesSet).sort(),
         disabledAbilities: Array.from(disabledSet).sort(),
@@ -272,8 +323,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "スーパーアーマー",
             "アーマー",
         ],
-        grants: c => (c.abilities || []).includes("superArmor") || (c.posRaw || []).some(p => p.toLowerCase().includes("superarmor")),
-        removes: c => (c.disabledAbilities || []).includes("superArmor") || (c.negRaw || []).some(n => n.toLowerCase().includes("superarmor")),
+        grants: c =>
+            (c.abilities || []).includes("superArmor") ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("superarmor") || p.includes("スーパーアーマー")),
+        removes: c =>
+            (c.disabledAbilities || []).includes("superArmor") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("superarmor") || n.includes("スーパーアーマー")),
     },
     {
         key: "floatShoes",
@@ -288,8 +343,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "フロートシューズ",
             "フロート",
         ],
-        grants: c => (c.abilities || []).includes("floatShoes") || (c.posRaw || []).some(p => p.toLowerCase().includes("floatshoes")),
-        removes: c => (c.disabledAbilities || []).includes("floatShoes") || (c.negRaw || []).some(n => n.toLowerCase().includes("floatshoes")),
+        grants: c =>
+            (c.abilities || []).includes("floatShoes") ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("floatshoes") || p.includes("フロートシューズ")),
+        removes: c =>
+            (c.disabledAbilities || []).includes("floatShoes") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("floatshoes") || n.includes("フロートシューズ")),
     },
     {
         key: "airShoes",
@@ -302,8 +361,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "飞鞋",
             "エアシューズ",
         ],
-        grants: c => (c.abilities || []).includes("airShoes") || (c.posRaw || []).some(p => p.toLowerCase().includes("airshoes")),
-        removes: c => (c.disabledAbilities || []).includes("airShoes") || (c.negRaw || []).some(n => n.toLowerCase().includes("airshoes")),
+        grants: c =>
+            (c.abilities || []).includes("airShoes") ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("airshoes") || p.includes("エアシューズ") || p.includes("エアーシューズ")),
+        removes: c =>
+            (c.disabledAbilities || []).includes("airShoes") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("airshoes") || n.includes("エアシューズ")),
     },
     {
         key: "underShirt",
@@ -317,8 +380,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "不死",
             "アンダーシャツ",
         ],
-        grants: c => (c.abilities || []).includes("underShirt") || (c.posRaw || []).some(p => p.toLowerCase().includes("undershirt")),
-        removes: c => (c.disabledAbilities || []).includes("underShirt") || (c.negRaw || []).some(n => n.toLowerCase().includes("undershirt")),
+        grants: c =>
+            (c.abilities || []).includes("underShirt") ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("undershirt") || p.includes("アンダーシャツ")),
+        removes: c =>
+            (c.disabledAbilities || []).includes("underShirt") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("undershirt") || n.includes("アンダーシャツ")),
     },
     {
         key: "statusGuard",
@@ -331,8 +398,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "防状态",
             "ステータスガード",
         ],
-        grants: c => (c.abilities || []).includes("statusGuard") || (c.posRaw || []).some(p => p.toLowerCase().includes("statusguard")),
-        removes: c => (c.disabledAbilities || []).includes("statusGuard") || (c.negRaw || []).some(n => n.toLowerCase().includes("statusguard")),
+        grants: c =>
+            (c.abilities || []).includes("statusGuard") ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("statusguard") || p.includes("ステータスガード")),
+        removes: c =>
+            (c.disabledAbilities || []).includes("statusGuard") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("statusguard") || n.includes("ステータスガード")),
     },
     {
         key: "firstBarrier",
@@ -353,8 +424,18 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             (c.abilities || []).includes("firstBarrier") ||
             (c.abilities || []).includes("firstBarrier200") ||
             !!c.firstBarrier ||
-            (c.posRaw || []).some(p => p.toLowerCase().includes("firstbarrier") || p.toLowerCase().includes("firstbubblewrap") || p.toLowerCase().includes("first lifeaura")),
-        removes: c => (c.disabledAbilities || []).includes("firstBarrier") || (c.negRaw || []).some(n => n.toLowerCase().includes("firstbarrier")),
+            (c.posRaw || []).some(
+                p =>
+                    p.toLowerCase().includes("firstbarrier") ||
+                    p.toLowerCase().includes("firstbubblewrap") ||
+                    p.toLowerCase().includes("first lifeaura") ||
+                    p.includes("ファーストバリア") ||
+                    p.includes("ファーストバブルラップ") ||
+                    p.includes("ファーストドリームオーラ")
+            ),
+        removes: c =>
+            (c.disabledAbilities || []).includes("firstBarrier") ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("firstbarrier") || n.includes("ファーストバリア")),
     },
     {
         key: "busterAddition",
@@ -366,8 +447,12 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "射击追加",
             "バスター追加",
         ],
-        grants: c => !!c.busterAddition || (c.posRaw || []).some(p => p.toLowerCase().includes("buster addition")),
-        removes: c => !!c.disabledBusterAddition || (c.negRaw || []).some(n => n.toLowerCase().includes("buster addition")),
+        grants: c =>
+            !!c.busterAddition ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("buster addition") || p.includes("バスターで")),
+        removes: c =>
+            !!c.disabledBusterAddition ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("buster addition") || n.includes("バスターの追加効果をOFF")),
     },
     {
         key: "chargeAddition",
@@ -380,22 +465,45 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
             "集气追加",
             "チャージ追加",
         ],
-        grants: c => !!c.chargeAddition || (c.posRaw || []).some(p => p.toLowerCase().includes("charge addition") || p.toLowerCase().includes("chargeshot addition")),
-        removes: c => !!c.disabledChargeAddition || (c.negRaw || []).some(n => n.toLowerCase().includes("charge addition") || n.toLowerCase().includes("chargeshot addition")),
+        grants: c =>
+            !!c.chargeAddition ||
+            (c.posRaw || []).some(
+                p =>
+                    p.toLowerCase().includes("charge addition") ||
+                    p.toLowerCase().includes("chargeshot addition") ||
+                    p.includes("チャージショットに") ||
+                    p.includes("チャージショットで")
+            ),
+        removes: c =>
+            !!c.disabledChargeAddition ||
+            (c.negRaw || []).some(
+                n =>
+                    n.toLowerCase().includes("charge addition") ||
+                    n.toLowerCase().includes("chargeshot addition") ||
+                    n.includes("チャージショットの追加効果をOFF")
+            ),
     },
     {
         key: "bLeft",
         name: { en: "B+Left", ja: "B+左", zh: "B+左" },
         synonyms: ["b+left", "b+左", "b左"],
-        grants: c => !!c.bLeft || (c.posRaw || []).some(p => p.toLowerCase().includes("b+left")),
-        removes: c => !!c.disabledBLeft || (c.negRaw || []).some(n => n.toLowerCase().includes("b+left")),
+        grants: c =>
+            !!c.bLeft ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("b+left") || p.includes("B+左で")),
+        removes: c =>
+            !!c.disabledBLeft ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("b+left") || n.includes("B+左をOFF")),
     },
     {
         key: "chipRecovery",
         name: { en: "Chip Recovery", ja: "チップリカバリー", zh: "芯片回复" },
         synonyms: ["chip recovery", "chiprecovery", "芯片回复", "チップリカバリー"],
-        grants: c => !!c.chipRecovery || (c.posRaw || []).some(p => p.toLowerCase().includes("chip recovery")),
-        removes: c => !!c.disabledChipRecovery || (c.negRaw || []).some(n => n.toLowerCase().includes("chip recovery")),
+        grants: c =>
+            !!c.chipRecovery ||
+            (c.posRaw || []).some(p => p.toLowerCase().includes("chip recovery") || p.includes("チップ使用時にリカバリー")),
+        removes: c =>
+            !!c.disabledChipRecovery ||
+            (c.negRaw || []).some(n => n.toLowerCase().includes("chip recovery") || n.includes("チップ使用時にリカバリーをOFF")),
     },
 ];
 
@@ -413,15 +521,36 @@ export interface ModCardSearchResult {
 export function searchModCards(
     query: string,
     categoryFilter: string,
-    lang: Lang = "zh"
+    lang: Lang = "zh",
+    gameId: string = "bn6"
 ): ModCardSearchResult {
     const q = (query || "").trim().toLowerCase();
+    const allCardsList = getModCards(gameId);
 
     // 1. Filter by category
-    const baseCards = BN6_MOD_CARDS.filter(c => {
-        if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 53)) return false;
-        if (categoryFilter === "part2" && (c.cardNo < 54 || c.cardNo > 106)) return false;
-        if (categoryFilter === "promo" && c.cardNo < 107) return false;
+    const baseCards = allCardsList.filter(c => {
+        if (gameId === "bn4") {
+            if (categoryFilter === "slot0A" && c.slot !== "0A") return false;
+            if (categoryFilter === "slot0B" && c.slot !== "0B") return false;
+            if (categoryFilter === "slot0C" && c.slot !== "0C") return false;
+            if (categoryFilter === "slot0D" && c.slot !== "0D") return false;
+            if (categoryFilter === "slot0E" && c.slot !== "0E") return false;
+            if (categoryFilter === "slot0F" && c.slot !== "0F") return false;
+            if (categoryFilter === "part1" && c.part !== "part1") return false;
+            if (categoryFilter === "part2" && c.part !== "part2") return false;
+            if (categoryFilter === "part3" && c.part !== "part3") return false;
+            if (categoryFilter === "part4" && c.part !== "part4") return false;
+            if (categoryFilter === "souls" && !c.soul) return false;
+            if (categoryFilter === "promo" && c.part !== "promo") return false;
+        } else if (gameId === "bn5") {
+            if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 50)) return false;
+            if (categoryFilter === "part2" && (c.cardNo < 51 || c.cardNo > 100)) return false;
+            if (categoryFilter === "promo" && c.cardNo < 101) return false;
+        } else {
+            if (categoryFilter === "part1" && (c.cardNo < 1 || c.cardNo > 53)) return false;
+            if (categoryFilter === "part2" && (c.cardNo < 54 || c.cardNo > 106)) return false;
+            if (categoryFilter === "promo" && c.cardNo < 107) return false;
+        }
         return true;
     });
 

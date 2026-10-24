@@ -207,6 +207,11 @@ function BuildStatsView({
                         🧬 {stats.modBody}Body
                     </span>
                 ) : null}
+                {stats.modSoul ? (
+                    <span className="badge bg-warning text-dark py-1 px-2 border border-warning fw-bold">
+                        🌟 {stats.modSoul}
+                    </span>
+                ) : null}
                 {stats.modGauge ? (
                     <span className={`badge ${stats.modGauge === "fast" ? "bg-success" : stats.modGauge === "slow" ? "bg-danger" : "bg-secondary"} py-1 px-2`}>
                         ⏱️ {stats.modGauge === "fast" ? (lang === "zh" ? "快速量表" : lang === "ja" ? "クイックゲージ" : "FastGauge") : stats.modGauge === "slow" ? (lang === "zh" ? "缓慢量表" : lang === "ja" ? "ヘビーゲージ" : "SlowGauge") : "NormalGauge"}
@@ -393,15 +398,17 @@ function ModCardManager({
     lang: Lang;
     data?: Data;
 }) {
+    const gameId = data?.gameId || "bn6";
+    const isBn4 = gameId === "bn4";
     const cardIds = problem.modCards || [];
-    const deck = computeDeckStats(cardIds);
+    const deck = computeDeckStats(cardIds, gameId);
     const [selectedCardToAdd, setSelectedCardToAdd] = React.useState<string>("");
     const [searchQuery, setSearchQuery] = React.useState<string>("");
     const [categoryFilter, setCategoryFilter] = React.useState<string>("all");
 
     const searchResult = React.useMemo(() => {
-        return searchModCards(searchQuery, categoryFilter, lang);
-    }, [searchQuery, categoryFilter, lang]);
+        return searchModCards(searchQuery, categoryFilter, lang, gameId);
+    }, [searchQuery, categoryFilter, lang, gameId]);
 
     const activeBuildAbilities = React.useMemo(() => {
         if (!data) return deck.activeAbilities;
@@ -413,10 +420,22 @@ function ModCardManager({
 
     const handleAddCard = (cid: string) => {
         if (!cid) return;
-        onChange({
-            ...problem,
-            modCards: [...cardIds, cid],
-        });
+        const newCard = getModCard(cid, gameId);
+        if (isBn4 && newCard?.slot) {
+            const filtered = cardIds.filter(id => {
+                const existing = getModCard(id, gameId);
+                return !existing || existing.slot !== newCard.slot;
+            });
+            onChange({
+                ...problem,
+                modCards: [...filtered, cid],
+            });
+        } else {
+            onChange({
+                ...problem,
+                modCards: [...cardIds, cid],
+            });
+        }
         setSelectedCardToAdd("");
     };
 
@@ -460,8 +479,9 @@ function ModCardManager({
         });
     };
 
-    const percentUsed = Math.min(100, Math.round((deck.totalMb / 80) * 100));
-    const isOver = deck.totalMb > 80;
+    const isOver = isBn4 ? (deck.hasSlotConflict || cardIds.length > 5) : deck.totalMb > 80;
+    const percentUsed = isBn4 ? Math.min(100, Math.round((cardIds.length / 5) * 100)) : Math.min(100, Math.round((deck.totalMb / 80) * 100));
+    const cardPrefix = (c: ModCard) => (isBn4 ? `[${c.slot || "Slot"}]` : `[${c.mb} MB]`);
 
     return (
         <div className="accordion mb-2" id="modcards-section">
@@ -477,8 +497,8 @@ function ModCardManager({
                     >
                         <span className="me-2">🎴</span>
                         <span className="fw-semibold me-2">{t("modCards", lang)}</span>
-                        <span className={`badge ${isOver ? "bg-danger" : deck.totalMb > 0 ? "bg-primary" : "bg-secondary"} ms-auto me-2`}>
-                            {deck.totalMb} / 80 MB ({cardIds.length})
+                        <span className={`badge ${isOver ? "bg-danger" : cardIds.length > 0 ? "bg-primary" : "bg-secondary"} ms-auto me-2`}>
+                            {isBn4 ? `${cardIds.length} / 5 ${t("slots", lang)}` : `${deck.totalMb} / 80 MB (${cardIds.length})`}
                         </span>
                     </button>
                 </h2>
@@ -489,22 +509,31 @@ function ModCardManager({
                     data-bs-parent="#modcards-section"
                 >
                     <div className="accordion-body p-2">
-                        {/* MB Capacity Progress Bar */}
+                        {/* Capacity Progress Bar */}
                         <div className="mb-2">
-                            <div className="d-flex justify-content-between small text-muted mb-1">
-                                <span>{t("modCapacity", lang)}</span>
-                                <span className={isOver ? "text-danger fw-bold" : "fw-semibold"}>
-                                    {deck.totalMb} / 80 MB {isOver ? `(${t("capacityExceeded", lang)})` : `(${80 - deck.totalMb} MB left)`}
-                                </span>
-                            </div>
+                            {isBn4 ? (
+                                <div className="d-flex justify-content-between small text-muted mb-1">
+                                    <span>{t("bn4SlotLimit", lang)}</span>
+                                    <span className={isOver ? "text-danger fw-bold" : "fw-semibold"}>
+                                        {cardIds.length} / 5 {t("slots", lang)}
+                                    </span>
+                                </div>
+                            ) : (
+                                <div className="d-flex justify-content-between small text-muted mb-1">
+                                    <span>{t("modCapacity", lang)}</span>
+                                    <span className={isOver ? "text-danger fw-bold" : "fw-semibold"}>
+                                        {deck.totalMb} / 80 MB {isOver ? `(${t("capacityExceeded", lang)})` : `(${80 - deck.totalMb} MB left)`}
+                                    </span>
+                                </div>
+                            )}
                             <div className="progress" style={{ height: "8px" }}>
                                 <div
                                     className={`progress-bar ${isOver ? "bg-danger" : percentUsed >= 90 ? "bg-warning" : "bg-success"}`}
                                     role="progressbar"
                                     style={{ width: `${percentUsed}%` }}
-                                    aria-valuenow={deck.totalMb}
+                                    aria-valuenow={isBn4 ? cardIds.length : deck.totalMb}
                                     aria-valuemin={0}
-                                    aria-valuemax={80}
+                                    aria-valuemax={isBn4 ? 5 : 80}
                                 />
                             </div>
                         </div>
@@ -522,7 +551,7 @@ function ModCardManager({
                         ) : (
                             <div className="list-group mb-2">
                                 {cardIds.map((cid, idx) => {
-                                    const card = getModCard(cid);
+                                    const card = getModCard(cid, gameId);
                                     if (!card) return null;
                                     const cardName = getCardDisplayName(card, lang);
 
@@ -536,10 +565,17 @@ function ModCardManager({
                                                     <span className="badge bg-secondary" style={{ fontSize: "0.75rem" }}>
                                                         #{card.cardNo}
                                                     </span>
+                                                    {card.slot ? (
+                                                        <span className="badge bg-warning text-dark fw-bold" style={{ fontSize: "0.75rem" }}>
+                                                            {card.slot}
+                                                        </span>
+                                                    ) : null}
                                                     <span className="fw-bold small">{cardName}</span>
-                                                    <span className="badge bg-primary text-light" style={{ fontSize: "0.75rem" }}>
-                                                        {card.mb} MB
-                                                    </span>
+                                                    {card.mb > 0 ? (
+                                                        <span className="badge bg-primary text-light" style={{ fontSize: "0.75rem" }}>
+                                                            {card.mb} MB
+                                                        </span>
+                                                    ) : null}
                                                     <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
                                                         [{card.id}]
                                                     </span>
@@ -617,9 +653,32 @@ function ModCardManager({
                                         onChange={e => setCategoryFilter(e.target.value)}
                                     >
                                         <option value="all">{t("allCardCategories", lang)}</option>
-                                        <option value="part1">{t("part1Cards", lang)}</option>
-                                        <option value="part2">{t("part2Cards", lang)}</option>
-                                        <option value="promo">{t("promoCards", lang)}</option>
+                                        {isBn4 ? (
+                                            <>
+                                                <optgroup label={t("slot", lang)}>
+                                                    <option value="slot0A">{t("slot0A", lang)}</option>
+                                                    <option value="slot0B">{t("slot0B", lang)}</option>
+                                                    <option value="slot0C">{t("slot0C", lang)}</option>
+                                                    <option value="slot0D">{t("slot0D", lang)}</option>
+                                                    <option value="slot0E">{t("slot0E", lang)}</option>
+                                                    <option value="slot0F">{t("slot0F", lang)}</option>
+                                                </optgroup>
+                                                <optgroup label={t("cardCategory", lang)}>
+                                                    <option value="part1">{t("part1Cards", lang)}</option>
+                                                    <option value="part2">{t("part2Cards", lang)}</option>
+                                                    <option value="part3">{t("part3Cards", lang)}</option>
+                                                    <option value="part4">{t("part4Cards", lang)}</option>
+                                                    <option value="souls">{t("soulUnisons", lang)}</option>
+                                                    <option value="promo">{t("promoCards", lang)}</option>
+                                                </optgroup>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <option value="part1">{t("part1Cards", lang)}</option>
+                                                <option value="part2">{t("part2Cards", lang)}</option>
+                                                <option value="promo">{t("promoCards", lang)}</option>
+                                            </>
+                                        )}
                                     </select>
                                 </div>
                                 <div className="col-sm-7">
@@ -678,7 +737,7 @@ function ModCardManager({
                                                         const cName = getCardDisplayName(c, lang);
                                                         return (
                                                             <option key={c.id} value={c.id}>
-                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id}) 🟢 [ON]
+                                                                {cardPrefix(c)} #{c.cardNo} {cName} ({c.id}) 🟢 [ON]
                                                             </option>
                                                         );
                                                     })}
@@ -690,7 +749,7 @@ function ModCardManager({
                                                         const cName = getCardDisplayName(c, lang);
                                                         return (
                                                             <option key={c.id} value={c.id}>
-                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id}) 🔴 [OFF]
+                                                                {cardPrefix(c)} #{c.cardNo} {cName} ({c.id}) 🔴 [OFF]
                                                             </option>
                                                         );
                                                     })}
@@ -702,7 +761,7 @@ function ModCardManager({
                                                         const cName = getCardDisplayName(c, lang);
                                                         return (
                                                             <option key={c.id} value={c.id}>
-                                                                [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
+                                                                {cardPrefix(c)} #{c.cardNo} {cName} ({c.id})
                                                             </option>
                                                         );
                                                     })}
@@ -714,7 +773,7 @@ function ModCardManager({
                                             const cName = getCardDisplayName(c, lang);
                                             return (
                                                 <option key={c.id} value={c.id}>
-                                                    [{c.mb} MB] #{c.cardNo} {cName} ({c.id})
+                                                    {cardPrefix(c)} #{c.cardNo} {cName} ({c.id})
                                                 </option>
                                             );
                                         })
@@ -732,9 +791,12 @@ function ModCardManager({
 
                             {/* Card Details Preview and Overwrite Warnings */}
                             {selectedCardToAdd ? (() => {
-                                const card = getModCard(selectedCardToAdd);
+                                const card = getModCard(selectedCardToAdd, gameId);
                                 if (!card) return null;
                                 const conflicts = (card.disabledAbilities || []).filter(a => activeBuildAbilities.includes(a));
+                                const existingSameSlotCard = isBn4 && card.slot
+                                    ? cardIds.map(id => getModCard(id, gameId)).find(c => c && c.slot === card.slot)
+                                    : null;
                                 return (
                                     <div className="mt-2 p-2 bg-body rounded border">
                                         <div className="d-flex flex-wrap gap-1" style={{ fontSize: "0.75rem" }}>
@@ -749,6 +811,15 @@ function ModCardManager({
                                                 </span>
                                             ))}
                                         </div>
+                                        {existingSameSlotCard ? (
+                                            <div className="alert alert-info py-1 px-2 mt-2 mb-0 small" style={{ fontSize: "0.75rem" }}>
+                                                ℹ️ {lang === "zh"
+                                                    ? `装备此卡将替换已装备的 ${existingSameSlotCard.slot} 卡片：${getCardDisplayName(existingSameSlotCard, lang)}`
+                                                    : lang === "ja"
+                                                    ? `このカードを装備すると、装備中の ${existingSameSlotCard.slot} カード「${getCardDisplayName(existingSameSlotCard, lang)}」と入れ替わります`
+                                                    : `Equipping this card will replace equipped ${existingSameSlotCard.slot} card: ${getCardDisplayName(existingSameSlotCard, lang)}`}
+                                            </div>
+                                        ) : null}
                                         {conflicts.length > 0 ? (
                                             <div className="alert alert-warning py-1 px-2 mt-2 mb-0 small" style={{ fontSize: "0.75rem" }}>
                                                 ⚠️ {t("removesEquippedAbilityWarning", lang)}: <strong>{conflicts.map(c => tAbility(c, lang)).join("、")}</strong>
@@ -1253,7 +1324,7 @@ function PartSelector({
                 </div>
             </div>
 
-            {data.gameId === "bn6" ? (
+            {data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6" ? (
                 <ModCardManager problem={problem} onChange={onChange} lang={lang} data={data} />
             ) : null}
 

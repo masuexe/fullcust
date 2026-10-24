@@ -317,14 +317,79 @@ export const translations = {
         zh: "全部类别",
     },
     part1Cards: {
-        en: "Part 1 (Item #1~53)",
-        ja: "第1弾 (137-A)",
-        zh: "第1弹 (137-A)",
+        en: "Part 1",
+        ja: "第1弾",
+        zh: "第1弹",
     },
     part2Cards: {
-        en: "Part 2 (Item #54~106)",
-        ja: "第2弾 (137-B)",
-        zh: "第2弹 (137-B)",
+        en: "Part 2",
+        ja: "第2弾",
+        zh: "第2弹",
+    },
+    part3Cards: {
+        en: "Part 3",
+        ja: "第3弾",
+        zh: "第3弹",
+    },
+    part4Cards: {
+        en: "Part 4",
+        ja: "第4弾",
+        zh: "第4弹",
+    },
+    soulUnisons: {
+        en: "Soul Unisons",
+        ja: "ソウルユニゾン",
+        zh: "灵魂共鸣",
+    },
+    slot: {
+        en: "Slot",
+        ja: "アドレス",
+        zh: "槽位",
+    },
+    slots: {
+        en: "Slots",
+        ja: "スロット",
+        zh: "槽位",
+    },
+    cardCategory: {
+        en: "Category",
+        ja: "区分",
+        zh: "类别",
+    },
+    slot0A: {
+        en: "Slot 0A",
+        ja: "アドレス 0A",
+        zh: "槽位 0A",
+    },
+    slot0B: {
+        en: "Slot 0B",
+        ja: "アドレス 0B",
+        zh: "槽位 0B",
+    },
+    slot0C: {
+        en: "Slot 0C",
+        ja: "アドレス 0C",
+        zh: "槽位 0C",
+    },
+    slot0D: {
+        en: "Slot 0D",
+        ja: "アドレス 0D",
+        zh: "槽位 0D",
+    },
+    slot0E: {
+        en: "Slot 0E",
+        ja: "アドレス 0E",
+        zh: "槽位 0E",
+    },
+    slot0F: {
+        en: "Slot 0F (Palette)",
+        ja: "アドレス 0F (カラーのみ)",
+        zh: "槽位 0F (改颜色/无属性)",
+    },
+    bn4SlotLimit: {
+        en: "Max 1 card per slot (0A~0E, max 5 cards)",
+        ja: "アドレスごとに1枚 (0A〜0E、最大5枚)",
+        zh: "每个槽位最多1张 (0A~0E，最多5张)",
     },
     promoCards: {
         en: "Promotional & Special",
