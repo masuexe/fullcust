@@ -1862,62 +1862,44 @@ function Results({
             ) : null}
 
             <BuildStatsView data={data} problem={problem} />
-            {(() => {
-                const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
-                const buildStats = computeBuildStats(data.gameId, partIds, problem.modCards, problem.baseHp ?? 1000);
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                        "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
+                    gap: "1.25rem",
+                }}
+            >
+                {solutions.length > 0 ? (
+                    solutions.map((solution, i) => {
+                        const cells = placeAll(
+                            data.parts,
+                            problem.requirements,
+                            solution as Solution,
+                            gs
+                        );
+                        const analysis = analyzeSolutionBugs(
+                            data.gameId,
+                            data.partMetas,
+                            problem.requirements,
+                            cells,
+                            gs,
+                            lang,
+                            problem.modCards
+                        );
 
-                return (
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "repeat(auto-fit, minmax(min(100%, 360px), 1fr))",
-                            gap: "1.25rem",
-                        }}
-                    >
-                        {solutions.length > 0 ? (
-                            solutions.map((solution, i) => {
-                                const cells = placeAll(
-                                    data.parts,
-                                    problem.requirements,
-                                    solution as Solution,
-                                    gs
-                                );
-                                const analysis = analyzeSolutionBugs(
-                                    data.gameId,
-                                    data.partMetas,
-                                    problem.requirements,
-                                    cells,
-                                    gs,
-                                    lang,
-                                    problem.modCards
-                                );
-
-                                return (
-                                    <div
-                                        className="card shadow-sm p-3 bg-body-tertiary"
-                                        style={{ overflow: "hidden" }}
-                                        key={i}
-                                    >
-                                        <div className="d-flex justify-content-between align-items-center mb-2">
-                                            <div className="d-flex align-items-center gap-2">
-                                                <span className="fw-bold small text-muted text-uppercase">
-                                                    {t("solution", lang)} #{i + 1}
-                                                </span>
-                                                <span
-                                                    className="badge bg-success-subtle text-success-emphasis border border-success-subtle py-1 px-2"
-                                                    style={{ fontSize: "0.75rem" }}
-                                                    title={lang === "zh"
-                                                        ? `初始 HP: ${buildStats.baseHp} | 最终 HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`
-                                                        : lang === "ja"
-                                                        ? `初期 HP: ${buildStats.baseHp} | 最終 HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`
-                                                        : `Base HP: ${buildStats.baseHp} | Final HP: ${buildStats.finalHp} (${buildStats.finalHp >= buildStats.baseHp ? "+" : ""}${buildStats.finalHp - buildStats.baseHp})`}
-                                                >
-                                                    ❤️ HP: {buildStats.finalHp}
-                                                </span>
-                                            </div>
-                                            <SolutionBugStatus analysis={analysis} lang={lang} />
-                                        </div>
+                        return (
+                            <div
+                                className="card shadow-sm p-3 bg-body-tertiary"
+                                style={{ overflow: "hidden" }}
+                                key={i}
+                            >
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <span className="fw-bold small text-muted text-uppercase">
+                                        {t("solution", lang)} #{i + 1}
+                                    </span>
+                                    <SolutionBugStatus analysis={analysis} lang={lang} />
+                                </div>
                                 <div style={{ display: "flex", justifyContent: "center" }}>
                                     <Navicust
                                         parts={data.parts}
@@ -1944,8 +1926,6 @@ function Results({
                 ) : null}
                 {done ? null : <NavicustPlaceholder ref={ref} gridSettings={gs} />}
             </div>
-                );
-            })()}
         </div>
     );
 }
