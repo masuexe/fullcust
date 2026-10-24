@@ -184,6 +184,7 @@ export function tAbility(ability: string, lang: Lang): string {
 export type BugType =
     | "movement"
     | "status"
+    | "player"
     | "involuntaryMove"
     | "buster"
     | "charge"
@@ -206,6 +207,7 @@ export type BugType =
 export interface BugDefinition {
     title: { en: string; ja: string; zh: string };
     mechanics: { en: string; ja: string; zh: string };
+    levels?: Record<number, { en: string; ja: string; zh: string }>;
 }
 
 export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
@@ -262,19 +264,19 @@ export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
 };
 
 export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
-    1: "status",   // SprArmr (No movement warp in BN4! Status bug: initial confusion / auto forward/backward move)
-    2: "customHp", // Custom1 (HP drains while in custom screen)
+    1: "player",   // SprArmr (TREZ Player Bug: Lv1 Confuse 10s, Lv2 Always moves front, Lv3 Always moves back)
+    2: "customHp", // Custom1 (HP drops while in Custom Screen)
     3: "customHp", // Custom2
     4: "customHp", // MegFldr1
     5: "customHp", // MegFldr2
     6: "customHp", // GigFldr1
-    7: "status",   // FstBarr
-    8: "status",   // Shield
-    9: "status",   // Reflect
-    10: "status",  // AntiMagc
+    7: "player",   // FstBarr
+    8: "player",   // Shield
+    9: "player",   // Reflect
+    10: "player",  // AntiMagc
     11: "panel",   // FlotShoe (stepped on panels become crack / hole / poison)
     12: "panel",   // AirShoes
-    13: "status",  // UnderSht
+    13: "player",  // UnderSht
     14: "encounter", // SneakRun
     15: "encounter", // OilBody
     16: "encounter", // Fish
@@ -283,10 +285,10 @@ export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
     19: "support", // Collect
     20: "emotion", // Humor
     21: "buster",  // BustPack
-    22: "status",  // BodyPack
+    22: "player",  // BodyPack
     23: "hpCut",   // HubBatc
     24: "emotion", // BugStop
-    25: "status",  // SoulClen
+    25: "player",  // SoulClen
     26: "support", // Rush
     27: "support", // Beat
     28: "support", // Tango
@@ -441,6 +443,23 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "通常バスターが不発（空打ち）になり、時折チャージショットが誤暴発します。",
                 zh: "普通射击有几率卡壳不发射子弹，偶发误触发集气射击。",
             },
+            levels: {
+                1: {
+                    en: "Normal buster: 6/16 Blank, 1/16 ChargeShot, 9/16 Normal Shot.",
+                    ja: "通常バスター：6/16 空撃ち、1/16 チャージ暴発、9/16 通常弾。",
+                    zh: "普通射击：6/16 空包弹，1/16 误暴发集气射击，9/16 正常射击。",
+                },
+                2: {
+                    en: "Normal buster: 10/16 Blank, 2/16 ChargeShot, 4/16 Normal Shot.",
+                    ja: "通常バスター：10/16 空撃ち、2/16 チャージ暴発、4/16 通常弾。",
+                    zh: "普通射击：10/16 空包弹，2/16 误暴发集气射击，4/16 正常射击。",
+                },
+                3: {
+                    en: "Normal buster: 13/16 Blank, 3/16 ChargeShot, 0/16 Normal Shot (no normal shots).",
+                    ja: "通常バスター：13/16 空撃ち、3/16 チャージ暴発、0/16 通常弾（普通弾が出なくなります）。",
+                    zh: "普通射击：13/16 空包弹，3/16 误暴发集气射击，0/16 正常射击（完全无法打出普通子弹）。",
+                },
+            },
         },
         battleHp: {
             title: {
@@ -449,9 +468,26 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "战斗HP BUG",
             },
             mechanics: {
-                en: "MegaMan's HP steadily drains during battle (1 HP every 40 to 10 frames depending on level; accelerates when flinching).",
+                en: "MegaMan's HP steadily drains during battle (accelerates when flinching).",
                 ja: "戦闘中にHPが一定フレームごとに減少し続けます（被ダメージ硬直時に加速）。",
-                zh: "战斗中 HP 以固定帧率持续扣减 1 HP，受到硬直伤害时扣血加速。",
+                zh: "战斗中 HP 持续流失扣减（受到硬直伤害时扣血加速）。",
+            },
+            levels: {
+                1: {
+                    en: "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
+                    ja: "戦闘中、40フレーム毎にHPが1減少します（被ダメージ硬直時に加速）。",
+                    zh: "战斗中每 40 帧流失 1 HP（受到硬直伤害时扣血加速）。",
+                },
+                2: {
+                    en: "Drops 1 HP every 35 frames in battle.",
+                    ja: "戦闘中、35フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 35 帧流失 1 HP。",
+                },
+                3: {
+                    en: "Drops 1 HP every 30 frames in battle.",
+                    ja: "戦闘中、30フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 30 帧流失 1 HP。",
+                },
             },
         },
         custom: {
@@ -461,9 +497,26 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "改装视窗 BUG",
             },
             mechanics: {
-                en: "After turn 4 (or earlier at higher bug levels), opening the Custom Screen reduces the number of available chips by 1 per turn (minimum 2 chips).",
-                ja: "戦闘開始から一定ターン後、カスタム画面を開くたびに選択可能なチップ数が毎ターン1枚減少します（最低2枚）。",
-                zh: "战斗指定回合后，每次打开自定义视窗可选芯片数逐回合减少 1 枚（最低保留 2 枚）。",
+                en: "Opening the Custom Screen reduces the number of available chips by 1 per turn after a threshold.",
+                ja: "一定ターン後、カスタム画面を開くたびに選択可能なチップ数が毎ターン1枚減少します（最低2枚）。",
+                zh: "指定回合后，每次打开自定义视窗可选芯片数逐回合减少 1 枚（最低保留 2 枚）。",
+            },
+            levels: {
+                1: {
+                    en: "From 4th turn onward, available custom chips decrease by 1 per turn (minimum 2 chips).",
+                    ja: "戦闘4ターン目以降、選択可能チップ数が毎ターン1枚減少（最低2枚）。",
+                    zh: "战斗第 4 回合起，打开自定义视窗可选芯片逐回合减少 1 枚（最低保留 2 枚）。",
+                },
+                2: {
+                    en: "From 3rd turn onward, available custom chips decrease by 1 per turn (minimum 2 chips).",
+                    ja: "戦闘3ターン目以降、選択可能チップ数が毎ターン1枚減少（最低2枚）。",
+                    zh: "战斗第 3 回合起，打开自定义视窗可选芯片逐回合减少 1 枚（最低保留 2 枚）。",
+                },
+                3: {
+                    en: "From 2nd turn onward, available custom chips decrease by 1 per turn (minimum 2 chips).",
+                    ja: "戦闘2ターン目以降、選択可能チップ数が毎ターン1枚減少（最低2枚）。",
+                    zh: "战斗第 2 回合起，打开自定义视窗可选芯片逐回合减少 1 枚（最低保留 2 枚）。",
+                },
             },
         },
         panel: {
@@ -473,9 +526,26 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "地面 BUG",
             },
             mechanics: {
-                en: "Moving off a panel has a chance (25% to 50%) to crack it. Stepping off an already cracked panel destroys it completely.",
-                ja: "移動したマスにヒビが入ります（25%〜50%確率）。ヒビパネルから離れると完全に穴が空きます。",
-                zh: "移动离开面板时有 25%~50% 几率使踩过的面板开裂（离开已开裂面板会使其完全破损洞穿）。",
+                en: "Moving off a panel has a chance (25% to 50%) to crack it.",
+                ja: "移動したマスにヒビが入ります（25%〜50%確率）。",
+                zh: "移动离开面板时有 25%~50% 几率使踩过的面板开裂。",
+            },
+            levels: {
+                1: {
+                    en: "Moving off a panel has 2/8 (25%) chance of cracking it.",
+                    ja: "移動時に2/8（25%）の確率で足元のパネルにヒビが入ります。",
+                    zh: "移动离开面板时有 2/8 (25%) 几率使踩过的面板开裂。",
+                },
+                2: {
+                    en: "Moving off a panel has 3/8 (37.5%) chance of cracking it.",
+                    ja: "移動時に3/8（37.5%）の確率で足元のパネルにヒビが入ります。",
+                    zh: "移动离开面板时有 3/8 (37.5%) 几率使踩过的面板开裂。",
+                },
+                3: {
+                    en: "Moving off a panel has 4/8 (50%) chance of cracking it.",
+                    ja: "移動時に4/8（50%）の確率で足元のパネルにヒビが入ります。",
+                    zh: "移动离开面板时有 4/8 (50%) 几率使踩过的面板开裂。",
+                },
             },
         },
         emotion: {
@@ -525,6 +595,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "5色以上使用した場合、戦闘開始時にランダムで短時間の状態異常（混乱、ブラインド、無敵、点滅）が付与されます。",
                 zh: "使用 5 种及以上颜色时，战斗开始瞬间随机陷入短暂的异常状态（混乱、目盲、无敌或闪烁）。",
             },
+            levels: {
+                1: {
+                    en: "Starts battles with random brief status for 5 seconds.",
+                    ja: "戦闘開始時に5秒間ランダムな状態異常が付与されます。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 5 秒。",
+                },
+                2: {
+                    en: "Starts battles with random brief status for 10 seconds.",
+                    ja: "戦闘開始時に10秒間ランダムな状態異常が付与されます。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 10 秒。",
+                },
+            },
         },
     },
     bn5: {
@@ -547,9 +629,9 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "空包弹 BUG",
             },
             mechanics: {
-                en: "Normal buster shots have a chance to click without firing.",
-                ja: "通常バスターが一定確率で空撃ちになります。",
-                zh: "普通射击有几率卡壳不发射子弹。",
+                en: "Normal buster shot: 4/16 Blank, 2/16 ChargeShot, 10/16 Normal Shot.",
+                ja: "通常バスター：4/16 空撃ち、2/16 チャージ暴発、10/16 通常弾。",
+                zh: "普通射击：4/16 空包弹，2/16 误暴发集气射击，10/16 正常射击。",
             },
         },
         battleHp: {
@@ -563,17 +645,51 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "戦闘中にHPが減少し続けます。",
                 zh: "战斗中 HP 持续流失。",
             },
+            levels: {
+                1: {
+                    en: "Drops 1 HP every 40 frames in battle.",
+                    ja: "戦闘中、40フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 40 帧流失 1 HP。",
+                },
+                2: {
+                    en: "Drops 1 HP every 35 frames in battle.",
+                    ja: "戦闘中、35フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 35 帧流失 1 HP。",
+                },
+                3: {
+                    en: "Drops 1 HP every 30 frames in battle.",
+                    ja: "戦闘中、30フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 30 帧流失 1 HP。",
+                },
+            },
         },
         custom: {
             title: {
-                en: "Custom Screen Bug",
-                ja: "カスタムバグ",
-                zh: "改装视窗 BUG",
+                en: "Custom Damage Bug",
+                ja: "カスタムダメージバグ",
+                zh: "改装伤害 BUG",
             },
             mechanics: {
-                en: "Opening the Custom Screen reduces the number of available chips.",
-                ja: "カスタム画面で選択可能なチップ枚数が減少します。",
-                zh: "战斗中每次打开自定义视窗可选芯片数逐回合减少。",
+                en: "Opening the Custom Screen costs HP each time.",
+                ja: "カスタム画面を開くたびにHPを失います。",
+                zh: "每次打开自定义视窗扣除 HP。",
+            },
+            levels: {
+                1: {
+                    en: "Opening the Custom Window costs 20 HP each time.",
+                    ja: "カスタム画面を開くたびに20 HPを失います。",
+                    zh: "每次打开自定义视窗扣除 20 HP。",
+                },
+                2: {
+                    en: "Opening the Custom Window costs 40 HP each time.",
+                    ja: "カスタム画面を開くたびに40 HPを失います。",
+                    zh: "每次打开自定义视窗扣除 40 HP。",
+                },
+                3: {
+                    en: "Opening the Custom Window costs 80 HP each time.",
+                    ja: "カスタム画面を開くたびに80 HPを失います。",
+                    zh: "每次打开自定义视窗扣除 80 HP。",
+                },
             },
         },
         panel: {
@@ -586,6 +702,23 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "Moving off panels has a chance to crack or break them.",
                 ja: "移動したマスにヒビが入ったり穴が空きます。",
                 zh: "移动踩过的面板开裂或破损。",
+            },
+            levels: {
+                1: {
+                    en: "Moving off a panel has 1/4 (25%) chance of cracking it.",
+                    ja: "移動時に1/4（25%）の確率で足元のパネルにヒビが入ります。",
+                    zh: "移动离开面板时有 1/4 (25%) 几率使面板开裂。",
+                },
+                2: {
+                    en: "Moving off a panel has 1/2 (50%) chance of cracking it.",
+                    ja: "移動時に1/2（50%）の確率で足元のパネルにヒビが入ります。",
+                    zh: "移动离开面板时有 1/2 (50%) 几率使面板开裂。",
+                },
+                3: {
+                    en: "Moving off a panel always (100%) cracks it.",
+                    ja: "移動時に必ず足元のパネルにヒビが入ります（100%）。",
+                    zh: "移动离开面板时必定使面板开裂（100%）。",
+                },
             },
         },
         emotion: {
@@ -638,16 +771,62 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
     },
     bn4: {
-        status: {
+        player: {
             title: {
-                en: "Status & Involuntary Move Bug",
-                ja: "ステータスバグ",
-                zh: "状态异常与自动移动 BUG",
+                en: "Player Bug",
+                ja: "プレイヤーバグ",
+                zh: "玩家行动 BUG",
             },
             mechanics: {
-                en: "Armor/defense program violation: Starts battles with brief Confusion, or involuntarily steps forward/backward during battle (no boundary warp).",
-                ja: "アーマー・防御系違反：戦闘開始時に初期混乱、または戦闘中に勝手に前進・後退します（ワープ移動はありません）。",
-                zh: "受到装甲/防御零件违规影响：战斗开始时短暂陷入混乱，或在战斗中不受控制地自动向前/向后移动（无边界瞬移）。",
+                en: "MegaMan involuntarily moves or starts with status disorder (no boundary warp).",
+                ja: "勝手に移動したり戦闘開始時に状態異常になります（ワープ移動はありません）。",
+                zh: "受到装甲/防御零件违规影响：战斗中不受控制地自动移动或陷入状态异常（无边界瞬移）。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battle in Confused status for 10 seconds.",
+                    ja: "戦闘開始時に10秒間混乱状態になります。",
+                    zh: "战斗开始时短暂陷入混乱状态持续 10 秒。",
+                },
+                2: {
+                    en: "MegaMan involuntarily always moves forward during battle.",
+                    ja: "戦闘中、勝手に前進（前移動）し続けます。",
+                    zh: "战斗中不受控制地持续向前移动（会向前走）。",
+                },
+                3: {
+                    en: "MegaMan involuntarily always moves backward during battle.",
+                    ja: "戦闘中、勝手に後退（後ろ移動）し続けます。",
+                    zh: "战斗中不受控制地持续向后退（会向后走）。",
+                },
+            },
+        },
+        status: {
+            title: {
+                en: "Player Bug",
+                ja: "プレイヤーバグ",
+                zh: "玩家行动 BUG",
+            },
+            mechanics: {
+                en: "MegaMan involuntarily moves or starts with status disorder (no boundary warp).",
+                ja: "勝手に移動したり戦闘開始時に状態異常になります（ワープ移動はありません）。",
+                zh: "受到装甲/防御零件违规影响：战斗中不受控制地自动移动或陷入状态异常（无边界瞬移）。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battle in Confused status for 10 seconds.",
+                    ja: "戦闘開始時に10秒間混乱状態になります。",
+                    zh: "战斗开始时短暂陷入混乱状态持续 10 秒。",
+                },
+                2: {
+                    en: "MegaMan involuntarily always moves forward during battle.",
+                    ja: "戦闘中、勝手に前進（前移動）し続けます。",
+                    zh: "战斗中不受控制地持续向前移动（会向前走）。",
+                },
+                3: {
+                    en: "MegaMan involuntarily always moves backward during battle.",
+                    ja: "戦闘中、勝手に後退（後ろ移動）し続けます。",
+                    zh: "战斗中不受控制地持续向后退（会向后走）。",
+                },
             },
         },
         customHp: {
@@ -657,21 +836,55 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "改装界面HP流失 BUG",
             },
             mechanics: {
-                en: "Custom program violation: HP drains continuously while the Custom Screen is open selecting chips (does not reduce chip quantity).",
-                ja: "カスタム系違反：カスタム画面でチップを選択中、HPが継続して減少し続けます（チップ枚数は減少しません）。",
-                zh: "受到改装零件违规影响：打开自定义视窗选芯片时，HP持续快速流失扣减（不会减少可选芯片数量）。",
+                en: "MegaMan's HP steadily drops while on the Custom Screen selecting chips (does not reduce chip quantity).",
+                ja: "カスタム画面でチップ選択中、HPが継続して減少し続けます（チップ枚数は減少しません）。",
+                zh: "打开自定义视窗选芯片时，HP持续快速流失扣减（不会减少可选芯片数量）。",
+            },
+            levels: {
+                1: {
+                    en: "HP drops 1 every 6 frames while on the Custom Screen.",
+                    ja: "カスタム画面でチップ選択中、6フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 6 帧流失 1 HP。",
+                },
+                2: {
+                    en: "HP drops 1 every 4 frames while on the Custom Screen.",
+                    ja: "カスタム画面でチップ選択中、4フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 4 帧流失 1 HP。",
+                },
+                3: {
+                    en: "HP drops 1 every 3 frames while on the Custom Screen.",
+                    ja: "カスタム画面でチップ選択中、3フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 3 帧流失 1 HP。",
+                },
             },
         },
         panel: {
             title: {
-                en: "Moving Panel Bug",
+                en: "Panel Bug",
                 ja: "移動パネルバグ",
                 zh: "移动面板改变 BUG",
             },
             mechanics: {
-                en: "Shoes program violation: Stepping off panels causes them to crack, turn into holes, or turn into poison panels.",
-                ja: "シューズ系違反：移動した足元のパネルがヒビ・穴・毒沼パネルに変化します。",
-                zh: "受到鞋类零件违规影响：移动离开面板时，踩过的格子有几率开裂、变为孔洞或变为毒沼。",
+                en: "The panel MegaMan steps off becomes a different panel type.",
+                ja: "移動した足元のパネルがヒビ・穴・毒沼パネルに変化します。",
+                zh: "移动离开的面板有几率变为开裂、孔洞或毒沼。",
+            },
+            levels: {
+                1: {
+                    en: "Stepping off a panel turns it into a Cracked panel.",
+                    ja: "移動して離れたマスがヒビパネルに変化します。",
+                    zh: "移动离开的面板会变为开裂面板。",
+                },
+                2: {
+                    en: "Stepping off a panel turns it into a Hole panel.",
+                    ja: "移動して離れたマスが穴パネルに変化します。",
+                    zh: "移动离开的面板会变为孔洞。",
+                },
+                3: {
+                    en: "Stepping off a panel turns it into a Swamp panel.",
+                    ja: "移動して離れたマスが毒沼パネルに変化します。",
+                    zh: "移动离开的面板会变为毒沼。",
+                },
             },
         },
         buster: {
@@ -681,9 +894,26 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "空包弹 BUG",
             },
             mechanics: {
-                en: "Buster program violation: Normal buster shots have a chance to click without firing.",
-                ja: "バスター系違反：通常バスターが一定確率で不発（空撃ち）になります。",
-                zh: "受到射击零件违规影响：普通射击有几率卡壳不发射子弹。",
+                en: "Normal buster shot has a chance of firing blanks.",
+                ja: "通常バスターが一定確率で不発（空撃ち）になります。",
+                zh: "普通射击有几率卡壳不发射子弹（空包弹）。",
+            },
+            levels: {
+                1: {
+                    en: "Normal buster shot has 2/8 (25%) chance of firing blanks.",
+                    ja: "通常バスターが2/8（25%）の確率で空撃ちになります。",
+                    zh: "普通射击有 2/8 (25%) 几率卡壳不发射子弹（空包弹）。",
+                },
+                2: {
+                    en: "Normal buster shot has 4/8 (50%) chance of firing blanks.",
+                    ja: "通常バスターが4/8（50%）の確率で空撃ちになります。",
+                    zh: "普通射击有 4/8 (50%) 几率卡壳不发射子弹（空包弹）。",
+                },
+                3: {
+                    en: "Normal buster shot has 5/8 (62.5%) chance of firing blanks.",
+                    ja: "通常バスターが5/8（62.5%）の確率で空撃ちになります。",
+                    zh: "普通射击有 5/8 (62.5%) 几率卡壳不发射子弹（空包弹）。",
+                },
             },
         },
         battleHp: {
@@ -693,9 +923,26 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "战斗HP BUG",
             },
             mechanics: {
-                en: "HP program violation: MegaMan's HP steadily drains throughout the battle.",
-                ja: "HP系違反：戦闘中、一定間隔でHPが減少し続けます。",
-                zh: "受到HP零件违规影响：战斗中 HP 以固定频率持续流失扣减。",
+                en: "MegaMan's HP steadily drains throughout the battle.",
+                ja: "戦闘中、一定間隔でHPが減少し続けます。",
+                zh: "战斗中 HP 以固定频率持续流失扣减。",
+            },
+            levels: {
+                1: {
+                    en: "HP drops 1 every 10 frames steadily in battle.",
+                    ja: "戦闘中、10フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 10 帧流失 1 HP。",
+                },
+                2: {
+                    en: "HP drops 1 every 6 frames steadily in battle.",
+                    ja: "戦闘中、6フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 6 帧流失 1 HP。",
+                },
+                3: {
+                    en: "HP drops 1 every 3 frames steadily in battle.",
+                    ja: "戦闘中、3フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 3 帧流失 1 HP。",
+                },
             },
         },
         encounter: {
@@ -708,6 +955,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "Encounter programs fail and wild virus encounter rates increase.",
                 ja: "ウイルスエンカウント率が上昇します。",
                 zh: "网络地图中的病毒遭遇频率大幅提高。",
+            },
+        },
+        resultZenny: {
+            title: {
+                en: "Battle Result Bug",
+                ja: "報酬ゼニー固定バグ",
+                zh: "战斗结算金币 BUG",
+            },
+            mechanics: {
+                en: "You only receive Zennys as Battle Rewards.",
+                ja: "戦闘リザルト報酬がゼニーのみになりチップが出なくなります。",
+                zh: "战斗胜利后结算奖励只掉落金币，无法获得芯片。",
             },
         },
         support: {
@@ -748,28 +1007,45 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
         colorStatus: {
             title: {
-                en: "Color Overflow Bug",
-                ja: "カラーオーバーバグ",
+                en: "Color Bug",
+                ja: "カラーバグ",
                 zh: "颜色超限 BUG",
             },
             mechanics: {
-                en: "Using 5 or more colors combines Custom Screen HP Drain with Status/Involuntary movement.",
-                ja: "5色以上使用した場合、カスタム中HP減少とステータスバグが複合して発生します。",
-                zh: "使用 5 种及以上颜色时，复合触发改装界面HP流失与状态异常/自动移动。",
+                en: "Using 5 colors causes Level 1 Player & Custom HP Bugs (Confused for 10s & HP drain in custom screen); 6 colors causes Level 2 (Always moves front & faster HP drain).",
+                ja: "5色使用でLv1プレイヤーバグ（10秒混乱）およびカスタム中HP減少が発生し、6色使用でLv2（勝手に前進・HP減少加速）が発生します。",
+                zh: "使用 5 色触发 Lv1 玩家行动与改装界面 HP 流失（混乱 10 秒）；使用 6 色触发 Lv2（持续向前走与加速流失）。",
             },
         },
     },
     bn3: {
         involuntaryMove: {
             title: {
-                en: "Drift & Confusion Bug",
-                ja: "勝手に移動・混乱バグ",
-                zh: "自动漂移与混乱 BUG",
+                en: "Player Movement Bug",
+                ja: "プレイヤー移動バグ",
+                zh: "自动移动与混乱 BUG",
             },
             mechanics: {
-                en: "Armor/defense/shoes violation: Automatically drifts Up, drifts Down, or becomes Confused (no boundary warp).",
-                ja: "アーマー・防御・シューズ系違反：勝手に上へ移動、下へ移動、または混乱状態になります（ワープ移動はありません）。",
-                zh: "受到装甲/防御/鞋类零件违规影响：战斗中不受控制地自动向上漂移、自动向下漂移，严重时陷入混乱状态（无边界瞬移）。",
+                en: "MegaMan involuntarily always moves during battle (no boundary warp).",
+                ja: "戦闘中、勝手に移動し続けます（ワープ移動はありません）。",
+                zh: "受到装甲/防御/鞋类零件违规影响：战斗中不受控制地自动移动或陷入混乱（无边界瞬移）。",
+            },
+            levels: {
+                1: {
+                    en: "MegaMan involuntarily always moves Up during battle.",
+                    ja: "戦闘中、勝手に上へ移動し続けます。",
+                    zh: "战斗中不受控制地持续向上移动（会向上走）。",
+                },
+                2: {
+                    en: "MegaMan involuntarily always moves Down during battle.",
+                    ja: "戦闘中、勝手に下へ移動し続けます。",
+                    zh: "战斗中不受控制地持续向下移动（会向下走）。",
+                },
+                3: {
+                    en: "MegaMan is permanently Confused during battle.",
+                    ja: "戦闘中、永続的に混乱状態になります。",
+                    zh: "战斗中处于永续混乱状态。",
+                },
             },
         },
         customHp: {
@@ -779,57 +1055,137 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "改装界面HP流失 BUG",
             },
             mechanics: {
-                en: "Custom programs violation: HP rapidly drains while the custom screen is open selecting chips.",
-                ja: "カスタム系違反：カスタム画面を開いている間、HPが減少し続けます。",
+                en: "MegaMan's HP steadily drops in the custom screen.",
+                ja: "カスタム画面を開いている間、HPが減少し続けます。",
                 zh: "受到改装零件违规影响：打开自定义视窗选芯片时，HP持续快速流失扣减。",
+            },
+            levels: {
+                1: {
+                    en: "HP drops 1 every 31 frames while in the Custom Screen.",
+                    ja: "カスタム画面を開いている間、31フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 31 帧流失 1 HP。",
+                },
+                2: {
+                    en: "HP drops 1 every 16 frames while in the Custom Screen.",
+                    ja: "カスタム画面を開いている間、16フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 16 帧流失 1 HP。",
+                },
+                3: {
+                    en: "HP drops 1 every 8 frames while in the Custom Screen.",
+                    ja: "カスタム画面を開いている間、8フレーム毎にHPが1減少します。",
+                    zh: "打开自定义视窗选芯片时，每 8 帧流失 1 HP。",
+                },
             },
         },
         panelSet: {
             title: {
-                en: "Panel State Bug",
+                en: "Battle Panel Change Bug",
                 ja: "パネル変化バグ",
                 zh: "面板状态改变 BUG",
             },
             mechanics: {
-                en: "Set panel program violation: Player territory normal panels turn into Cracked or Poison panels.",
-                ja: "セットパネル系違反：自エリアのノーマルパネルがヒビや毒沼パネルに変化します。",
-                zh: "受到面板设置零件违规影响：己方区域普通面板变为裂地或毒沼。",
+                en: "When battle starts, all normal panels on player's side become a certain panel type.",
+                ja: "戦闘開始時に自エリアのノーマルパネルが変化します。",
+                zh: "受到面板设置零件违规影响：己方区域普通面板变为开裂或毒沼。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battle with all player panels Cracked.",
+                    ja: "戦闘開始時に自エリアの全ノーマルパネルがヒビパネルに変化します。",
+                    zh: "战斗开始时己方区域所有普通面板变为开裂面板。",
+                },
+                2: {
+                    en: "Starts battle with all player panels Swamp.",
+                    ja: "戦闘開始時に自エリアの全ノーマルパネルが毒沼パネルに変化します。",
+                    zh: "战斗开始时己方区域所有普通面板变为毒沼。",
+                },
             },
         },
         buster: {
             title: {
-                en: "Buster Malfunction Bug",
+                en: "Weakened Buster Bug",
                 ja: "バスター異常バグ",
                 zh: "射击异常 BUG",
             },
             mechanics: {
-                en: "Buster program violation: Normal shots blank/misfire; at higher levels, normal shot turns into MetGuard.",
-                ja: "バスター系違反：バスターが空撃ちになり、重度になると通常バスターがメットガードに変化します。",
-                zh: "受到飞弹零件违规影响：射击卡壳，甚至普通射击变为防护罩（MetGuard）。",
+                en: "Firing blanks affects both normal and charge shots, or turns into Guard.",
+                ja: "バスターが空撃ちになり、重度になると通常バスターがメットガードに変化します。",
+                zh: "射击有几率卡壳，甚至普通射击变为防护罩（MetGuard）。",
+            },
+            levels: {
+                1: {
+                    en: "1/4 (25%) chance of firing blanks for normal shot and charge shot.",
+                    ja: "通常射撃およびチャージ射撃が1/4の確率で空撃ちになります。",
+                    zh: "普通射击与集气射击均有 1/4 几率卡壳（空包弹）。",
+                },
+                2: {
+                    en: "1/2 (50%) chance of firing blanks.",
+                    ja: "射撃が1/2の確率で空撃ちになります。",
+                    zh: "射击有 1/2 几率卡壳（空包弹）。",
+                },
+                3: {
+                    en: "For the first 15 shots, normal buster shot becomes Guard (MetGuard).",
+                    ja: "戦闘開始から最初の15発、通常バスターがメットガードになります。",
+                    zh: "开局前 15 发普通射击直接变为防护罩（MetGuard）。",
+                },
             },
         },
         charge: {
             title: {
-                en: "Charge Shot Bug",
+                en: "Modified Shot Bug",
                 ja: "ため撃ち異常バグ",
                 zh: "集气射击异常 BUG",
             },
             mechanics: {
-                en: "Charge program violation: Charge shot turns into StoneCube, WaterGun, or Flower Bouquet.",
-                ja: "ため撃ち系違反：チャージショットが目の前のキューブ、水鉄砲、または花束に変化します。",
+                en: "B Button charge attack changes into a different object.",
+                ja: "チャージ射撃が別の技に変化します。",
                 zh: "受到集气零件违规影响：集气射击变为石块、水枪或花束。",
+            },
+            levels: {
+                1: {
+                    en: "Charge shot summons a Rock Cube one panel ahead.",
+                    ja: "チャージ射撃が目の前にストーンキューブを生成する技に変化します。",
+                    zh: "集气射击变为在正前方生成石块（Rock Cube）。",
+                },
+                2: {
+                    en: "Charge shot shoots a Water Gun one panel ahead (100 damage).",
+                    ja: "チャージ射撃が目の前1マスの水鉄砲（100ダメージ）に変化します。",
+                    zh: "集气射击变为正前方 1 格的水枪（威力 100）。",
+                },
+                3: {
+                    en: "Charge shot produces a Magic Flower (does nothing).",
+                    ja: "チャージ射撃が花束（効果なし）に変化します。",
+                    zh: "集气射击变为魔术花束（无伤害无效果）。",
+                },
             },
         },
         battleHp: {
             title: {
-                en: "Battle HP Bug",
+                en: "Battle HP Drain Bug",
                 ja: "HP減少バグ",
                 zh: "战斗HP BUG",
             },
             mechanics: {
-                en: "HP steadily drains during battle.",
+                en: "MegaMan's HP steadily drops during battle.",
                 ja: "戦闘中にHPが減少し続けます。",
                 zh: "受到HP零件违规影响：战斗中 HP 持续流失。",
+            },
+            levels: {
+                1: {
+                    en: "Drops 1 HP every 30 frames in battle.",
+                    ja: "戦闘中、30フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 30 帧流失 1 HP。",
+                },
+                2: {
+                    en: "Drops 1 HP every 16 frames in battle.",
+                    ja: "戦闘中、16フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 16 帧流失 1 HP。",
+                },
+                3: {
+                    en: "Drops 1 HP every 8 frames in battle.",
+                    ja: "戦闘中、8フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 8 帧流失 1 HP。",
+                },
             },
         },
         encounter: {
@@ -839,7 +1195,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "遇敌率 BUG",
             },
             mechanics: {
-                en: "Virus encounter rates in network areas increase.",
+                en: "Viruses appear more frequently.",
                 ja: "ウイルスエンカウント率が上昇します。",
                 zh: "网络地图中的病毒遭遇频率大幅提高。",
             },
@@ -870,13 +1226,13 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
         gaugeSlow: {
             title: {
-                en: "Heavy Gauge Bug",
+                en: "Custom Gauge Bug",
                 ja: "ヘビーゲージバグ",
                 zh: "改装量表变慢 BUG",
             },
             mechanics: {
-                en: "FastGauge program violation: Custom gauge fills significantly slower (HeavyGauge effect).",
-                ja: "クイックゲージ違反：カスタムゲージの充填速度が著しく低下します（ヘビーゲージ化）。",
+                en: "Custom gauge automatically has the SlowGauge effect.",
+                ja: "カスタムゲージが自動的にヘビーゲージ状態になります。",
                 zh: "受到快速量表违规影响：战斗中自定义量表充能速度大幅减慢（重力计状态）。",
             },
         },
@@ -884,7 +1240,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Chip Auto-Fire Bug",
                 ja: "チップ自動使用バグ",
-                zh: "芯片自动触发 BUG",
+                zh: "芯片自动打出 BUG",
             },
             mechanics: {
                 en: "BusterMAX built-in bug: Selected chips are automatically and involuntarily fired upon entering battle.",
@@ -995,11 +1351,25 @@ export function tBugMechanics(bugType: BugType | string, lang: Lang, gameId: str
     return entry ? entry.mechanics[lang] : bugType;
 }
 
+export interface ActiveBugEffect {
+    bugType: BugType;
+    level: number;
+    title: string;
+    mechanics: string;
+    parts: {
+        partIndex: number;
+        partId: number;
+        partName: string;
+        causes: BugCause[];
+    }[];
+}
+
 export interface AnalyzedBug {
     partIndex: number;
     partId: number;
     partName: string;
     bugType: BugType;
+    level: number;
     bugTitle: string;
     bugMechanics: string;
     causes: BugCause[];
@@ -1009,6 +1379,7 @@ export interface SolutionBugAnalysis {
     hasBugs: boolean;
     bugStopActive: boolean;
     bugs: AnalyzedBug[];
+    activeBugs: ActiveBugEffect[];
     tooManyColors: boolean;
     colorBugTitle?: string;
     colorBugMechanics?: string;
@@ -1105,7 +1476,16 @@ export function analyzeSolutionBugs(
     const gameBugMap = GAME_PART_BUG_TYPES[gameId] ?? BN6_PART_BUG_TYPES;
     const gameDefs = GAME_BUG_DEFINITIONS[gameId] ?? GAME_BUG_DEFINITIONS["bn6"];
 
-    const bugs: AnalyzedBug[] = [];
+    // 1. Identify all bugged parts and their individual causes
+    const buggedReqs: {
+        reqIdx: number;
+        partIndex: number;
+        partId: number;
+        partName: string;
+        bugType: BugType;
+        causes: BugCause[];
+    }[] = [];
+
     for (const d of reqDetails) {
         const causes: BugCause[] = [];
 
@@ -1124,18 +1504,71 @@ export function analyzeSolutionBugs(
 
         if (causes.length > 0) {
             const bugType = gameBugMap[d.partMeta.id] ?? "battleHp";
-            const bugDef = gameDefs[bugType] ?? GAME_BUG_DEFINITIONS["bn6"][bugType];
-            const bugTitle = bugDef?.title[lang] ?? bugType;
-            const bugMechanics = bugDef?.mechanics[lang] ?? "";
-
-            bugs.push({
+            buggedReqs.push({
+                reqIdx: d.reqIdx,
                 partIndex: d.partIndex,
                 partId: d.partMeta.id,
                 partName: getPartName(d.partMeta, lang),
                 bugType,
-                bugTitle,
-                bugMechanics,
                 causes,
+            });
+        }
+    }
+
+    // 2. Group bugged parts by bugType to compute the stack/level
+    const bugTypeGroups = new Map<string, typeof buggedReqs>();
+    for (const br of buggedReqs) {
+        let list = bugTypeGroups.get(br.bugType);
+        if (!list) {
+            list = [];
+            bugTypeGroups.set(br.bugType, list);
+        }
+        list.push(br);
+    }
+
+    const activeBugs: ActiveBugEffect[] = [];
+    const bugs: AnalyzedBug[] = [];
+
+    for (const [bugType, group] of bugTypeGroups.entries()) {
+        const bugDef = gameDefs[bugType] ?? GAME_BUG_DEFINITIONS["bn6"][bugType];
+        const baseTitle = bugDef?.title[lang] ?? bugType;
+        const count = group.length;
+
+        const level = Math.max(1, count);
+        const maxDefinedLevel = bugDef?.levels
+            ? Math.max(...Object.keys(bugDef.levels).map(Number))
+            : 1;
+        const effectiveLevel = Math.min(level, maxDefinedLevel);
+
+        const levelMechanics =
+            bugDef?.levels?.[effectiveLevel]?.[lang] ??
+            bugDef?.mechanics[lang] ??
+            "";
+        const titleWithLevel = bugDef?.levels ? `${baseTitle} (Lv${level})` : baseTitle;
+
+        activeBugs.push({
+            bugType: bugType as BugType,
+            level,
+            title: titleWithLevel,
+            mechanics: levelMechanics,
+            parts: group.map((g) => ({
+                partIndex: g.partIndex,
+                partId: g.partId,
+                partName: g.partName,
+                causes: g.causes,
+            })),
+        });
+
+        for (const g of group) {
+            bugs.push({
+                partIndex: g.partIndex,
+                partId: g.partId,
+                partName: g.partName,
+                bugType: g.bugType,
+                level,
+                bugTitle: titleWithLevel,
+                bugMechanics: levelMechanics,
+                causes: g.causes,
             });
         }
     }
@@ -1150,6 +1583,7 @@ export function analyzeSolutionBugs(
         hasBugs,
         bugStopActive,
         bugs,
+        activeBugs,
         tooManyColors,
         colorBugTitle,
         colorBugMechanics,

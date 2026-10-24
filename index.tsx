@@ -199,16 +199,20 @@ function SolutionBugStatus({
     analysis: SolutionBugAnalysis;
     lang: Lang;
 }) {
-    const totalBugs = analysis.bugs.length + (analysis.tooManyColors ? 1 : 0);
     if (!analysis.hasBugs) {
         return <span className="badge bg-success px-2 py-1">✅ {t("noBugs", lang)}</span>;
     }
     if (analysis.bugStopActive) {
         return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
     }
+
+    const totalActive = (analysis.activeBugs?.length ?? analysis.bugs.length) + (analysis.tooManyColors ? 1 : 0);
+    const maxLevel = Math.max(0, ...(analysis.activeBugs || []).map(b => b.level));
+    const levelLabel = totalActive === 1 && maxLevel > 1 ? ` (Lv${maxLevel})` : "";
+
     return (
         <span className="badge bg-secondary px-2 py-1">
-            ⚙️ {totalBugs} {t("bugsDetected", lang)}
+            ⚙️ {totalActive} {t("bugsDetected", lang)}{levelLabel}
         </span>
     );
 }
@@ -223,7 +227,9 @@ function SolutionBugDetails({
     const [open, setOpen] = React.useState(false);
     if (!analysis.hasBugs) return null;
 
-    const totalBugs = analysis.bugs.length + (analysis.tooManyColors ? 1 : 0);
+    const totalActive = (analysis.activeBugs?.length ?? analysis.bugs.length) + (analysis.tooManyColors ? 1 : 0);
+    const maxLevel = Math.max(0, ...(analysis.activeBugs || []).map(b => b.level));
+    const levelLabel = totalActive === 1 && maxLevel > 1 ? ` (Lv${maxLevel})` : "";
 
     return (
         <div className="mt-2 text-start">
@@ -233,7 +239,7 @@ function SolutionBugDetails({
                 onClick={() => setOpen(prev => !prev)}
             >
                 <span className="small">
-                    ⚙️ {totalBugs} {t("bugsDetected", lang)}
+                    ⚙️ {totalActive} {t("bugsDetected", lang)}{levelLabel}
                     {analysis.bugStopActive ? ` (${t("bugStopActive", lang)})` : ""}
                 </span>
                 <span className="small">{open ? "▲" : "▼"}</span>
@@ -255,24 +261,40 @@ function SolutionBugDetails({
                                 {t("bugOrigin", lang)}: {tBugCause("tooManyColors", lang)} ({analysis.distinctColorCount}/4)
                             </div>
                             <div className="mt-1">
-                                {t("bugMechanics", lang)}: {analysis.colorBugMechanics || tBugMechanics("colorStatus", lang)}
+                                {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{analysis.colorBugMechanics || tBugMechanics("colorStatus", lang)}</span>
                             </div>
                         </div>
                     ) : null}
 
-                    {analysis.bugs.map((b, idx) => (
-                        <div key={idx} className={idx < analysis.bugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
-                            <div className="fw-bold">
-                                ⚙️ {b.bugTitle || tBugTitle(b.bugType, lang)}
+                    {analysis.activeBugs && analysis.activeBugs.length > 0 ? (
+                        analysis.activeBugs.map((ab, idx) => (
+                            <div key={idx} className={idx < analysis.activeBugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
+                                <div className="fw-bold">
+                                    ⚙️ {ab.title}
+                                </div>
+                                <div className="text-muted">
+                                    {t("bugOrigin", lang)}: {ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")}
+                                </div>
+                                <div className="mt-1">
+                                    {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{ab.mechanics}</span>
+                                </div>
                             </div>
-                            <div className="text-muted">
-                                {t("bugOrigin", lang)}: <span className="fw-semibold">{b.partName}</span> ({b.causes.map(c => tBugCause(c, lang)).join(", ")})
+                        ))
+                    ) : (
+                        analysis.bugs.map((b, idx) => (
+                            <div key={idx} className={idx < analysis.bugs.length - 1 ? "mb-2 pb-2 border-bottom" : ""}>
+                                <div className="fw-bold">
+                                    ⚙️ {b.bugTitle || tBugTitle(b.bugType, lang)}
+                                </div>
+                                <div className="text-muted">
+                                    {t("bugOrigin", lang)}: <span className="fw-semibold">{b.partName}</span> ({b.causes.map(c => tBugCause(c, lang)).join(", ")})
+                                </div>
+                                <div className="mt-1">
+                                    {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{b.bugMechanics || tBugMechanics(b.bugType, lang)}</span>
+                                </div>
                             </div>
-                            <div className="mt-1">
-                                {t("bugMechanics", lang)}: {b.bugMechanics || tBugMechanics(b.bugType, lang)}
-                            </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             ) : null}
         </div>

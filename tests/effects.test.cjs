@@ -210,28 +210,46 @@ test("BN3, BN4, BN5 part bug mappings and definitions are game-specific", () => 
     assert.equal(BN6_PART_BUG_TYPES[1], "movement");
     // - In BN5: movement warp
     assert.equal(BN5_PART_BUG_TYPES[1], "movement");
-    // - In BN4: status bug (no movement warp!)
-    assert.equal(BN4_PART_BUG_TYPES[1], "status");
-    assert.equal(GAME_BUG_DEFINITIONS.bn4.status.title.zh, "状态异常与自动移动 BUG");
-    assert(GAME_BUG_DEFINITIONS.bn4.status.mechanics.zh.includes("无边界瞬移"));
+    // - In BN4: player bug (no movement warp! Lv1 confuse, Lv2 moves front, Lv3 moves back)
+    assert.equal(BN4_PART_BUG_TYPES[1], "player");
+    assert.equal(GAME_BUG_DEFINITIONS.bn4.player.title.zh, "玩家行动 BUG");
+    assert(GAME_BUG_DEFINITIONS.bn4.player.mechanics.zh.includes("无边界瞬移"));
+    assert.equal(GAME_BUG_DEFINITIONS.bn4.player.levels[2].zh, "战斗中不受控制地持续向前移动（会向前走）。");
     // - In BN3: involuntary drift
     assert.equal(BN3_PART_BUG_TYPES[1], "involuntaryMove");
-    assert.equal(GAME_BUG_DEFINITIONS.bn3.involuntaryMove.title.zh, "自动漂移与混乱 BUG");
+    assert.equal(GAME_BUG_DEFINITIONS.bn3.involuntaryMove.title.zh, "自动移动与混乱 BUG");
 });
 
 test("analyzeSolutionBugs uses game-specific bug types and BugStop across all games", () => {
     const gridSettings = { width: 7, height: 7, hasOob: false, commandLineRow: 3 };
 
-    // In BN4, misplacing SuperArmor (ID 1) triggers "status" bug (NOT "movement"!)
+    // In BN4, misplacing SuperArmor (ID 1) triggers "player" bug (NOT "movement"!)
     const bn4Metas = [{ id: 1, name: "SprArmr (red)", nameZh: "超级装甲（红色）", isSolid: true, color: 4 }];
     const cellsOffLine = new Array(49).fill(null);
     cellsOffLine[1 * 7 + 3] = 0; // row 1, not cmd line
 
     const bn4Analysis = analyzeSolutionBugs("bn4", bn4Metas, [{ partIndex: 0 }], cellsOffLine, gridSettings, "zh");
     assert.equal(bn4Analysis.bugs.length, 1);
-    assert.equal(bn4Analysis.bugs[0].bugType, "status");
-    assert.equal(bn4Analysis.bugs[0].bugTitle, "状态异常与自动移动 BUG");
-    assert(bn4Analysis.bugs[0].bugMechanics.includes("无边界瞬移"));
+    assert.equal(bn4Analysis.bugs[0].bugType, "player");
+    assert.equal(bn4Analysis.bugs[0].level, 1);
+    assert.equal(bn4Analysis.bugs[0].bugTitle, "玩家行动 BUG (Lv1)");
+    assert(bn4Analysis.bugs[0].bugMechanics.includes("混乱"));
+
+    // Scenario: BN4 Shield (ID 8, Blue) adjacent to Reflect (ID 9, Blue) -> Triggers Player Bug Level 2: Always moves front (向前走)!
+    const bn4ShieldReflectMetas = [
+        { id: 8, name: "Shield (blue)", nameZh: "盾（蓝色）", isSolid: true, color: 2 },
+        { id: 9, name: "Reflect (blue)", nameZh: "反射（蓝色）", isSolid: true, color: 2 },
+    ];
+    const adjacentCells = new Array(49).fill(null);
+    adjacentCells[3 * 7 + 2] = 0; // row 3 col 2
+    adjacentCells[3 * 7 + 3] = 1; // row 3 col 3 (adjacent same color)
+    const bn4Lv2Analysis = analyzeSolutionBugs("bn4", bn4ShieldReflectMetas, [{ partIndex: 0 }, { partIndex: 1 }], adjacentCells, gridSettings, "zh");
+    assert.equal(bn4Lv2Analysis.hasBugs, true);
+    assert.equal(bn4Lv2Analysis.activeBugs.length, 1); // Aggregated into 1 active bug effect
+    assert.equal(bn4Lv2Analysis.activeBugs[0].level, 2);
+    assert.equal(bn4Lv2Analysis.activeBugs[0].title, "玩家行动 BUG (Lv2)");
+    assert.equal(bn4Lv2Analysis.activeBugs[0].mechanics, "战斗中不受控制地持续向前移动（会向前走）。");
+    assert.equal(bn4Lv2Analysis.activeBugs[0].parts.length, 2);
 
     // In BN4, BugStop is ID 24
     const bn4WithBugStop = [
@@ -251,5 +269,6 @@ test("analyzeSolutionBugs uses game-specific bug types and BugStop across all ga
     const bn3BugStopAnalysis = analyzeSolutionBugs("bn3", bn3Metas, [{ partIndex: 0 }, { partIndex: 1 }], cellsWithBn4BugStop, gridSettings, "zh");
     assert.equal(bn3BugStopAnalysis.bugStopActive, true);
     assert.equal(bn3BugStopAnalysis.bugs[0].bugType, "involuntaryMove");
-    assert.equal(bn3BugStopAnalysis.bugs[0].bugTitle, "自动漂移与混乱 BUG");
+    assert.equal(bn3BugStopAnalysis.bugs[0].bugTitle, "自动移动与混乱 BUG (Lv1)");
+    assert.equal(bn3BugStopAnalysis.bugs[0].bugMechanics, "战斗中不受控制地持续向上移动（会向上走）。");
 });
