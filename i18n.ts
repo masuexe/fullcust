@@ -521,6 +521,136 @@ export const translations = {
         ja: "1000 HPにリセット",
         zh: "重置为 1000 HP",
     },
+    buildLibrary: {
+        en: "Build Library",
+        ja: "マイビルド",
+        zh: "构筑管理",
+    },
+    saveBuild: {
+        en: "Save Current Build",
+        ja: "現在のビルドを保存",
+        zh: "保存当前构筑",
+    },
+    buildName: {
+        en: "Build Name",
+        ja: "ビルド名",
+        zh: "构筑名称",
+    },
+    loadBuild: {
+        en: "Load",
+        ja: "読み込む",
+        zh: "载入",
+    },
+    deleteBuild: {
+        en: "Delete",
+        ja: "削除",
+        zh: "删除",
+    },
+    exportJson: {
+        en: "Export JSON File",
+        ja: "JSON書き出し",
+        zh: "导出 JSON 文件",
+    },
+    copyJson: {
+        en: "Copy JSON",
+        ja: "JSONをコピー",
+        zh: "复制 JSON",
+    },
+    importBuild: {
+        en: "Import Build",
+        ja: "ビルド読み込み",
+        zh: "导入构筑",
+    },
+    uploadFile: {
+        en: "Upload File (.json)",
+        ja: "ファイル選択 (.json)",
+        zh: "上传文件 (.json)",
+    },
+    pasteJsonOrLink: {
+        en: "Paste Build JSON or Share URL",
+        ja: "JSONまたは共有URLを貼り付け",
+        zh: "粘贴构筑 JSON 或分享链接",
+    },
+    importSuccess: {
+        en: "Build imported successfully!",
+        ja: "ビルドを読み込みました！",
+        zh: "构筑载入成功！",
+    },
+    importError: {
+        en: "Failed to import build: invalid format",
+        ja: "読み込みに失敗しました：無効な形式",
+        zh: "载入失败：格式无效",
+    },
+    buildSaved: {
+        en: "Build saved to local library!",
+        ja: "ビルドを保存しました！",
+        zh: "构筑已保存到本地库！",
+    },
+    communityPresets: {
+        en: "Community Presets",
+        ja: "おすすめプリセット",
+        zh: "精选预设构筑",
+    },
+    mySavedBuilds: {
+        en: "My Saved Builds",
+        ja: "保存したビルド",
+        zh: "我的保存构筑",
+    },
+    noSavedBuilds: {
+        en: "No saved builds for this game yet.",
+        ja: "このゲームの保存済みビルドはありません。",
+        zh: "当前游戏暂无保存的构筑。",
+    },
+    exportSav: {
+        en: "💾 Export .sav File",
+        ja: "💾 .sav セーブ書き出し",
+        zh: "💾 导出 .sav 存档",
+    },
+    exportSavDesc: {
+        en: "Export a 100% completed GBA .sav save file with your solved NaviCust layout and Mod Cards injected.",
+        ja: "完成した配置と改造カードを注入した100%全収集GBAセーブデータを生成します。エミュレータや実機ですぐプレイ可能！",
+        zh: "一键导出注入了当前拼放方案与改造卡的 100% 全收集 GBA .sav 存档，可直接在 mGBA、烧录卡等载入游玩！",
+    },
+    selectEdition: {
+        en: "Select Game Edition",
+        ja: "ゲームバージョンを選択",
+        zh: "选择游戏版本",
+    },
+    downloadSavBtn: {
+        en: "Download .sav File",
+        ja: ".sav ファイルをダウンロード",
+        zh: "下载 .sav 存档文件",
+    },
+    saveCreditTitle: {
+        en: "100% Save Template Credits:",
+        ja: "全収集セーブデータ提供：",
+        zh: "全收集存档模板致谢：",
+    },
+    saveCreditBody: {
+        en: "100% completed save templates courtesy of ore4545 and the Tango (N1GP) project.",
+        ja: "全収集セーブデータテンプレートは ore4545 氏 および Tango (N1GP) プロジェクトより提供されています。",
+        zh: "全收集存档模板由 ore4545 与 Tango (N1GP) 项目制作提供，特此致谢！",
+    },
+    modCardRegionNotice: {
+        en: "Note: Mod Cards (改造カード) were an e-Reader feature on Japanese cartridges. For English ROMs, use an e-Reader patch or play with Japanese ROMs.",
+        ja: "注意：改造カードは日本版e-Reader機能です。北米版ROM等で使用する場合は改造カードパッチや日本版ROMをご利用ください。",
+        zh: "说明：改造卡为日版 GBA e-Reader 刷卡功能。若在美版 ROM 运行，推荐搭配改造卡解锁补丁或日版 ROM。",
+    },
+    close: {
+        en: "Close",
+        ja: "閉じる",
+        zh: "关闭",
+    },
+    copied: {
+        en: "Copied!",
+        ja: "コピーしました！",
+        zh: "已复制！",
+    },
+    exportBuildWithSolutionNotice: {
+        en: "Solution placements will be included in the exported build.",
+        ja: "配置結果もビルドデータに含まれます。",
+        zh: "当前拼放结果将一并保存在构筑数据中。",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

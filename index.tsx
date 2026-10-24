@@ -42,6 +42,9 @@ import {
     ModCard,
     searchModCards,
 } from "./modcards";
+import { BuildLibraryModal } from "./build-library-modal";
+import { SaveExportModal } from "./save-export-modal";
+import { getSavedBuilds, buildDataToProblem } from "./build-data";
 
 const LangContext = React.createContext<{
     lang: Lang;
@@ -1796,10 +1799,14 @@ function Results({
     problem,
     data,
     onNavigateToSetup,
+    onExportSav,
+    onSolutionFound,
 }: {
     problem: Problem;
     data: Data;
     onNavigateToSetup?: () => void;
+    onExportSav?: (solution: Solution, index: number) => void;
+    onSolutionFound?: (solution: Solution) => void;
 }) {
     const { lang } = useLang();
     const gs = makeGridSettings(data, problem);
@@ -1841,11 +1848,16 @@ function Results({
             if (nextDone) {
                 setDone(true);
             } else {
-                setSolutions((solutions) => [...solutions, value]);
+                setSolutions((solutions) => {
+                    if (solutions.length === 0 && onSolutionFound) {
+                        onSolutionFound(value);
+                    }
+                    return [...solutions, value];
+                });
             }
             setPending(false);
         })();
-    }, [inView, done, pending, setDone, setSolutions]);
+    }, [inView, done, pending, setDone, setSolutions, onSolutionFound]);
 
     return (
         <div>
@@ -1898,7 +1910,20 @@ function Results({
                                     <span className="fw-bold small text-muted text-uppercase">
                                         {t("solution", lang)} #{i + 1}
                                     </span>
-                                    <SolutionBugStatus analysis={analysis} lang={lang} />
+                                    <div className="d-flex align-items-center gap-2">
+                                        <SolutionBugStatus analysis={analysis} lang={lang} />
+                                        {onExportSav ? (
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-outline-success py-0 px-2 fw-semibold"
+                                                onClick={() => onExportSav(solution as Solution, i)}
+                                                title={t("exportSav", lang)}
+                                                style={{ fontSize: "0.8rem", height: "24px" }}
+                                            >
+                                                {t("exportSav", lang)}
+                                            </button>
+                                        ) : null}
+                                    </div>
                                 </div>
                                 <div style={{ display: "flex", justifyContent: "center" }}>
                                     <Navicust
@@ -1990,6 +2015,10 @@ function App() {
     const [problem, setProblem] = React.useState<Problem | null>(null);
     const [error, setError] = React.useState<string | null>(null);
 
+    const [isBuildLibraryOpen, setIsBuildLibraryOpen] = React.useState(false);
+    const [exportSavTarget, setExportSavTarget] = React.useState<{ solution: Solution; index: number } | null>(null);
+    const [latestSolution, setLatestSolution] = React.useState<Solution | undefined>(undefined);
+
     React.useEffect(() => {
         let cancelled = false;
         if (!gameDefinition) {
@@ -2006,6 +2035,26 @@ function App() {
         });
         return () => { cancelled = true; };
     }, []);
+
+    React.useEffect(() => {
+        if (!data) return;
+        const loadBuildId = queryParams.get("loadBuild");
+        if (loadBuildId) {
+            const allSaved = getSavedBuilds();
+            const found = allSaved.find(b => b.id === loadBuildId);
+            if (found && found.gameId === data.gameId) {
+                try {
+                    const { problem: loadedProblem } = buildDataToProblem(found, data);
+                    setProblem(loadedProblem);
+                    const nextUrl = new URL(window.location.href);
+                    nextUrl.searchParams.delete("loadBuild");
+                    window.history.replaceState({}, "", nextUrl.toString());
+                } catch (e) {
+                    console.error("Failed to load build from param:", e);
+                }
+            }
+        }
+    }, [data]);
 
     React.useEffect(() => {
         if (!data) return;
@@ -2052,6 +2101,15 @@ function App() {
                             </small>
                         </h1>
                         <div className="d-flex align-items-center gap-2">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+                                onClick={() => setIsBuildLibraryOpen(true)}
+                                title={t("buildLibrary", lang)}
+                            >
+                                <span>📁</span>
+                                <span className="d-none d-sm-inline">{t("buildLibrary", lang)}</span>
+                            </button>
                             <button
                                 type="button"
                                 className="btn btn-outline-secondary btn-sm"
@@ -2155,9 +2213,69 @@ function App() {
                             data={data}
                             problem={problem}
                             onNavigateToSetup={() => setMobileTab("setup")}
+                            onExportSav={(solution, index) => setExportSavTarget({ solution, index })}
+                            onSolutionFound={(solution) => setLatestSolution(solution)}
                         />
                     ) : null}
+                    <footer className="mt-4 pt-3 pb-4 border-top text-center text-muted small">
+                        <div className="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-1">
+                            <a
+                                href="https://github.com/harp/fullcust"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-decoration-none text-muted"
+                            >
+                                fullcust GitHub
+                            </a>
+                            <span>•</span>
+                            <span>
+                                {t("saveCreditTitle", lang)}{" "}
+                                <a
+                                    href="https://github.com/ore4545"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-decoration-none fw-semibold"
+                                >
+                                    ore4545
+                                </a>{" "}
+                                &amp;{" "}
+                                <a
+                                    href="https://github.com/tangobattle/tango"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-decoration-none fw-semibold"
+                                >
+                                    Tango (N1GP)
+                                </a>
+                            </span>
+                        </div>
+                        <div className="opacity-75" style={{ fontSize: "0.75rem" }}>
+                            Mega Man Battle Network / Rockman EXE © Capcom. This is a non-commercial fan tool.
+                        </div>
+                    </footer>
                 </div>
+                {data && problem ? (
+                    <BuildLibraryModal
+                        isOpen={isBuildLibraryOpen}
+                        onClose={() => setIsBuildLibraryOpen(false)}
+                        data={data}
+                        problem={problem}
+                        solution={latestSolution}
+                        onLoadProblem={(p) => setProblem(p)}
+                        lang={lang}
+                    />
+                ) : null}
+                {data && problem && exportSavTarget ? (
+                    <SaveExportModal
+                        isOpen={Boolean(exportSavTarget)}
+                        onClose={() => setExportSavTarget(null)}
+                        data={data}
+                        problem={problem}
+                        solution={exportSavTarget.solution}
+                        solutionIndex={exportSavTarget.index}
+                        lang={lang}
+                    />
+                ) : null}
             </div>
         </LangContext.Provider>
     );

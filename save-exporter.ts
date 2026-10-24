@@ -1,0 +1,499 @@
+import type { Data } from "./game-data";
+import { getModCard } from "./modcards";
+import type { Problem } from "./problem";
+import { placeAll, type Solution } from "./solver";
+
+export interface SaveEdition {
+    id: string;
+    gameId: "bn3" | "bn4" | "bn5" | "bn6";
+    nameEn: string;
+    nameJa: string;
+    nameZh: string;
+    romType: "JP" | "US";
+    variant: "gregar" | "falzar" | "protoman" | "colonel" | "redsun" | "bluemoon" | "white" | "blue";
+    rawPath: string;
+    defaultFilename: string;
+}
+
+export const SAVE_EDITIONS: SaveEdition[] = [
+    // BN6
+    {
+        id: "bn6_gregar_jp",
+        gameId: "bn6",
+        nameEn: "Cybeast Gregar (JP)",
+        nameJa: "電脳獣グレイガ（日本版）",
+        nameZh: "电脑兽 格雷加（日版）",
+        romType: "JP",
+        variant: "gregar",
+        rawPath: "saves/bn6/g_jp.raw",
+        defaultFilename: "Rockman_EXE6_Gregar_JP.sav",
+    },
+    {
+        id: "bn6_falzar_jp",
+        gameId: "bn6",
+        nameEn: "Cybeast Falzar (JP)",
+        nameJa: "電脳獣ファルザー（日本版）",
+        nameZh: "电脑兽 法萨尔（日版）",
+        romType: "JP",
+        variant: "falzar",
+        rawPath: "saves/bn6/f_jp.raw",
+        defaultFilename: "Rockman_EXE6_Falzar_JP.sav",
+    },
+    {
+        id: "bn6_gregar_us",
+        gameId: "bn6",
+        nameEn: "Cybeast Gregar (US)",
+        nameJa: "Cybeast Gregar（北米版）",
+        nameZh: "电脑兽 格雷加（美版）",
+        romType: "US",
+        variant: "gregar",
+        rawPath: "saves/bn6/g_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork6_Gregar_US.sav",
+    },
+    {
+        id: "bn6_falzar_us",
+        gameId: "bn6",
+        nameEn: "Cybeast Falzar (US)",
+        nameJa: "Cybeast Falzar（北米版）",
+        nameZh: "电脑兽 法萨尔（美版）",
+        romType: "US",
+        variant: "falzar",
+        rawPath: "saves/bn6/f_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork6_Falzar_US.sav",
+    },
+
+    // BN5
+    {
+        id: "bn5_protoman_jp",
+        gameId: "bn5",
+        nameEn: "Team ProtoMan (JP)",
+        nameJa: "チーム・オブ・ブルース（日本版）",
+        nameZh: "布鲁斯小队（日版）",
+        romType: "JP",
+        variant: "protoman",
+        rawPath: "saves/bn5/light_protoman_jp.raw",
+        defaultFilename: "Rockman_EXE5_Team_ProtoMan_JP.sav",
+    },
+    {
+        id: "bn5_colonel_jp",
+        gameId: "bn5",
+        nameEn: "Team Colonel (JP)",
+        nameJa: "チーム・オブ・カーネル（日本版）",
+        nameZh: "卡尼尔小队（日版）",
+        romType: "JP",
+        variant: "colonel",
+        rawPath: "saves/bn5/light_colonel_jp.raw",
+        defaultFilename: "Rockman_EXE5_Team_Colonel_JP.sav",
+    },
+    {
+        id: "bn5_protoman_us",
+        gameId: "bn5",
+        nameEn: "Team ProtoMan (US)",
+        nameJa: "Team ProtoMan（北米版）",
+        nameZh: "布鲁斯小队（美版）",
+        romType: "US",
+        variant: "protoman",
+        rawPath: "saves/bn5/light_protoman_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork5_Team_ProtoMan_US.sav",
+    },
+    {
+        id: "bn5_colonel_us",
+        gameId: "bn5",
+        nameEn: "Team Colonel (US)",
+        nameJa: "Team Colonel（北米版）",
+        nameZh: "卡尼尔小队（美版）",
+        romType: "US",
+        variant: "colonel",
+        rawPath: "saves/bn5/light_colonel_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork5_Team_Colonel_US.sav",
+    },
+
+    // BN4
+    {
+        id: "bn4_redsun_jp",
+        gameId: "bn4",
+        nameEn: "Red Sun (JP)",
+        nameJa: "トーナメント レッドサン（日本版）",
+        nameZh: "锦标赛 红日（日版）",
+        romType: "JP",
+        variant: "redsun",
+        rawPath: "saves/bn4/light_hp_1000_rs_jp.raw",
+        defaultFilename: "Rockman_EXE4_Red_Sun_JP.sav",
+    },
+    {
+        id: "bn4_bluemoon_jp",
+        gameId: "bn4",
+        nameEn: "Blue Moon (JP)",
+        nameJa: "トーナメント ブルームーン（日本版）",
+        nameZh: "锦标赛 蓝月（日版）",
+        romType: "JP",
+        variant: "bluemoon",
+        rawPath: "saves/bn4/light_hp_1000_bm_jp.raw",
+        defaultFilename: "Rockman_EXE4_Blue_Moon_JP.sav",
+    },
+    {
+        id: "bn4_redsun_us",
+        gameId: "bn4",
+        nameEn: "Red Sun (US)",
+        nameJa: "Red Sun（北米版）",
+        nameZh: "红日（美版）",
+        romType: "US",
+        variant: "redsun",
+        rawPath: "saves/bn4/light_hp_1000_rs_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork4_Red_Sun_US.sav",
+    },
+    {
+        id: "bn4_bluemoon_us",
+        gameId: "bn4",
+        nameEn: "Blue Moon (US)",
+        nameJa: "Blue Moon（北米版）",
+        nameZh: "蓝月（美版）",
+        romType: "US",
+        variant: "bluemoon",
+        rawPath: "saves/bn4/light_hp_1000_bm_us.raw",
+        defaultFilename: "MegaMan_BattleNetwork4_Blue_Moon_US.sav",
+    },
+
+    // BN3
+    {
+        id: "bn3_white",
+        gameId: "bn3",
+        nameEn: "White Version",
+        nameJa: "ホワイト版",
+        nameZh: "白版（通常版）",
+        romType: "JP",
+        variant: "white",
+        rawPath: "saves/bn3/white.raw",
+        defaultFilename: "Rockman_EXE3_White.sav",
+    },
+    {
+        id: "bn3_blue",
+        gameId: "bn3",
+        nameEn: "Blue / Black Version",
+        nameJa: "ブラック版（海外Blue版）",
+        nameZh: "黑版（EXE3 Black / 蓝版）",
+        romType: "JP",
+        variant: "blue",
+        rawPath: "saves/bn3/blue.raw",
+        defaultFilename: "Rockman_EXE3_Black.sav",
+    },
+];
+
+// Helper to compute raw sum checksum excluding checksum bytes
+export function computeRawChecksum(buf: Uint8Array, checksumOffset: number): number {
+    let sum = 0;
+    for (let i = 0; i < buf.length; i++) {
+        if (i < checksumOffset || i >= checksumOffset + 4) {
+            sum = (sum + buf[i]) >>> 0;
+        }
+    }
+    return sum;
+}
+
+// In-place masking function matching GBA Battle Network save format
+export function applySaveMask(buf: Uint8Array, maskOffset: number): void {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const maskWord = view.getUint32(maskOffset, true);
+    const maskByte = maskWord & 0xff;
+    for (let i = 0; i < buf.length; i++) {
+        buf[i] ^= maskByte;
+    }
+    view.setUint32(maskOffset, maskWord, true);
+}
+
+// Convert part color name to ROM raw color byte
+export function colorNameToRaw(colorName: string): number {
+    switch (colorName.toLowerCase()) {
+        case "white": return 1;
+        case "yellow": return 2;
+        case "pink": return 3;
+        case "red": return 4;
+        case "blue": return 5;
+        case "green": return 6;
+        default: return 0;
+    }
+}
+
+export interface BuildSaveOptions {
+    edition: SaveEdition;
+    templateBytes: Uint8Array;
+    problem: Problem;
+    solution?: Solution;
+    data: Data;
+}
+
+/**
+ * Builds a complete 64KB GBA SRAM .sav file with the NaviCust solution and Mod Cards installed.
+ */
+export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
+    const { edition, templateBytes, problem, solution, data } = options;
+
+    // Clone template buffer
+    const buf = new Uint8Array(templateBytes.length);
+    buf.set(templateBytes);
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+
+    const gameId = edition.gameId;
+
+    // 1. Process NaviCust Installation
+    if (solution && solution.length > 0 && solution.length === problem.requirements.length) {
+        const placements = solution;
+        const requirements = problem.requirements;
+
+        // Occupancy grid via placeAll
+        const occupancy = placeAll(data.parts, requirements, placements, data.gridSettings);
+
+        // A. Materialized Grid
+        if (gameId === "bn6") {
+            const gridOffset = 0x414c;
+            buf.fill(0, gridOffset, gridOffset + 0x44);
+            for (let i = 0; i < 49 && i < occupancy.length; i++) {
+                const cell = occupancy[i];
+                buf[gridOffset + i] = cell !== null ? (cell + 1) : 0;
+            }
+        } else if (gameId === "bn5") {
+            const gridOffset = 0x4d48;
+            buf.fill(0, gridOffset, gridOffset + 0x24);
+            for (let i = 0; i < 25 && i < occupancy.length; i++) {
+                const cell = occupancy[i];
+                buf[gridOffset + i] = cell !== null ? (cell + 1) : 0;
+            }
+        } else if (gameId === "bn4") {
+            const gridOffset = 0x4540;
+            buf.fill(0, gridOffset, gridOffset + 0x24);
+            for (let i = 0; i < 25 && i < occupancy.length; i++) {
+                const cell = occupancy[i];
+                buf[gridOffset + i] = cell !== null ? (cell + 1) : 0;
+            }
+        } else if (gameId === "bn3") {
+            const gridOffset = 0x1d90;
+            buf.fill(0, gridOffset, gridOffset + 25);
+            for (let i = 0; i < 25 && i < occupancy.length; i++) {
+                const cell = occupancy[i];
+                buf[gridOffset + i] = cell !== null ? (cell + 1) : 0;
+            }
+        }
+
+        // B. Parts Array
+        const partsOffset = gameId === "bn6" ? 0x4190
+            : gameId === "bn5" ? 0x4d6c
+            : gameId === "bn4" ? 0x4564
+            : 0x1300; // bn3
+
+        // Clear 25 slots
+        buf.fill(0, partsOffset, partsOffset + 25 * 8);
+
+        for (let i = 0; i < placements.length && i < 25; i++) {
+            const req = requirements[i];
+            const meta = data.partMetas[req.partIndex];
+            const p = placements[i];
+
+            let rawId: number;
+            if (gameId === "bn3") {
+                rawId = meta.id;
+                if (p.compressed) {
+                    const flagBit = 0x02e0 + rawId;
+                    const byteIdx = flagBit >> 3;
+                    const bitMask = 1 << (flagBit & 7);
+                    if (byteIdx < buf.length) {
+                        buf[byteIdx] |= bitMask;
+                    }
+                }
+            } else {
+                // In BN4, BN5, BN6, rawId = (part.id * 4) + variant_index
+                let variantIdx = 0;
+                for (let prev = 0; prev < req.partIndex; prev++) {
+                    if (data.partMetas[prev].id === meta.id) {
+                        variantIdx++;
+                    }
+                }
+                rawId = (meta.id * 4) + variantIdx;
+            }
+
+            const slotOffset = partsOffset + i * 8;
+            if (gameId === "bn6") {
+                const col = p.loc.position.x + 3;
+                const row = p.loc.position.y + 3;
+                buf[slotOffset + 0] = rawId & 0xff;
+                buf[slotOffset + 1] = 0;
+                buf[slotOffset + 2] = 0;
+                buf[slotOffset + 3] = col & 0xff;
+                buf[slotOffset + 4] = row & 0xff;
+                buf[slotOffset + 5] = p.loc.rotation & 0xff;
+                buf[slotOffset + 6] = p.compressed ? 1 : 0;
+                buf[slotOffset + 7] = 0;
+            } else if (gameId === "bn5" || gameId === "bn4") {
+                const col = p.loc.position.x + 2;
+                const row = p.loc.position.y + 2;
+                buf[slotOffset + 0] = rawId & 0xff;
+                buf[slotOffset + 1] = 0;
+                buf[slotOffset + 2] = col & 0xff;
+                buf[slotOffset + 3] = row & 0xff;
+                buf[slotOffset + 4] = p.loc.rotation & 0xff;
+                buf[slotOffset + 5] = p.compressed ? 1 : 0;
+                buf[slotOffset + 6] = 0;
+                buf[slotOffset + 7] = 0;
+            } else {
+                // BN3
+                const col = p.loc.position.x + 2;
+                const row = p.loc.position.y + 2;
+                buf[slotOffset + 0] = rawId & 0xff;
+                buf[slotOffset + 1] = 0;
+                buf[slotOffset + 2] = col & 0xff;
+                buf[slotOffset + 3] = row & 0xff;
+                buf[slotOffset + 4] = p.loc.rotation & 0xff;
+                buf[slotOffset + 5] = 0;
+                buf[slotOffset + 6] = 0;
+                buf[slotOffset + 7] = 0;
+            }
+        }
+
+        // C. Color Bar (distinct colors in placement order, up to 6 colors)
+        if (gameId === "bn6" || gameId === "bn5" || gameId === "bn4") {
+            const colorBarOffset = gameId === "bn6" ? 0x90 : gameId === "bn5" ? 0x1e8 : 0x190;
+            buf.fill(0, colorBarOffset, colorBarOffset + 6);
+            const placedColors: number[] = [];
+            for (let i = 0; i < placements.length; i++) {
+                const req = requirements[i];
+                const part = data.parts[req.partIndex];
+                const rawColor = colorNameToRaw(data.colors[part.color] || "");
+                if (rawColor > 0 && !placedColors.includes(rawColor)) {
+                    placedColors.push(rawColor);
+                }
+            }
+            for (let slot = 0; slot < 6 && slot < placedColors.length; slot++) {
+                buf[colorBarOffset + slot] = placedColors[slot];
+            }
+        }
+    } else {
+        // Clear NaviCust grid if no solution
+        if (gameId === "bn6") {
+            buf.fill(0, 0x414c, 0x414c + 0x44);
+            buf.fill(0, 0x4190, 0x4190 + 25 * 8);
+            buf.fill(0, 0x90, 0x90 + 6);
+        } else if (gameId === "bn5") {
+            buf.fill(0, 0x4d48, 0x4d48 + 0x24);
+            buf.fill(0, 0x4d6c, 0x4d6c + 25 * 8);
+            buf.fill(0, 0x1e8, 0x1e8 + 6);
+        } else if (gameId === "bn4") {
+            buf.fill(0, 0x4540, 0x4540 + 0x24);
+            buf.fill(0, 0x4564, 0x4564 + 25 * 8);
+            buf.fill(0, 0x190, 0x190 + 6);
+        } else if (gameId === "bn3") {
+            buf.fill(0, 0x1d90, 0x1d90 + 25);
+            buf.fill(0, 0x1300, 0x1300 + 25 * 8);
+        }
+    }
+
+    // 2. Mod Cards Injection
+    const modCards = problem.modCards || [];
+    if (gameId === "bn6") {
+        buf[0x65f0] = modCards.length & 0xff;
+        buf.fill(0, 0x6620, 0x6620 + 32);
+        for (let slot = 0; slot < modCards.length && slot < 32; slot++) {
+            const card = getModCard(modCards[slot], "bn6");
+            if (card) {
+                buf[0x6620 + slot] = card.cardNo & 0x7f;
+            }
+        }
+        // Anti-cheat table
+        const mask = edition.variant === "gregar" ? 0x43 : 0x8d;
+        for (let id = 0; id < 0x200; id++) {
+            buf[0x5038 + id] = buf[0x0670 + id] ^ mask;
+        }
+    } else if (gameId === "bn5") {
+        buf[0x79a0] = modCards.length & 0xff;
+        buf.fill(0, 0x79d0, 0x79d0 + 32);
+        for (let slot = 0; slot < modCards.length && slot < 32; slot++) {
+            const card = getModCard(modCards[slot], "bn5");
+            if (card) {
+                buf[0x79d0 + slot] = card.cardNo & 0x7f;
+            }
+        }
+        // Anti-cheat table
+        const mask = edition.variant === "protoman" ? 0x43 : 0x8d;
+        for (let id = 0; id < 0x200; id++) {
+            buf[0x60dc + id] = buf[0x1220 + id] ^ mask;
+        }
+    } else if (gameId === "bn4") {
+        // BN4 slots 0A through 0F (6 slots)
+        buf.fill(0xff, 0x464c, 0x464c + 6);
+        buf.fill(0xff, 0x4653, 0x4653 + 6);
+        for (const cardId of modCards) {
+            const card = getModCard(cardId, "bn4");
+            if (card && card.slot) {
+                const slotIdx = parseInt(card.slot.substring(1), 16) - 10;
+                if (slotIdx >= 0 && slotIdx < 6) {
+                    buf[0x464c + slotIdx] = card.cardNo & 0xff;
+                }
+            }
+        }
+    }
+
+    // 3. Rebuild Checksum
+    if (gameId === "bn6") {
+        const variantAdd = edition.variant === "gregar" ? 0x72 : 0x18;
+        const cs = (computeRawChecksum(buf, 0x1c6c) + variantAdd) >>> 0;
+        view.setUint32(0x1c6c, cs, true);
+    } else if (gameId === "bn5") {
+        const variantAdd = edition.variant === "protoman" ? 0x72 : 0x18;
+        const cs = (computeRawChecksum(buf, 0x29dc) + variantAdd) >>> 0;
+        view.setUint32(0x29dc, cs, true);
+    } else if (gameId === "bn4") {
+        const variantAdd = edition.variant === "redsun" ? 0x16 : 0x22;
+        const cs = (computeRawChecksum(buf, 0x21e8) + variantAdd) >>> 0;
+        view.setUint32(0x21e8, cs, true);
+    } else if (gameId === "bn3") {
+        const variantAdd = edition.variant === "white" ? 0x16 : 0x22;
+        const cs = (computeRawChecksum(buf, 0x1dd8) + variantAdd) >>> 0;
+        view.setUint32(0x1dd8, cs, true);
+    }
+
+    // 4. Create 64KB SRAM Dump with Mask
+    const sram = new Uint8Array(0x10000);
+    const startOffset = gameId === "bn3" ? 0 : 0x0100;
+    sram.set(buf, startOffset);
+
+    if (gameId === "bn6") {
+        applySaveMask(sram.subarray(0x0100, 0x0100 + buf.length), 0x1064);
+    } else if (gameId === "bn5") {
+        applySaveMask(sram.subarray(0x0100, 0x0100 + buf.length), 0x1a34);
+    } else if (gameId === "bn4") {
+        applySaveMask(sram.subarray(0x0100, 0x0100 + buf.length), 0x1554);
+    }
+    // BN3 has no masking and starts at offset 0
+
+    return sram;
+}
+
+/**
+ * Triggers a download of a Uint8Array binary file in the browser.
+ */
+export function downloadSaveFile(data: Uint8Array, filename: string): void {
+    const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Fetches the raw template bytes for an edition.
+ */
+export async function fetchSaveTemplate(edition: SaveEdition): Promise<Uint8Array> {
+    let url = edition.rawPath;
+    if (typeof window !== "undefined") {
+        const base = document.baseURI || window.location.href;
+        url = new URL(edition.rawPath, base).href;
+    }
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`Failed to load save template: ${edition.rawPath} (${res.statusText})`);
+    }
+    const arrayBuffer = await res.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+}
