@@ -1575,22 +1575,28 @@ export function analyzeSolutionBugs(
         partName: string;
         bugType: BugType;
         causes: BugCause[];
+        violationCount: number;
     }[] = [];
 
     for (const d of reqDetails) {
         const causes: BugCause[] = [];
+        let violationCount = 0;
 
         if (d.partMeta.isSolid && !d.onCommandLine) {
             causes.push("solidNotOnCommandLine");
+            violationCount += 1;
         }
         if (!d.partMeta.isSolid && d.onCommandLine) {
             causes.push("plusOnCommandLine");
+            violationCount += 1;
         }
         if (d.adjacentSameColoredPlacements.size > 0) {
             causes.push("adjacentSameColor");
+            violationCount += d.adjacentSameColoredPlacements.size;
         }
         if (d.outOfBounds) {
             causes.push("outOfBounds");
+            violationCount += 1;
         }
 
         if (causes.length > 0) {
@@ -1602,6 +1608,7 @@ export function analyzeSolutionBugs(
                 partName: getPartName(d.partMeta, lang),
                 bugType,
                 causes,
+                violationCount,
             });
         }
     }
@@ -1623,9 +1630,9 @@ export function analyzeSolutionBugs(
     for (const [bugType, group] of bugTypeGroups.entries()) {
         const bugDef = gameDefs[bugType] ?? GAME_BUG_DEFINITIONS["bn6"][bugType];
         const baseTitle = bugDef?.title[lang] ?? bugType;
-        const count = group.length;
+        const totalViolations = group.reduce((sum, g) => sum + g.violationCount, 0);
 
-        const level = Math.max(1, count);
+        const level = Math.max(1, totalViolations);
         const maxDefinedLevel = bugDef?.levels
             ? Math.max(...Object.keys(bugDef.levels).map(Number))
             : 1;
@@ -1635,11 +1642,11 @@ export function analyzeSolutionBugs(
             bugDef?.levels?.[effectiveLevel]?.[lang] ??
             bugDef?.mechanics[lang] ??
             "";
-        const titleWithLevel = bugDef?.levels ? `${baseTitle} (Lv${level})` : baseTitle;
+        const titleWithLevel = bugDef?.levels ? `${baseTitle} (Lv${effectiveLevel})` : baseTitle;
 
         activeBugs.push({
             bugType: bugType as BugType,
-            level,
+            level: effectiveLevel,
             title: titleWithLevel,
             mechanics: levelMechanics,
             parts: group.map((g) => ({
@@ -1656,7 +1663,7 @@ export function analyzeSolutionBugs(
                 partId: g.partId,
                 partName: g.partName,
                 bugType: g.bugType,
-                level,
+                level: effectiveLevel,
                 bugTitle: titleWithLevel,
                 bugMechanics: levelMechanics,
                 causes: g.causes,

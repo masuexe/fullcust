@@ -272,3 +272,49 @@ test("analyzeSolutionBugs uses game-specific bug types and BugStop across all ga
     assert.equal(bn3BugStopAnalysis.bugs[0].bugTitle, "自动移动与混乱 BUG (Lv1)");
     assert.equal(bn3BugStopAnalysis.bugs[0].bugMechanics, "战斗中不受控制地持续向上移动（会向上走）。");
 });
+
+test("BN5 bug level scaling: adjacent same-color parts count distinct neighbors, not cells (Lv2 panel bug)", () => {
+    // 5x5 grid, row 2 is command line, no oob
+    const gridSettings = { width: 5, height: 5, hasOob: false, commandLineRow: 2 };
+
+    // Layout from user screenshot /tmp/FD2C9A4BDAFCD4319BC15A3D04E55046.png:
+    // All 3 parts are Yellow (color 3)
+    // Part 0: Rush (ID 30, solid, Yellow)
+    // Part 1: Charge+1 (ID 37, plus, Yellow)
+    // Part 2: AirShoes (ID 12, solid, Yellow)
+    const partMetas = [
+        { id: 30, name: "Rush (yellow)", nameZh: "莱西支援（黄色）", isSolid: true, color: 3 },
+        { id: 37, name: "Charge+1 (yellow)", nameZh: "集气+1（黄色）", isSolid: false, color: 3 },
+        { id: 12, name: "AirShoes (yellow)", nameZh: "飞行鞋（黄色）", isSolid: true, color: 3 },
+    ];
+    const requirements = [{ partIndex: 0 }, { partIndex: 1 }, { partIndex: 2 }];
+
+    const cells = new Array(25).fill(null);
+    // Part 0 (Rush): at (0, 0)
+    cells[0 * 5 + 0] = 0;
+
+    // Part 1 (Charge+1): at (1, 0) and (2, 0)
+    cells[1 * 5 + 0] = 1;
+    cells[2 * 5 + 0] = 1;
+
+    // Part 2 (AirShoes): at (0, 1), (1, 1), (2, 1), (2, 2), (2, 3), (3, 3)
+    // Note: AirShoes touches Rush at (0, 1) <-> (0, 0) [1 cell edge]
+    // And AirShoes touches Charge+1 at (1, 1) <-> (1, 0) and (2, 1) <-> (2, 0) [2 cell edges]
+    // Total touching edges = 3, but distinct adjacent same-colored parts = 2 (Rush and Charge+1)!
+    cells[0 * 5 + 1] = 2;
+    cells[1 * 5 + 1] = 2;
+    cells[2 * 5 + 1] = 2;
+    cells[2 * 5 + 2] = 2;
+    cells[2 * 5 + 3] = 2;
+    cells[3 * 5 + 3] = 2;
+
+    const analysis = analyzeSolutionBugs("bn5", partMetas, requirements, cells, gridSettings, "zh");
+    assert.equal(analysis.hasBugs, true);
+
+    const panelBug = analysis.activeBugs.find(b => b.bugType === "panel");
+    assert(panelBug, "Panel bug must be present");
+    // Expected level is 2 (2 adjacent distinct same-color programs), NOT 1 (part count) and NOT 3 (cell edge count)
+    assert.equal(panelBug.level, 2);
+    assert.equal(panelBug.title, "地面 BUG (Lv2)");
+    assert.equal(panelBug.mechanics, "移动离开面板时有 1/2 (50%) 几率使面板开裂。");
+});
