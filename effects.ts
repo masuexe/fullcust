@@ -422,7 +422,8 @@ export const ABILITY_NAMES: Record<string, { en: string; ja: string; zh: string 
     allGuard: { en: "All Guard", ja: "オールガード", zh: "全御防御" },
     fullSynchro: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" },
     statusGuard: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" },
-    firstBarrier200: { en: "FirstBarrier200", ja: "ファーストバリア200", zh: "初始防护罩200" },
+    firstBarrier200: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" },
+    firstBarrier100: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" },
     batteryMode: { en: "Battery", ja: "バッテリーモード", zh: "电池模式" },
     soulClean: { en: "SoulCleaner", ja: "ソウルクリーナー", zh: "灵魂净化" },
     superArmor: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" },
@@ -471,6 +472,7 @@ export const BN6_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
     { id: "WideShot", name: { en: "CS: WideShot (DiveMan)", ja: "CS: ワイドショット（ダイブマン）", zh: "CS: 广域射击 (WideShot / 潜水人)" } },
     { id: "CornShot", name: { en: "CS: CornShot (BombCorn)", ja: "CS: コーンショット（ボムコーン）", zh: "CS: 玉米射击 (BombCorn / 炸弹玉米)" } },
     { id: "MachineGun", name: { en: "CS: MachineGun (Gunner)", ja: "CS: ガンナー（ガンナー）", zh: "CS: 气力机枪 (MachineGun / 枪手)" } },
+    { id: "Vulcan", name: { en: "CS: Vulcan (BowlMan)", ja: "CS: バルカン（ボウルマン）", zh: "CS: 火神炮 (BowlMan / 保龄球人)" } },
     { id: "CircleGun", name: { en: "CS: CircleGun (SearchMan)", ja: "CS: サークルガン（サーチマン）", zh: "CS: 旋转枪 (CircleGun / 侦察人)" } },
     { id: "SuperVulcan", name: { en: "CS: SuperVulcan (SoulBattler)", ja: "CS: スーパーバルカン（ソウルバトラー）", zh: "CS: 超级火神炮 (SuperVulcan / 魂斗士改装)" } },
     { id: "ShootingBuster", name: { en: "CS: Shooting Buster (BassBX / BassCross)", ja: "CS: シューティングバスター（フォルテBX / フォルテクロス）", zh: "CS: 疾风射击 (Shooting Buster / 佛鲁迪BX)" } },
@@ -633,7 +635,6 @@ export const BN6_BBUTTON_OPTIONS: ConstraintOption[] = [
     { id: "MiniBomb", name: { en: "B: MiniBomb (Beetle)", ja: "B: ミニボム（ビートル）", zh: "B: 迷你炸弹 (MiniBomb / 甲虫)" } },
     { id: "CrackShot", name: { en: "B: CrackShot (PlanetMan)", ja: "B: クラックショット（プラネットマン）", zh: "B: 裂缝射击 (CrackShot / 行星人)" } },
     { id: "Meteor1", name: { en: "B: Meteor1 (MetFire)", ja: "B: メテオ1（メットファイア）", zh: "B: 流星1 (Meteor1 / 头盔火)" } },
-    { id: "Vulcan", name: { en: "B: Vulcan (BowlMan)", ja: "B: バルカン（ボウルマン）", zh: "B: 火神炮 (Vulcan / 保龄球人)" } },
 ];
 
 export const BN5_BBUTTON_OPTIONS: ConstraintOption[] = [
@@ -669,6 +670,7 @@ export const BN6_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
     { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
     { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
     { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier100", name: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" } },
     { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
     { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
     { id: "chipShuffle", name: { en: "ChipShuffle", ja: "サーチシャッフル", zh: "随机切换" } },
@@ -684,6 +686,7 @@ export const BN5_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
     { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
     { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
     { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier100", name: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" } },
     { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
     { id: "autoHeal", name: { en: "AutoHeal", ja: "セルフリカバリー", zh: "自我回复" } },
     { id: "bugStop", name: { en: "BugStop", ja: "バグストッパー", zh: "BUG停止器" } },
@@ -694,6 +697,7 @@ export const BN5_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
 
 export const BN4_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
     { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier100", name: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" } },
     { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
     { id: "fullSynchro", name: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" } },
     { id: "allGuard", name: { en: "All Guard", ja: "オールガード", zh: "全御防御" } },

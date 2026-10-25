@@ -505,8 +505,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
 
     for (const card of candidateCards) {
         const weight = card.mb;
-        const baseVal = evaluateCardScore(card, target, requiredBugs);
-        if (baseVal <= 0 || weight > remainingMb) continue;
+        if (weight > remainingMb) continue;
 
         let cardMask = 0;
         for (let i = 0; i < numReq; i++) {
@@ -514,6 +513,9 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
                 cardMask |= (1 << i);
             }
         }
+
+        const baseVal = evaluateCardScore(card, target, requiredBugs);
+        if (baseVal <= 0 && cardMask === 0) continue;
 
         for (let mask = maxMask - 1; mask >= 0; mask--) {
             const nextMask = mask | cardMask;

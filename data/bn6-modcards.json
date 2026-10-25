@@ -120,7 +120,8 @@
       "hp": -80
     },
     "abilities": [
-      "airShoes"
+      "airShoes",
+      "firstBarrier100"
     ],
     "disabledAbilities": [],
     "bugs": [],
@@ -2946,7 +2947,7 @@
     "posRaw": [
       "HP +100",
       "Custom +1",
-      "Vulcan"
+      "B PwrAtk: Vulcan"
     ],
     "negRaw": [
       "OFF: FloatShoes"
@@ -2961,7 +2962,7 @@
     ],
     "bugs": [],
     "repairs": [],
-    "bButton": "Vulcan"
+    "bPwrAtk": "Vulcan"
   },
   {
     "id": "137-B042",

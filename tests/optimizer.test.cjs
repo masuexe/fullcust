@@ -602,7 +602,9 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
 
     // 1. Check counts of complete catalogs
     const bn6Cs = getSpecialCsOptions("bn6");
-    assert.equal(bn6Cs.length, 43, "BN6 must have all 43 special CS options (including ChargeShot)");
+    assert.equal(bn6Cs.length, 44, "BN6 must have all 44 special CS options (including ChargeShot and Vulcan)");
+    assert.ok(bn6Cs.some(o => o.id === "Vulcan"), "BN6 must have CS: Vulcan (BowlMan)");
+
     const bn5Cs = getSpecialCsOptions("bn5");
     assert.equal(bn5Cs.length, 32, "BN5 must have 32 CS options (including ChargeShot)");
     const bn4Cs = getSpecialCsOptions("bn4");
@@ -610,6 +612,10 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
 
     const bn6BLeft = getBLeftOptions("bn6");
     assert.equal(bn6BLeft.length, 8, "BN6 must have 8 B+Left options (including MachineSword)");
+
+    const bn6BButton = getBButtonOptions("bn6");
+    assert.equal(bn6BButton.length, 5, "BN6 must have 5 B-Button options (none, Sword, MiniBomb, CrackShot, Meteor1)");
+    assert.ok(!bn6BButton.some(o => o.id === "Vulcan"), "BN6 B-Button options must not contain Vulcan (BowlMan is CS)");
 
     // 2. Test optimizing with CS: Cannon (CanGard)
     const cardsCannon = optimizeModCards({
@@ -663,4 +669,30 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
         deckMagnetize.bLeft && deckMagnetize.bLeft.startsWith("Magnetize"),
         "Must successfully match Magnetize"
     );
+
+    // 7. Test BowlMan CS: Vulcan
+    const cardsVulcan = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredSpecialMove: "Vulcan" },
+    });
+    const deckVulcan = computeDeckStats(cardsVulcan, "bn6");
+    assert.equal(deckVulcan.bPwrAtk, "Vulcan", "BowlMan must be selected for CS: Vulcan");
+    assert.ok(cardsVulcan.includes("137-B041"), "Deck must include BowlMan (137-B041)");
+
+    // 8. Test FirstBarrier 100 ability support
+    const { getCoreAbilityOptions } = require("../effects.ts");
+    const bn6Abilities = getCoreAbilityOptions("bn6");
+    assert.ok(bn6Abilities.some(o => o.id === "firstBarrier100"), "BN6 core abilities must include firstBarrier100");
+
+    const cardsBarrier100 = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredAbilities: ["firstBarrier100"] },
+    });
+    const deckBarrier100 = computeDeckStats(cardsBarrier100, "bn6");
+    assert.ok(deckBarrier100.activeAbilities.includes("firstBarrier100"), "Deck must include firstBarrier100");
+    assert.ok(cardsBarrier100.includes("137-A005"), "Deck must include Heady (137-A005)");
 });

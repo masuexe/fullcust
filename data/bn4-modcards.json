@@ -226,7 +226,8 @@
     ],
     "stats": {},
     "abilities": [
-      "firstBarrier"
+      "firstBarrier",
+      "firstBarrier100"
     ],
     "disabledAbilities": [],
     "firstBarrier": 100,

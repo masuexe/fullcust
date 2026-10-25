@@ -507,7 +507,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         for (const [ability, offset] of abilityOffsets) {
             buf[bn6NaviStatsOffset + offset] = stats.abilities.includes(ability) ? 1 : 0;
         }
-        buf[bn6NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+        buf[bn6NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.abilities.includes("firstBarrier100") || stats.abilities.includes("firstBarrier200") || stats.modFirstBarrier) ? 1 : 0;
         buf[bn6NaviStatsOffset + 0x0d] = (stats.abilities.includes("rush") ? 1 : 0)
             | (stats.abilities.includes("beat") ? 2 : 0)
             | (stats.abilities.includes("tango") ? 4 : 0);
@@ -535,7 +535,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn5NaviStatsOffset + 0x03] = Math.max(0, Math.min(4, stats.charge - 1));
 
         // First barrier
-        buf[bn5NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+        buf[bn5NaviStatsOffset + 0x06] = (stats.abilities.includes("firstBarrier") || stats.abilities.includes("firstBarrier100") || stats.abilities.includes("firstBarrier200") || stats.modFirstBarrier) ? 1 : 0;
 
         // B+Left ability: Shield 0x3b, Reflect 0x8b, AntiDamage 0x3d, None 0xff
         let bLeft = 0xff;
@@ -644,7 +644,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn4NaviOffset + 0x1c] = stats.abilities.includes("humor") ? 1 : 0;
         buf[bn4NaviOffset + 0x1d] = stats.abilities.includes("bugStop") ? 1 : 0;
         buf[bn4NaviOffset + 0x1e] = (stats.abilities.includes("soulClean") || stats.abilities.includes("soulCleanse")) ? 1 : 0;
-        buf[bn4NaviOffset + 0x21] = (stats.abilities.includes("firstBarrier") || stats.modFirstBarrier) ? 1 : 0;
+        buf[bn4NaviOffset + 0x21] = (stats.abilities.includes("firstBarrier") || stats.abilities.includes("firstBarrier100") || stats.abilities.includes("firstBarrier200") || stats.modFirstBarrier) ? 1 : 0;
 
         // HPs in battle record
         view.setUint16(bn4NaviOffset + 0x30, stats.baseHp, true);

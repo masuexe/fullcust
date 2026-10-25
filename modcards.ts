@@ -293,7 +293,7 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
     }
 
     // Interaction check 2: Buster addition applies to normal buster bullets AND tripleBuster (which fires 3 normal buster bullets).
-    // Only if bButton is explicitly overridden with a weapon (e.g. Sword, MiniBomb, CrackShot, Meteor1, Vulcan), busterAddition is invalidated!
+    // Only if bButton is explicitly overridden with a weapon (e.g. Sword, MiniBomb, CrackShot, Meteor1), busterAddition is invalidated!
     let invalidatedBusterAddition: string | undefined;
     if (bButton) {
         if (busterAddition) {
@@ -451,6 +451,7 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
         ],
         grants: c =>
             (c.abilities || []).includes("firstBarrier") ||
+            (c.abilities || []).includes("firstBarrier100") ||
             (c.abilities || []).includes("firstBarrier200") ||
             !!c.firstBarrier ||
             (c.posRaw || []).some(
