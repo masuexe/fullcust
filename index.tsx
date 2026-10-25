@@ -948,6 +948,12 @@ function AutoOptimizerPanel({
     const [forbiddenBugs, setForbiddenBugs] = React.useState<string[]>(
         problem.constraints?.forbiddenBugs ?? []
     );
+    const activeConstraintCount =
+        reqAbilities.length +
+        (reqSpecialMove ? 1 : 0) +
+        (reqBLeft ? 1 : 0) +
+        forbiddenBugs.length;
+    const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
     const [isOptimizing, setIsOptimizing] = React.useState(false);
     const [statusMessage, setStatusMessage] = React.useState<{
         type: "success" | "error";
@@ -1063,215 +1069,12 @@ function AutoOptimizerPanel({
                     data-bs-parent="#auto-optimizer-section"
                 >
                     <div className="accordion-body p-2">
-                        <p className="text-muted small mb-2">{t("autoOptimizeDesc", lang)}</p>
+                        <p className="text-muted small mb-2" style={{ fontSize: "0.78rem" }}>
+                            {t("autoOptimizeDesc", lang)}
+                        </p>
 
-                        {/* Mod Card Format Selector (BN4 / BN5 / BN6) */}
-                        {hasModCards && (
-                            <div className="mb-2">
-                                <label className="form-label small fw-semibold mb-1">{t("optModCardModeTitle", lang)}:</label>
-                                <div className="d-flex flex-column gap-1">
-                                    <div className="form-check">
-                                        <input
-                                            className="form-check-input"
-                                            type="radio"
-                                            name="optModCardMode"
-                                            id="optModCardNone"
-                                            checked={modCardMode === "none"}
-                                            onChange={() => setModCardMode("none")}
-                                        />
-                                        <label className="form-check-label small" htmlFor="optModCardNone">
-                                            <span className="fw-semibold">{t("optModCardNone", lang)}</span>
-                                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                                {t("optModCardNoneDesc", lang)}
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div className="form-check">
-                                        <input
-                                            className="form-check-input"
-                                            type="radio"
-                                            name="optModCardMode"
-                                            id="optModCardAuto"
-                                            checked={modCardMode === "auto"}
-                                            onChange={() => setModCardMode("auto")}
-                                        />
-                                        <label className="form-check-label small" htmlFor="optModCardAuto">
-                                            <span className="fw-semibold">{t("optModCardAuto", lang)}</span>
-                                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                                {t("optModCardAutoDesc", lang)}
-                                            </div>
-                                        </label>
-                                    </div>
-                                    {userAlreadyHasCards && (
-                                        <div className="form-check">
-                                            <input
-                                                className="form-check-input"
-                                                type="radio"
-                                                name="optModCardMode"
-                                                id="optModCardKeep"
-                                                checked={modCardMode === "keep"}
-                                                onChange={() => setModCardMode("keep")}
-                                            />
-                                            <label className="form-check-label small" htmlFor="optModCardKeep">
-                                                <span className="fw-semibold">{t("optModCardKeep", lang)}</span>
-                                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                                    {t("optModCardKeepDesc", lang)}
-                                                </div>
-                                            </label>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Bug Policy Selector */}
+                        {/* 1. Optimization Goal / Target Selector (Placed at top for instant access) */}
                         <div className="mb-2">
-                            <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
-                            <div className="d-flex flex-column gap-1">
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="optBugPolicy"
-                                        id="policyNoBugs"
-                                        checked={policyType === "no_bugs"}
-                                        onChange={() => {
-                                            setPolicyType("no_bugs");
-                                            onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
-                                        }}
-                                    />
-                                    <label className="form-check-label small" htmlFor="policyNoBugs">
-                                        <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
-                                        <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                            {t("policyNoBugsDesc", lang)}
-                                        </div>
-                                    </label>
-                                </div>
-                                <div className="form-check">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="optBugPolicy"
-                                        id="policyBenign"
-                                        checked={policyType === "benign_allowed"}
-                                        onChange={() => {
-                                            setPolicyType("benign_allowed");
-                                            onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
-                                        }}
-                                    />
-                                    <label className="form-check-label small" htmlFor="policyBenign">
-                                        <span className="fw-semibold">{t("policyBenign", lang)}</span>
-                                        <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                            {t("policyBenignDesc", lang)}
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Declarative Build Constraints */}
-                        <div className="card mb-3 border-secondary-subtle bg-body-tertiary">
-                            <div className="card-header py-1 px-2 d-flex align-items-center justify-content-between">
-                                <span className="small fw-semibold">🎯 {t("buildConstraintsTitle", lang)}</span>
-                            </div>
-                            <div className="card-body p-2">
-                                <div className="text-muted small mb-2" style={{ fontSize: "0.78rem" }}>
-                                    {t("buildConstraintsDesc", lang)}
-                                </div>
-
-                                {/* Required Abilities */}
-                                <div className="mb-2">
-                                    <label className="form-label small fw-semibold mb-1 d-block">
-                                        {t("reqAbilitiesTitle", lang)}:
-                                    </label>
-                                    <div className="d-flex flex-wrap gap-1">
-                                        {CORE_ABILITY_OPTIONS.map(opt => {
-                                            const active = reqAbilities.includes(opt.id);
-                                            return (
-                                                <button
-                                                    key={opt.id}
-                                                    type="button"
-                                                    className={`btn btn-sm py-0 px-2 ${active ? "btn-primary" : "btn-outline-secondary"}`}
-                                                    style={{ fontSize: "0.78rem", borderRadius: "12px" }}
-                                                    onClick={() => toggleAbility(opt.id)}
-                                                >
-                                                    {active ? "✓ " : "+ "}{opt.name[lang] || opt.name.en}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Special CS & B+Left (Available when mod cards enabled) */}
-                                {hasModCards && modCardMode !== "none" && (
-                                    <div className="row g-2 mb-2">
-                                        <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold mb-1">
-                                                {t("reqSpecialMoveTitle", lang)}:
-                                            </label>
-                                            <select
-                                                className="form-select form-select-sm"
-                                                value={reqSpecialMove}
-                                                onChange={e => setReqSpecialMove(e.target.value)}
-                                            >
-                                                <option value="">{t("anyOption", lang)}</option>
-                                                {SPECIAL_CS_OPTIONS.map(opt => (
-                                                    <option key={opt.id} value={opt.id}>
-                                                        {opt.name[lang] || opt.name.en}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="col-12 col-md-6">
-                                            <label className="form-label small fw-semibold mb-1">
-                                                {t("reqBLeftTitle", lang)}:
-                                            </label>
-                                            <select
-                                                className="form-select form-select-sm"
-                                                value={reqBLeft}
-                                                onChange={e => setReqBLeft(e.target.value)}
-                                            >
-                                                <option value="">{t("anyOption", lang)}</option>
-                                                {BLEFT_OPTIONS.map(opt => (
-                                                    <option key={opt.id} value={opt.id}>
-                                                        {opt.name[lang] || opt.name.en}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Forbidden Bugs */}
-                                <div className="mb-1">
-                                    <label className="form-label small fw-semibold mb-1 d-block text-danger">
-                                        🚫 {t("forbiddenBugsTitle", lang)}:
-                                    </label>
-                                    <div className="d-flex flex-wrap gap-2">
-                                        {FORBIDDEN_BUG_OPTIONS.map(opt => {
-                                            const active = forbiddenBugs.includes(opt.id);
-                                            return (
-                                                <div key={opt.id} className="form-check form-check-inline me-1 mb-1">
-                                                    <input
-                                                        className="form-check-input"
-                                                        type="checkbox"
-                                                        id={`fbug-${opt.id}`}
-                                                        checked={active}
-                                                        onChange={() => toggleForbiddenBug(opt.id)}
-                                                    />
-                                                    <label className="form-check-label small" htmlFor={`fbug-${opt.id}`} style={{ fontSize: "0.8rem" }}>
-                                                        {opt.name[lang] || opt.name.en}
-                                                    </label>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Optimization Target Selector */}
-                        <div className="mb-3">
                             <label className="form-label small fw-semibold mb-1">{t("optTarget", lang)}:</label>
                             <div className="btn-group btn-group-sm w-100" role="group">
                                 <button
@@ -1298,24 +1101,245 @@ function AutoOptimizerPanel({
                             </div>
                         </div>
 
-                        {/* Action button */}
-                        <button
-                            type="button"
-                            className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
-                            disabled={isOptimizing}
-                            onClick={handleOptimize}
-                        >
-                            {isOptimizing ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                    <span>{t("optimizing", lang)}</span>
-                                </>
-                            ) : (
-                                <span>{t("autoOptimizeBtn", lang)}</span>
-                            )}
-                        </button>
+                        {/* 2. Mod Card Format Selector (Compact) */}
+                        {hasModCards && (
+                            <div className="mb-2">
+                                <label className="form-label small fw-semibold mb-1">{t("optModCardModeTitle", lang)}:</label>
+                                <div className="d-flex flex-column gap-1">
+                                    <div className="form-check mb-0">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="optModCardMode"
+                                            id="optModCardNone"
+                                            checked={modCardMode === "none"}
+                                            onChange={() => setModCardMode("none")}
+                                        />
+                                        <label className="form-check-label small" htmlFor="optModCardNone">
+                                            <span className="fw-semibold">{t("optModCardNone", lang)}</span>
+                                        </label>
+                                    </div>
+                                    <div className="form-check mb-0">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="optModCardMode"
+                                            id="optModCardAuto"
+                                            checked={modCardMode === "auto"}
+                                            onChange={() => setModCardMode("auto")}
+                                        />
+                                        <label className="form-check-label small" htmlFor="optModCardAuto">
+                                            <span className="fw-semibold">{t("optModCardAuto", lang)}</span>
+                                        </label>
+                                    </div>
+                                    {userAlreadyHasCards && (
+                                        <div className="form-check mb-0">
+                                            <input
+                                                className="form-check-input"
+                                                type="radio"
+                                                name="optModCardMode"
+                                                id="optModCardKeep"
+                                                checked={modCardMode === "keep"}
+                                                onChange={() => setModCardMode("keep")}
+                                            />
+                                            <label className="form-check-label small" htmlFor="optModCardKeep">
+                                                <span className="fw-semibold">{t("optModCardKeep", lang)}</span>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="text-muted mt-1" style={{ fontSize: "0.74rem" }}>
+                                    {modCardMode === "none" && t("optModCardNoneDesc", lang)}
+                                    {modCardMode === "auto" && t("optModCardAutoDesc", lang)}
+                                    {modCardMode === "keep" && t("optModCardKeepDesc", lang)}
+                                </div>
+                            </div>
+                        )}
 
-                        {/* Status notice */}
+                        {/* 3. Bug Policy Selector (Compact) */}
+                        <div className="mb-2">
+                            <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
+                            <div className="d-flex flex-column gap-1">
+                                <div className="form-check mb-0">
+                                    <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="optBugPolicy"
+                                        id="policyNoBugs"
+                                        checked={policyType === "no_bugs"}
+                                        onChange={() => {
+                                            setPolicyType("no_bugs");
+                                            onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
+                                        }}
+                                    />
+                                    <label className="form-check-label small" htmlFor="policyNoBugs">
+                                        <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
+                                    </label>
+                                </div>
+                                <div className="form-check mb-0">
+                                    <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="optBugPolicy"
+                                        id="policyBenign"
+                                        checked={policyType === "benign_allowed"}
+                                        onChange={() => {
+                                            setPolicyType("benign_allowed");
+                                            onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
+                                        }}
+                                    />
+                                    <label className="form-check-label small" htmlFor="policyBenign">
+                                        <span className="fw-semibold">{t("policyBenign", lang)}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="text-muted mt-1" style={{ fontSize: "0.74rem" }}>
+                                {policyType === "no_bugs" ? t("policyNoBugsDesc", lang) : t("policyBenignDesc", lang)}
+                            </div>
+                        </div>
+
+                        {/* 4. Declarative Build Constraints (Collapsible Card with Active Badge) */}
+                        <div className="card mb-2 border-secondary-subtle bg-body-tertiary">
+                            <div
+                                className="card-header py-1 px-2 d-flex align-items-center justify-content-between"
+                                style={{ cursor: "pointer", userSelect: "none" }}
+                                onClick={() => setIsConstraintsOpen(prev => !prev)}
+                                role="button"
+                                aria-expanded={isConstraintsOpen}
+                            >
+                                <div className="d-flex align-items-center gap-1">
+                                    <span>🎯</span>
+                                    <span className="small fw-semibold">{t("buildConstraintsTitle", lang)}</span>
+                                </div>
+                                <div className="d-flex align-items-center gap-1">
+                                    {activeConstraintCount > 0 && (
+                                        <span className="badge bg-primary text-light" style={{ fontSize: "0.72rem" }}>
+                                            {activeConstraintCount}
+                                        </span>
+                                    )}
+                                    <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
+                                        {isConstraintsOpen ? "▲" : "▼"}
+                                    </span>
+                                </div>
+                            </div>
+                            {isConstraintsOpen && (
+                                <div className="card-body p-2 border-top border-secondary-subtle">
+                                    <div className="text-muted small mb-2" style={{ fontSize: "0.76rem" }}>
+                                        {t("buildConstraintsDesc", lang)}
+                                    </div>
+
+                                    {/* Required Abilities */}
+                                    <div className="mb-2">
+                                        <label className="form-label small fw-semibold mb-1 d-block">
+                                            {t("reqAbilitiesTitle", lang)}:
+                                        </label>
+                                        <div className="d-flex flex-wrap gap-1">
+                                            {CORE_ABILITY_OPTIONS.map(opt => {
+                                                const active = reqAbilities.includes(opt.id);
+                                                return (
+                                                    <button
+                                                        key={opt.id}
+                                                        type="button"
+                                                        className={`btn btn-sm py-0 px-2 ${active ? "btn-primary" : "btn-outline-secondary"}`}
+                                                        style={{ fontSize: "0.78rem", borderRadius: "12px" }}
+                                                        onClick={() => toggleAbility(opt.id)}
+                                                    >
+                                                        {active ? "✓ " : "+ "}{opt.name[lang] || opt.name.en}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Special CS & B+Left (Available when mod cards enabled) */}
+                                    {hasModCards && modCardMode !== "none" && (
+                                        <div className="row g-2 mb-2">
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold mb-1">
+                                                    {t("reqSpecialMoveTitle", lang)}:
+                                                </label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={reqSpecialMove}
+                                                    onChange={e => setReqSpecialMove(e.target.value)}
+                                                >
+                                                    <option value="">{t("anyOption", lang)}</option>
+                                                    {SPECIAL_CS_OPTIONS.map(opt => (
+                                                        <option key={opt.id} value={opt.id}>
+                                                            {opt.name[lang] || opt.name.en}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold mb-1">
+                                                    {t("reqBLeftTitle", lang)}:
+                                                </label>
+                                                <select
+                                                    className="form-select form-select-sm"
+                                                    value={reqBLeft}
+                                                    onChange={e => setReqBLeft(e.target.value)}
+                                                >
+                                                    <option value="">{t("anyOption", lang)}</option>
+                                                    {BLEFT_OPTIONS.map(opt => (
+                                                        <option key={opt.id} value={opt.id}>
+                                                            {opt.name[lang] || opt.name.en}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Forbidden Bugs */}
+                                    <div className="mb-1">
+                                        <label className="form-label small fw-semibold mb-1 d-block text-danger">
+                                            🚫 {t("forbiddenBugsTitle", lang)}:
+                                        </label>
+                                        <div className="d-flex flex-wrap gap-2">
+                                            {FORBIDDEN_BUG_OPTIONS.map(opt => {
+                                                const active = forbiddenBugs.includes(opt.id);
+                                                return (
+                                                    <div key={opt.id} className="form-check form-check-inline me-1 mb-1">
+                                                        <input
+                                                            className="form-check-input"
+                                                            type="checkbox"
+                                                            id={`fbug-${opt.id}`}
+                                                            checked={active}
+                                                            onChange={() => toggleForbiddenBug(opt.id)}
+                                                        />
+                                                        <label className="form-check-label small" htmlFor={`fbug-${opt.id}`} style={{ fontSize: "0.8rem" }}>
+                                                            {opt.name[lang] || opt.name.en}
+                                                        </label>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 5. Sticky Action Button */}
+                        <div className="sticky-bottom bg-body pt-2 pb-1 border-top mt-2" style={{ zIndex: 2 }}>
+                            <button
+                                type="button"
+                                className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
+                                disabled={isOptimizing}
+                                onClick={handleOptimize}
+                            >
+                                {isOptimizing ? (
+                                    <>
+                                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                        <span>{t("optimizing", lang)}</span>
+                                    </>
+                                ) : (
+                                    <span>{t("autoOptimizeBtn", lang)}</span>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* 6. Status notice */}
                         {statusMessage ? (
                             <div className={`alert alert-${statusMessage.type === "success" ? "success" : "warning"} py-2 px-3 mt-2 mb-0 small`}>
                                 <div className="fw-semibold">{statusMessage.text}</div>
