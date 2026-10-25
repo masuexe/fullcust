@@ -439,3 +439,55 @@ test("problem hash serialization round-trips bugRules", () => {
         customHp: "allowed",
     });
 });
+
+test("CS and Buster addition invalidation rules and tripleBuster compatibility", () => {
+    const { computeDeckStats } = require("../modcards.ts");
+    const { orderModCardsForConstraints, optimizeModCards } = require("../optimizer.ts");
+
+    // 1. Special CS overrides standard ChargeShot -> chargeAddition is invalidated
+    // ToadMan (137-A037, chargeAddition: Paralyze) + ScarCrow (137-A025, bPwrAtk: DollThunder)
+    const deckSpecialCS = computeDeckStats(["137-A037", "137-A025"], "bn6");
+    assert.equal(deckSpecialCS.bPwrAtk, "DollThunder");
+    assert.equal(deckSpecialCS.chargeAddition, undefined);
+    assert.equal(deckSpecialCS.invalidatedChargeAddition, "Paralyze");
+
+    // 2. Standard ChargeShot explicitly set -> chargeAddition is preserved
+    // ToadMan (137-A037) + NumberMan (137-A014, bPwrAtk: ChargeShot)
+    const deckStandardCS = computeDeckStats(["137-A037", "137-A014"], "bn6");
+    assert.equal(deckStandardCS.bPwrAtk, "ChargeShot");
+    assert.equal(deckStandardCS.chargeAddition, "Paralyze");
+    assert.equal(deckStandardCS.invalidatedChargeAddition, undefined);
+
+    // 3. TripleBuster preserves busterAddition (fires 3 standard buster pellets)
+    // BassBX (137-C005, tripleBuster: true) + BomBoy (137-A017, busterAddition: "1 square knock back")
+    const deckTripleBuster = computeDeckStats(["137-C005", "137-A017"], "bn6");
+    assert.equal(deckTripleBuster.tripleBuster, true);
+    assert.equal(deckTripleBuster.busterAddition, "1 square knock back");
+    assert.equal(deckTripleBuster.invalidatedBusterAddition, undefined);
+
+    // 4. B-Button weapon override invalidates busterAddition
+    // Shadow (137-A008, bButton: Sword) + BomBoy (137-A017)
+    const deckBButton = computeDeckStats(["137-A008", "137-A017"], "bn6");
+    assert.equal(deckBButton.bButton, "Sword");
+    assert.equal(deckBButton.busterAddition, undefined);
+    assert.equal(deckBButton.invalidatedBusterAddition, "1 square knock back");
+
+    // 5. Card ordering ensures required special move is loaded last
+    const ordered = orderModCardsForConstraints(["137-A025", "137-A014"], "bn6", {
+        requiredSpecialMove: "DollThunder",
+    });
+    assert.equal(ordered[ordered.length - 1], "137-A025", "ScarCrow (DollThunder) must be ordered after NumberMan");
+
+    // 6. ChargeShot constraint excludes special CS cards
+    const optimizedCards = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredSpecialMove: "ChargeShot" },
+    });
+    const optimizedDeck = computeDeckStats(optimizedCards, "bn6");
+    assert.ok(
+        !optimizedDeck.bPwrAtk || optimizedDeck.bPwrAtk.toLowerCase() === "chargeshot",
+        "ChargeShot constraint must not select any special CS"
+    );
+});

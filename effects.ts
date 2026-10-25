@@ -41,6 +41,10 @@ export interface BuildStats {
     modBButton?: string;
     modBPwrAtk?: string;
     modBLeft?: string;
+    modBusterAddition?: string;
+    modChargeAddition?: string;
+    invalidatedBusterAddition?: string;
+    invalidatedChargeAddition?: string;
     modChipRecovery?: number;
     modFirstBarrier?: number | string;
     modTripleBuster?: boolean;
@@ -289,6 +293,10 @@ export function computeBuildStats(
     let modBButton: string | undefined;
     let modBPwrAtk: string | undefined;
     let modBLeft: string | undefined;
+    let modBusterAddition: string | undefined;
+    let modChargeAddition: string | undefined;
+    let invalidatedBusterAddition: string | undefined;
+    let invalidatedChargeAddition: string | undefined;
     let modChipRecovery: number | undefined;
     let modFirstBarrier: number | string | undefined;
     let modTripleBuster: boolean | undefined;
@@ -331,6 +339,10 @@ export function computeBuildStats(
         modBButton = deck.bButton;
         modBPwrAtk = deck.bPwrAtk;
         modBLeft = deck.bLeft;
+        modBusterAddition = deck.busterAddition;
+        modChargeAddition = deck.chargeAddition;
+        invalidatedBusterAddition = deck.invalidatedBusterAddition;
+        invalidatedChargeAddition = deck.invalidatedChargeAddition;
         modChipRecovery = deck.chipRecovery;
         modFirstBarrier = deck.firstBarrier;
         modTripleBuster = deck.tripleBuster;
@@ -382,6 +394,10 @@ export function computeBuildStats(
         modBButton,
         modBPwrAtk,
         modBLeft,
+        modBusterAddition,
+        modChargeAddition,
+        invalidatedBusterAddition,
+        invalidatedChargeAddition,
         modChipRecovery,
         modFirstBarrier,
         modTripleBuster,
@@ -451,6 +467,7 @@ export const CORE_ABILITY_OPTIONS: ConstraintOption[] = [
 ];
 
 export const SPECIAL_CS_OPTIONS: ConstraintOption[] = [
+    { id: "ChargeShot", name: { en: "Standard ChargeShot (No Special CS)", ja: "通常チャージショット（特殊CSなし）", zh: "标准集气射击 (禁用特殊CS)" } },
     { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" } },
     { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" } },
     { id: "Thunder", name: { en: "CS: Thunder (CloudMan)", ja: "CS: サンダー（クラウドマン）", zh: "CS: 雷击 (Thunder / 云人)" } },

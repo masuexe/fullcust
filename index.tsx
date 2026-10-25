@@ -267,6 +267,26 @@ function BuildStatsView({
                         [B+←] {stats.modBLeft}
                     </span>
                 ) : null}
+                {stats.modChargeAddition ? (
+                    <span className="badge bg-info text-dark py-1 px-2">
+                        [CS附加] {stats.modChargeAddition}
+                    </span>
+                ) : null}
+                {stats.invalidatedChargeAddition ? (
+                    <span className="badge bg-secondary text-decoration-line-through py-1 px-2" title={lang === "zh" ? "已被特殊集气攻击覆盖失效" : "Overridden by Special CS"}>
+                        ❌ [CS附加] {stats.invalidatedChargeAddition}
+                    </span>
+                ) : null}
+                {stats.modBusterAddition ? (
+                    <span className="badge bg-info text-dark py-1 px-2">
+                        [子弹附加] {stats.modBusterAddition}
+                    </span>
+                ) : null}
+                {stats.invalidatedBusterAddition ? (
+                    <span className="badge bg-secondary text-decoration-line-through py-1 px-2" title={lang === "zh" ? "已被特殊普通射击覆盖失效" : "Overridden by Special Buster"}>
+                        ❌ [子弹附加] {stats.invalidatedBusterAddition}
+                    </span>
+                ) : null}
                 {stats.modBugCount && stats.modBugCount > 0 ? (
                     <span className="badge bg-secondary py-1 px-2" title={t("modCardBugNotice", lang)}>
                         🎴 {stats.modBugCount} {t("modCardBugCount", lang)}
@@ -710,6 +730,26 @@ function ModCardManager({
                                 })}
                             </div>
                         )}
+
+                        {/* Invalidation Notices */}
+                        {deck.invalidatedChargeAddition ? (
+                            <div className="alert alert-warning py-1 px-2 mb-2 small" style={{ fontSize: "0.78rem" }}>
+                                ⚠️ {lang === "zh"
+                                    ? `集气射击附加效果 [${deck.invalidatedChargeAddition}] 已被特殊集气攻击 [${deck.bPwrAtk}] 覆盖，实战中无法触发！`
+                                    : lang === "ja"
+                                    ? `CS付加効果 [${deck.invalidatedChargeAddition}] は特殊チャージ攻撃 [${deck.bPwrAtk}] により上書きされ、実戦で発動しません！`
+                                    : `ChargeShot Addition [${deck.invalidatedChargeAddition}] is overridden by Special CS [${deck.bPwrAtk}] and has no effect!`}
+                            </div>
+                        ) : null}
+                        {deck.invalidatedBusterAddition ? (
+                            <div className="alert alert-warning py-1 px-2 mb-2 small" style={{ fontSize: "0.78rem" }}>
+                                ⚠️ {lang === "zh"
+                                    ? `洛克炮附加效果 [${deck.invalidatedBusterAddition}] 已被特殊普通攻击 [${deck.bButton}] 覆盖，实战中无法触发！`
+                                    : lang === "ja"
+                                    ? `バスター付加効果 [${deck.invalidatedBusterAddition}] は特殊通常攻撃 [${deck.bButton}] により上書きされ、実戦で発動しません！`
+                                    : `Buster Addition [${deck.invalidatedBusterAddition}] is overridden by [${deck.bButton}] and has no effect!`}
+                            </div>
+                        ) : null}
 
                         {/* Clear all button */}
                         {cardIds.length > 0 ? (

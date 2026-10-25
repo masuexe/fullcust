@@ -134,6 +134,42 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
 }
 
 /**
+ * Orders mod cards sequentially so that required special CS or B+Left moves are placed last
+ * among cards that modify those attributes, preventing accidental overwriting.
+ */
+export function orderModCardsForConstraints(
+    cardIds: string[],
+    gameId: string,
+    constraints?: BuildConstraints
+): string[] {
+    if (!constraints || cardIds.length <= 1) return cardIds;
+    const sorted = [...cardIds];
+    if (constraints.requiredSpecialMove) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = cardA?.bPwrAtk === constraints.requiredSpecialMove;
+            const bMatches = cardB?.bPwrAtk === constraints.requiredSpecialMove;
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+    if (constraints.requiredBLeft) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = cardA?.bLeft === constraints.requiredBLeft;
+            const bMatches = cardB?.bLeft === constraints.requiredBLeft;
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+    return sorted;
+}
+
+/**
  * Optimizes the equipped Mod Cards:
  * - BN6 & BN5: 0-1 Knapsack DP within 80 MB capacity.
  * - BN4: Slot-based greedy optimization across slots 0A through 0E.
@@ -162,7 +198,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     const locked = [...existingCardIds, ...lockedCardIds];
 
     // Lock required special move (Charge Shot) if specified
-    if (constraints?.requiredSpecialMove && !locked.some(id => {
+    if (constraints?.requiredSpecialMove && constraints.requiredSpecialMove !== "ChargeShot" && !locked.some(id => {
         const c = getModCard(id, gameId);
         return c?.bPwrAtk === constraints.requiredSpecialMove;
     })) {
@@ -194,7 +230,13 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     const candidateCards = allCards.filter(c => {
         if (lockedSet.has(c.id)) return false;
         if (!isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)) return false;
-        if (constraints?.requiredSpecialMove && c.bPwrAtk && c.bPwrAtk !== constraints.requiredSpecialMove) return false;
+        if (constraints?.requiredSpecialMove) {
+            if (constraints.requiredSpecialMove === "ChargeShot") {
+                if (c.bPwrAtk && c.bPwrAtk.toLowerCase() !== "chargeshot") return false;
+            } else {
+                if (c.bPwrAtk && c.bPwrAtk !== constraints.requiredSpecialMove) return false;
+            }
+        }
         if (constraints?.requiredBLeft && c.bLeft && c.bLeft !== constraints.requiredBLeft) return false;
         return true;
     });
@@ -222,7 +264,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
                 usedSlots.add(slot);
             }
         }
-        return selected;
+        return orderModCardsForConstraints(selected, gameId, constraints);
     }
 
     // BN5 / BN6: 80 MB Knapsack DP with Bitmask over required abilities
@@ -313,7 +355,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         }
     }
 
-    return [...locked, ...best.items];
+    return orderModCardsForConstraints([...locked, ...best.items], gameId, constraints);
 }
 
 interface RankedCandidate {
@@ -421,7 +463,11 @@ function doesBuildSatisfyConstraints(
     }
 
     if (constraints.requiredSpecialMove) {
-        if (stats.modBPwrAtk !== constraints.requiredSpecialMove) {
+        if (constraints.requiredSpecialMove === "ChargeShot") {
+            if (stats.modBPwrAtk && stats.modBPwrAtk.toLowerCase() !== "chargeshot") {
+                return false;
+            }
+        } else if (stats.modBPwrAtk !== constraints.requiredSpecialMove) {
             return false;
         }
     }
@@ -719,7 +765,11 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
 
         if (constraints?.requiredSpecialMove) {
             const deck = computeDeckStats(modCards, data.gameId);
-            if (deck.bPwrAtk !== constraints.requiredSpecialMove) return null;
+            if (constraints.requiredSpecialMove === "ChargeShot") {
+                if (deck.bPwrAtk && deck.bPwrAtk.toLowerCase() !== "chargeshot") return null;
+            } else if (deck.bPwrAtk !== constraints.requiredSpecialMove) {
+                return null;
+            }
         }
         if (constraints?.requiredBLeft) {
             const deck = computeDeckStats(modCards, data.gameId);

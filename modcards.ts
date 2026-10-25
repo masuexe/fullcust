@@ -128,6 +128,8 @@ export interface DeckStats {
     bLeft?: string;
     busterAddition?: string;
     chargeAddition?: string;
+    invalidatedBusterAddition?: string;
+    invalidatedChargeAddition?: string;
     movePanel?: string;
     chipRecovery?: number;
     firstBarrier?: number | string;
@@ -230,6 +232,11 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         if (card.firstBarrier !== undefined) firstBarrier = card.firstBarrier;
         if (card.tripleBuster !== undefined) tripleBuster = card.tripleBuster;
 
+        // Handle negative disable attributes from cards
+        if (card.disabledBLeft) bLeft = undefined;
+        if (card.disabledChargeAddition) chargeAddition = undefined;
+        if (card.disabledBusterAddition) busterAddition = undefined;
+
         // Add card bugs
         if (card.bugs) {
             for (const b of card.bugs) {
@@ -275,6 +282,26 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         ? hasSlotConflict || cardIds.length > 5
         : totalMb > 80;
 
+    // Interaction check 1: ChargeShot addition only applies when final CS is standard ChargeShot (or default buster CS).
+    // If bPwrAtk is modified into a special weapon (e.g. DollThunder, CornShot, etc.), chargeAddition is invalidated!
+    let invalidatedChargeAddition: string | undefined;
+    if (bPwrAtk && bPwrAtk.toLowerCase() !== "chargeshot") {
+        if (chargeAddition) {
+            invalidatedChargeAddition = chargeAddition;
+            chargeAddition = undefined;
+        }
+    }
+
+    // Interaction check 2: Buster addition applies to normal buster bullets AND tripleBuster (which fires 3 normal buster bullets).
+    // Only if bButton is explicitly overridden with a weapon (e.g. Sword, MiniBomb, CrackShot, Meteor1, Vulcan), busterAddition is invalidated!
+    let invalidatedBusterAddition: string | undefined;
+    if (bButton) {
+        if (busterAddition) {
+            invalidatedBusterAddition = busterAddition;
+            busterAddition = undefined;
+        }
+    }
+
     return {
         totalMb,
         isOverCapacity,
@@ -293,6 +320,8 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         bLeft,
         busterAddition,
         chargeAddition,
+        invalidatedBusterAddition,
+        invalidatedChargeAddition,
         movePanel,
         chipRecovery,
         firstBarrier,
