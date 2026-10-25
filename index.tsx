@@ -1589,7 +1589,7 @@ function AutoOptimizerPanel({
                                         </div>
 
                                         <div className="d-flex flex-column gap-1">
-                                            {BUG_SPEC_OPTIONS.map(opt => {
+                                            {BUG_SPEC_OPTIONS.filter(opt => !opt.games || opt.games.includes(data.gameId)).map(opt => {
                                                 const currentTol: BugTolerance = bugRules[opt.id] ?? "forbidden";
                                                 return (
                                                     <div

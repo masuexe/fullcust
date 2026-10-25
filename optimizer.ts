@@ -7,7 +7,7 @@ import {
     getEffectiveInBattleBugs,
     getPartEffect,
     getBusterStatLimits,
-    GAME_PART_BUG_TYPES,
+    getPartBugTypes,
     isBenignBug,
     isSolutionAcceptable,
     normalizeBugType,
@@ -718,17 +718,17 @@ export function requirementsUnderPolicy(
     if (modCards.length > 0 && computeDeckStats(modCards, data.gameId).repairedBugs.length > 0) return requirements;
     const rules = bugRules ?? policy.customRules;
     return requirements.map(req => {
-        const type = GAME_PART_BUG_TYPES[data.gameId]?.[data.partMetas[req.partIndex].id] ?? "battleHp";
-        const norm = normalizeBugType(type);
-        let forbidden: boolean;
-        if (rules !== undefined || policy.type === "custom") {
-            forbidden = (rules?.[norm] ?? rules?.[type] ?? "forbidden") === "forbidden";
-        } else if (forbiddenBugs.length > 0) {
-            forbidden = forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
-                !(["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1));
-        } else {
-            forbidden = policy.type === "no_bugs" || !isBenignBug(type, 1);
-        }
+        const forbidden = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id).some(type => {
+            const norm = normalizeBugType(type);
+            if (rules !== undefined || policy.type === "custom") {
+                return (rules?.[norm] ?? rules?.[type] ?? "forbidden") === "forbidden";
+            } else if (forbiddenBugs.length > 0) {
+                return forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
+                    !(["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1));
+            } else {
+                return policy.type === "no_bugs" || !isBenignBug(type, 1);
+            }
+        });
         return forbidden ? {
             ...req,
             constraint: { ...req.constraint, maxBugLevel: Math.min(req.constraint.maxBugLevel, 0) },

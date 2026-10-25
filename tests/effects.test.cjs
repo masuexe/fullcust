@@ -18,6 +18,7 @@ const {
     BN3_PART_BUG_TYPES,
     GAME_BUG_DEFINITIONS,
     GAME_PART_BUG_TYPES,
+    getPartBugTypes,
 } = require("../effects.ts");
 
 test("BN6 has effects defined for all 46 unique program templates", () => {
@@ -111,7 +112,9 @@ test("BN6 all 46 parts map to an objective bug type", () => {
     for (let id = 1; id <= 46; id++) {
         const bugType = BN6_PART_BUG_TYPES[id];
         assert(bugType, `Missing bug type for ID: ${id}`);
-        assert(BUG_DEFINITIONS[bugType], `Missing bug definition for type: ${bugType}`);
+        for (const type of getPartBugTypes("bn6", id)) {
+            assert(BUG_DEFINITIONS[type], `Missing bug definition for type: ${type}`);
+        }
     }
 });
 
@@ -161,7 +164,7 @@ test("analyzeSolutionBugs detects command line, color adjacency, and BugStop", (
     buggedCells[3 * 7 + 3] = 1; // plus on cmd line
     const buggedAnalysis = analyzeSolutionBugs("bn6", partMetas, requirements, buggedCells, gridSettings, "zh");
     assert.equal(buggedAnalysis.hasBugs, true);
-    assert.equal(buggedAnalysis.bugs.length, 2);
+    assert.equal(buggedAnalysis.bugs.length, 3);
 
     const suprBug = buggedAnalysis.bugs.find(b => b.partId === 1);
     assert(suprBug);

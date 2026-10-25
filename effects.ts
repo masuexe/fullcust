@@ -763,6 +763,7 @@ export const GAUGE_OPTIONS: ConstraintOption[] = [
 
 export interface BugSpecOption {
     id: string;
+    games?: string[];
     name: { en: string; ja: string; zh: string };
     desc: { en: string; ja: string; zh: string };
 }
@@ -782,6 +783,16 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         id: "battleHp",
         name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP 流失 BUG" },
         desc: { en: "Steadily loses HP during combat", ja: "戦闘中にHPが継続減少", zh: "战斗中自身 HP 持续流失" },
+    },
+    {
+        id: "damageHp",
+        games: ["bn6"],
+        name: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受击加重 HP 流失 BUG" },
+        desc: {
+            en: "Flinching or damaging Drag hits raise Battle HP Bug by 1 level, up to Lv7",
+            ja: "のけぞり・ダメージを伴う引き寄せでバトルHPバグが1段階上昇（最大Lv7）",
+            zh: "受到硬直或带伤害的拖拽攻击时，战斗 HP BUG 升 1 级，最高 Lv7",
+        },
     },
     {
         id: "buster",
@@ -816,6 +827,7 @@ export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
     if (t === "involuntarymove" || t === "player" || t === "movement") return "movement";
     if (t === "damagebattlehp" || t === "battlehp") return "battleHp";
+    if (t === "damagehp") return "damageHp";
     if (t === "customdamage" || t === "customhp") return "customHp";
     if (t === "damageconfusion" || t === "status" || t === "colorstatus") return "status";
     if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
@@ -846,6 +858,7 @@ export type BugType =
     | "buster"
     | "charge"
     | "battleHp"
+    | "damageHp"
     | "custom"
     | "customHp"
     | "panel"
@@ -1010,7 +1023,7 @@ export const BN5_PART_BUG_TYPES: Record<number, BugType> = {
     47: "battleHp", // HP+500
 };
 
-export const BN6_PART_BUG_TYPES: Record<number, BugType> = {
+export const BN6_PART_BUG_TYPES: Record<number, BugType | readonly BugType[]> = {
     // Movement Bug
     1: "movement",   // SuprArmr
     7: "movement",   // FstBarr
@@ -1042,13 +1055,13 @@ export const BN6_PART_BUG_TYPES: Record<number, BugType> = {
     38: "buster",    // AttckMAX
     39: "buster",    // SpeedMAX
     40: "buster",    // ChargMAX
-    // Battle HP Bug
-    41: "battleHp",  // HP+50
-    42: "battleHp",  // HP+100
-    43: "battleHp",  // HP+200
-    44: "battleHp",  // HP+300
-    45: "battleHp",  // HP+400
-    46: "battleHp",  // HP+500
+    // Each bugged HP part causes both independent bug types.
+    41: ["battleHp", "damageHp"],  // HP+50
+    42: ["battleHp", "damageHp"],  // HP+100
+    43: ["battleHp", "damageHp"],  // HP+200
+    44: ["battleHp", "damageHp"],  // HP+300
+    45: ["battleHp", "damageHp"],  // HP+400
+    46: ["battleHp", "damageHp"],  // HP+500
     // Encounter Bug
     16: "encounter", // SneakRun
     17: "encounter", // OilBody
@@ -1068,12 +1081,19 @@ export const BN6_PART_BUG_TYPES: Record<number, BugType> = {
     31: "emotion",   // BugStop improper placement triggers emotion bug
 };
 
-export const GAME_PART_BUG_TYPES: Record<string, Record<number, BugType>> = {
+export const GAME_PART_BUG_TYPES: Record<string, Record<number, BugType | readonly BugType[]>> = {
     bn3: BN3_PART_BUG_TYPES,
     bn4: BN4_PART_BUG_TYPES,
     bn5: BN5_PART_BUG_TYPES,
     bn6: BN6_PART_BUG_TYPES,
 };
+
+/** All placement bugs produced by a part; one violation may cause several types. */
+export function getPartBugTypes(gameId: string, partId: number): readonly BugType[] {
+    const mapping = GAME_PART_BUG_TYPES[gameId] ?? BN6_PART_BUG_TYPES;
+    const types = mapping[partId] ?? "battleHp";
+    return typeof types === "string" ? [types] : types;
+}
 
 export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>> = {
     bn6: {
@@ -1215,6 +1235,14 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "In base form with Beast Counter > 0, the Emotion Window constantly cycles between Normal, Tired, Angry, and Full Synchro every 60 frames.",
                 ja: "ノーマル状態でビーストカウンターが0より大きい時、ココロウインドウが60フレーム毎に通常・疲労・怒り・フルシンクロをランダムに推移します。",
                 zh: "Base 状态且兽化计数器大于 0 时，心灵之窗每 60 帧在普通/疲惫/愤怒/Full Synchro 之间随机循环切换。",
+            },
+        },
+        damageHp: {
+            title: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受击加重 HP 流失 BUG" },
+            mechanics: {
+                en: "A damaging hit that causes flinching or Drag raises Battle HP Bug by 1 level, up to Lv7. SuperArmor prevents the flinch trigger, but does not remove this bug. This is separate from the temporary Damage Battle HP Bug supplied by cards.",
+                ja: "ダメージを伴うのけぞり・引き寄せでバトルHPバグが1段階上昇（最大Lv7）。スーパーアーマーはのけぞりによる発動を防ぎますが、バグ自体は残ります。改造カードの一時的なダメージ時バトルHPバグとは別です。",
+                zh: "受到造成硬直或拖拽的伤害时，Battle HP Bug 升 1 级，最高 Lv7。超级装甲可阻止硬直触发，但不会消除此 BUG。它与改造卡的临时受伤战斗 HP BUG（Damage Battle HP Bug）不同。",
             },
         },
         encounter: {
@@ -2139,7 +2167,6 @@ export function analyzeSolutionBugs(
         }
     }
 
-    const gameBugMap = GAME_PART_BUG_TYPES[gameId] ?? BN6_PART_BUG_TYPES;
     const gameDefs = GAME_BUG_DEFINITIONS[gameId] ?? GAME_BUG_DEFINITIONS["bn6"];
 
     // 1. Identify all bugged parts and their individual causes
@@ -2175,16 +2202,17 @@ export function analyzeSolutionBugs(
         }
 
         if (causes.length > 0) {
-            const bugType = gameBugMap[d.partMeta.id] ?? "battleHp";
-            buggedReqs.push({
-                reqIdx: d.reqIdx,
-                partIndex: d.partIndex,
-                partId: d.partMeta.id,
-                partName: getPartName(d.partMeta, lang),
-                bugType,
-                causes,
-                violationCount,
-            });
+            for (const bugType of getPartBugTypes(gameId, d.partMeta.id)) {
+                buggedReqs.push({
+                    reqIdx: d.reqIdx,
+                    partIndex: d.partIndex,
+                    partId: d.partMeta.id,
+                    partName: getPartName(d.partMeta, lang),
+                    bugType,
+                    causes,
+                    violationCount,
+                });
+            }
         }
     }
 
@@ -2264,6 +2292,10 @@ export function analyzeSolutionBugs(
                 for (const rep of deck.repairedBugs) {
                     const normRep = rep.toLowerCase();
                     const bType = ab.bugType.toLowerCase();
+                    if (bType === "damagehp") {
+                        if (normRep === "damage bug" || normRep === "damage hp bug") return false;
+                        continue;
+                    }
                     if (normRep.includes("battle hp") && bType === "battlehp") return false;
                     if (normRep.includes("movement") && bType === "movement") return false;
                     if (normRep.includes("buster blank") && bType === "buster") return false;

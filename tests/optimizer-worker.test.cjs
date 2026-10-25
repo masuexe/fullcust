@@ -46,7 +46,7 @@ function run(request) {
 test("the real optimizer worker streams improved builds and completes after exhaustive search", async () => {
     const data = tinyData();
     const events = await run({ data, problem: emptyProblem(data), modCardMode: "none",
-        constraints: { bugRules: { battleHp: "allowed_any" } } });
+        constraints: { bugRules: { battleHp: "allowed_any", damageHp: "allowed_any" } } });
     const scores = events.filter(e => e.type === "progress" && e.best).map(e => e.best.stats.finalHp);
     assert.ok(scores.includes(1500), "Early incumbent should be streamed");
     assert.ok(scores.includes(2000), "Exhaustive search must improve beyond the one-copy seed");
@@ -91,7 +91,7 @@ test("a running optimizer worker can be interrupted while retaining its last str
 test("the optimizer worker never streams a build below a required Buster stat", async () => {
     const data = tinyData(); // HP parts cannot supply Attack Lv5.
     const events = await run({ data, problem: emptyProblem(data), modCardMode: "none",
-        constraints: { requiredMaxBusterStats: ["attack"], bugRules: { battleHp: "allowed_any" } } });
+        constraints: { requiredMaxBusterStats: ["attack"], bugRules: { battleHp: "allowed_any", damageHp: "allowed_any" } } });
     assert.ok(events.every(event => !event.best));
     assert.equal(events.at(-1).type, "done");
     assert.equal(events.at(-1).completed, true);

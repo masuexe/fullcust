@@ -738,7 +738,7 @@ test("allowed placement bugs can be used when adding filler parts", () => {
     const problem = emptyProblem(data);
     problem.expansionMemories = 0;
     problem.requirements = [{ partIndex: 0, constraint: { onCommandLine: true, minBugLevel: 0, maxBugLevel: 0, compressed: true } }];
-    const constraints = { bugRules: { battleHp: "allowed_any" } };
+    const constraints = { bugRules: { battleHp: "allowed_any", damageHp: "allowed_any" } };
     const result = optimizeBuild({ data, problem, constraints, timeoutMs: 500, modCardMode: "none" });
     assert.ok(result);
     assert.deepEqual(result.addedPartIndices, [1]);

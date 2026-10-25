@@ -73,3 +73,5 @@ Tests cover data validation, shared link migration, part and color reordering, B
 ## Documentation language
 
 Write all repository documentation in English. This policy applies to documentation, independently of the application's UI languages.
+
+BN6 HP+50 through HP+500 parts produce **both** `battleHp` and `damageHp` when bugged. Damage HP Bug raises Battle HP Bug by one level when a damaging hit causes flinching or Drag, up to Lv7. SuperArmor can prevent the flinch trigger; it does not remove the bug. The two types have independent tolerance rules; allowing only Battle HP does not allow bugged HP parts unless the remaining bug is neutralized. Effective BugStop absorbs both NC bugs. This correction does not change the HP/Attack priority order or simulate combat HP loss. It applies to BN6 only; BN3–5 mappings remain unchanged. Source: [N1GPedia HP parts](https://wiki.n1gp.net/HP_NaviCust_part_series_%28BN6%29).

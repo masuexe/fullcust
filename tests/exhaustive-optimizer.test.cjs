@@ -27,7 +27,7 @@ function req(partIndex, overrides = {}) {
 
 test("exact search can satisfy a required bug by adding to an initially invalid build", () => {
     const data = fixture([1, 46]);
-    const constraints = { requiredAbilities: ["superArmor"], bugRules: { battleHp: "required" } };
+    const constraints = { requiredAbilities: ["superArmor"], bugRules: { battleHp: "required", damageHp: "allowed_any" } };
     const result = searchBuilds({ data, problem: emptyProblem(data), constraints, modCardMode: "none" });
     assert.equal(result.completed, true);
     assert.ok(result.best);
@@ -94,7 +94,7 @@ test("small exhaustive searches match an independent enumeration including repea
     const data = fixture([1, 46]);
     const problem = emptyProblem(data);
     const grid = data.gridOptions[0].settings;
-    for (const policy of [{ type: "no_bugs" }, { type: "custom", customRules: { battleHp: "allowed_any" } }]) {
+    for (const policy of [{ type: "no_bugs" }, { type: "custom", customRules: { battleHp: "allowed_any", damageHp: "allowed_any" } }]) {
         for (const target of ["max_hp", "max_attack"]) {
             let expected = null;
             const order = target === "max_attack" ? ["attack", "finalHp"] : ["finalHp", "attack"];
@@ -156,7 +156,7 @@ test("card repairs prevent forbidden local placement bugs from being pruned", ()
 test("required Buster stats stay at Lv5 while the HP objective optimizes the remaining space", () => {
     const data = fixture([38, 46]);
     const problem = emptyProblem(data);
-    const bugRules = { buster: "allowed_any", battleHp: "allowed_any" };
+    const bugRules = { buster: "allowed_any", battleHp: "allowed_any", damageHp: "allowed_any" };
     const unconstrained = searchBuilds({ data, problem, modCardMode: "none", target: "max_hp", constraints: { bugRules } });
     assert.equal(unconstrained.best.stats.finalHp, 2000);
     assert.equal(unconstrained.best.stats.attack, 1);
@@ -206,7 +206,7 @@ test("max Buster requirements use final card effects, including penalties to MAX
 test("a MAX requirement in one attribute does not require the other two", () => {
     const data = fixture([40, 46]);
     const result = searchBuilds({ data, problem: emptyProblem(data), modCardMode: "none",
-        constraints: { requiredMaxBusterStats: ["charge"], bugRules: { buster: "allowed_any", battleHp: "allowed_any" } } });
+        constraints: { requiredMaxBusterStats: ["charge"], bugRules: { buster: "allowed_any", battleHp: "allowed_any", damageHp: "allowed_any" } } });
     assert.equal(result.completed, true);
     assert.deepEqual([result.best.stats.attack, result.best.stats.rapid, result.best.stats.charge], [1, 1, 5]);
     assert.equal(result.best.stats.finalHp, 1500);
@@ -235,4 +235,24 @@ test("both search passes honor strict priorities and hard Attack minima", () => 
         if (search === searchBuilds) assert.ok(required);
         assert.equal(search({ ...options, target: "max_attack", constraints: { minBusterStats: { attack: 6 } } }).best, null);
     }
+});
+
+test("placement pruning and full search respect both HP bug types independently", () => {
+    const { requirementsUnderPolicy } = require("../optimizer.ts");
+    const data = fixture([46]);
+    const problem = emptyProblem(data);
+    problem.requirements = [req(0, { minBugLevel: 1 })];
+    const policy = { type: "custom" };
+    for (const bugRules of [{ battleHp: "allowed_any" }, { damageHp: "allowed_any" }]) {
+        const requirements = requirementsUnderPolicy(data, problem.requirements, policy, [], bugRules);
+        assert.equal(requirements[0].constraint.maxBugLevel, 0);
+        assert.equal(searchBuilds({ data, problem, policy, modCardMode: "none", constraints: { bugRules } }).best, null);
+    }
+    const bugRules = { battleHp: "allowed_any", damageHp: "required" };
+    assert.equal(requirementsUnderPolicy(data, problem.requirements, policy, [], bugRules)[0].constraint.maxBugLevel, Infinity);
+    const result = searchBuilds({ data, problem: emptyProblem(data), policy, modCardMode: "none", constraints: { bugRules } });
+    assert.ok(result.completed);
+    assert.ok(result.best);
+    assert.ok(result.best.analysis.activeBugs.some(b => b.bugType === "damageHp"));
+    assert.ok(isSolutionAcceptable(result.best.analysis, policy, [], bugRules));
 });
