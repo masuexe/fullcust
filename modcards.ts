@@ -228,7 +228,15 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         if (card.busterAddition !== undefined) busterAddition = card.busterAddition;
         if (card.chargeAddition !== undefined) chargeAddition = card.chargeAddition;
         if (card.movePanel !== undefined) movePanel = card.movePanel;
-        if (card.chipRecovery !== undefined) chipRecovery = card.chipRecovery;
+        if (card.chipRecovery !== undefined) {
+            chipRecovery = card.chipRecovery;
+            if (chipRecovery > 0) {
+                abilitiesSet.add("chipRecovery");
+                disabledSet.delete("chipRecovery");
+            } else {
+                abilitiesSet.delete("chipRecovery");
+            }
+        }
         if (card.firstBarrier !== undefined) firstBarrier = card.firstBarrier;
         if (card.tripleBuster !== undefined) tripleBuster = card.tripleBuster;
 
@@ -236,6 +244,11 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         if (card.disabledBLeft) bLeft = undefined;
         if (card.disabledChargeAddition) chargeAddition = undefined;
         if (card.disabledBusterAddition) busterAddition = undefined;
+        if (card.disabledChipRecovery) {
+            chipRecovery = undefined;
+            abilitiesSet.delete("chipRecovery");
+            disabledSet.add("chipRecovery");
+        }
 
         // Add card bugs
         if (card.bugs) {

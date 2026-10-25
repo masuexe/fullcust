@@ -722,9 +722,44 @@ export const translations = {
         zh: "已成功补全构筑！",
     },
     optNoSolution: {
-        en: "Could not find a valid placement for core parts under this policy. Try adjusting core parts or policy.",
-        ja: "現在の指定パーツでは選択されたポリシーを満たす配置が見つかりませんでした。",
-        zh: "当前选定的核心部件无法在此 Bug 策略下拼装，请调整核心部件或策略。",
+        en: "Search exhausted: no build satisfies all current constraints.",
+        ja: "探索完了：現在のすべての条件を満たす構成はありません。",
+        zh: "已穷尽搜索：不存在满足当前全部约束的构筑。",
+    },
+    optStopSearch: {
+        en: "Stop search & keep best", ja: "探索を停止して最良の結果を保存", zh: "停止搜索并保留最佳结果",
+    },
+    optSearchingFeasible: {
+        en: "Searching for a valid build… No time limit; you can stop at any time.",
+        ja: "条件を満たす構成を探索中…時間制限はありません。いつでも停止できます。",
+        zh: "正在搜索合法构筑……无时间限制，可随时停止。",
+    },
+    optSearchingBetter: {
+        en: "Valid build found. Searching for improvements…", ja: "有効な構成が見つかりました。さらに探索中…", zh: "已找到合法构筑，正在继续搜索更优结果……",
+    },
+    optCheckedBuilds: {
+        en: "Part combinations checked", ja: "確認済みパーツ構成", zh: "已检查部件组合",
+    },
+    optCurrentBest: {
+        en: "Best build so far", ja: "現在の最良の構成", zh: "当前最佳构筑",
+    },
+    optStoppedWithResult: {
+        en: "Search stopped. Best build saved; optimality is not proven.",
+        ja: "探索を停止し、最良の構成を保存しました。最適性は未確認です。",
+        zh: "已停止搜索并保留最佳构筑，尚未证明它是最优解。",
+    },
+    optStoppedNoResult: {
+        en: "Search stopped before finding a valid build. This does not prove it is impossible.",
+        ja: "有効な構成が見つかる前に停止しました。不可能と確定したわけではありません。",
+        zh: "已停止，尚未找到合法构筑；这不代表无解。",
+    },
+    optInputsChanged: {
+        en: "Inputs changed. Previous search stopped; start a new search.",
+        ja: "条件が変更されたため、前の探索を停止しました。再度探索してください。",
+        zh: "输入已更改，旧搜索已停止，请重新搜索。",
+    },
+    optSearchComplete: {
+        en: "Search exhausted. Best build saved.", ja: "全探索が完了し、最良の構成を保存しました。", zh: "已穷尽搜索并保留最佳构筑。",
     },
     optAddedParts: {
         en: "Added Parts",
@@ -796,6 +831,38 @@ export const translations = {
         ja: "必須アビリティ（形態不問）",
         zh: "必须能力（来源不限）",
     },
+    reqMaxBusterStatsTitle: {
+        en: "Required max Buster stats", ja: "バスター性能の最大値を必須にする", zh: "洛克炮属性必须满级",
+    },
+    minBusterStatsTitle: {
+        en: "Minimum Buster stats", ja: "バスター性能の最低値", zh: "洛克炮属性最低值",
+    },
+    minBusterStatsDesc: {
+        en: "Each selected minimum must hold after NC and card effects. BN5/6 cards can raise Attack up to 10; Rapid and Charge remain capped at 5.",
+        ja: "ナビカスと改造カード適用後の最低値を指定します。BN5/6ではカードでアタックを最大10まで強化できます。ラピッドとチャージは最大5です。",
+        zh: "按部件与改造卡叠加后的最终数值判断。EXE5/6 可通过相应改造卡把攻击提高至 10，连射和集气上限仍为 5。",
+    },
+    minChipRecoveryTitle: {
+        en: "Minimum Chip Recovery", ja: "チップリカバリーの最低回復量", zh: "芯片回复最低值",
+    },
+    minCustomTitle: {
+        en: "Minimum Custom (chip choices)", ja: "カスタムの最低選択枚数", zh: "改装（选卡数量）最低值",
+    },
+    minCustomDesc: {
+        en: "Base chip choices are 5. Apply the minimum to final build stats after NC/card bonuses and penalties; in-battle Custom bugs are controlled separately by Bug Rules.",
+        ja: "基本は5枚です。ナビカス・改造カードの加減算後の構成値で判定します。戦闘中のカスタムバグはバグ条件で別途指定します。",
+        zh: "基础选卡数为 5，按部件与改造卡加减后的构筑数值判断。战斗中减少选卡数的 Custom BUG 可在 Bug 规则中另行禁止。",
+    },
+    minChipRecoveryDesc: {
+        en: "The final active recovery amount must meet this minimum, including after later improvements.",
+        ja: "最終的に有効な回復量の下限です。以降の改善でもこの条件を維持します。",
+        zh: "按最终生效的回复量判断；后续改进也必须保持此下限。",
+    },
+    reqMaxBusterStatsDesc: {
+        en: "Select any stats that must reach Lv5 after NaviCust and Mod Card effects. The optimization goal still applies to valid builds.",
+        ja: "ナビカスと改造カードの効果適用後にLv5を必須とする項目を選択します。条件を満たす構成で最適化を続けます。",
+        zh: "可多选。所选属性在部件与改造卡效果叠加后必须达到 Lv5，再按优化目标寻找更优构筑。",
+    },
     reqSpecialMoveTitle: {
         en: "Special Charge Shot (CS)",
         ja: "特殊チャージショット（CS）",
@@ -825,6 +892,17 @@ export const translations = {
         en: "Body Element",
         ja: "ボディ属性",
         zh: "身体属性",
+    },
+    allowedBodiesTitle: {
+        en: "Allowed body elements", ja: "許可するボディ属性", zh: "允许的身体属性",
+    },
+    allowedBodiesDesc: {
+        en: "Select any acceptable elements; unchecked elements are forbidden. An unchanged body counts as Normal.",
+        ja: "許容する属性を複数選択できます。未選択の属性は禁止です。属性変更がない場合はノーマルとして判定します。",
+        zh: "可多选；未勾选的属性禁止。身体未被改变时，按一般属性判断。",
+    },
+    allowedBodiesEmpty: {
+        en: "Select at least one allowed body element.", ja: "許可する属性を1つ以上選択してください。", zh: "请至少勾选一种允许的身体属性。",
     },
     reqGaugeTitle: {
         en: "Gauge Speed",

@@ -28,10 +28,18 @@ import {
     BugPolicyType,
     BugTolerance,
     BuildConstraints,
+    BusterStat,
+    ChipRecoveryMinimum,
+    BUSTER_STATS,
+    getBusterMinimums,
+    BODY_ELEMENTS,
+    BodyElement,
 } from "./problem";
-import { optimizeBuild, OptimizationTarget, ModCardMode } from "./optimizer";
+import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
+import AsyncOptimizer from "./async-optimizer";
 import {
     computeBuildStats,
+    getBusterStatLimits,
     tAbility,
     analyzeSolutionBugs,
     SolutionBugAnalysis,
@@ -999,7 +1007,7 @@ function AutoOptimizerPanel({
 }: {
     data: Data;
     problem: Problem;
-    onChange: (problem: Problem) => void;
+    onChange: (problem: Problem, solution?: Solution) => void;
     lang: Lang;
     onNavigateToResults?: () => void;
 }) {
@@ -1009,9 +1017,17 @@ function AutoOptimizerPanel({
         userAlreadyHasCards ? "keep" : "none"
     );
     const [target, setTarget] = React.useState<OptimizationTarget>("max_hp");
-    const [reqAbilities, setReqAbilities] = React.useState<string[]>(
-        problem.constraints?.requiredAbilities ?? []
+    const [reqAbilities, setReqAbilities] = React.useState<string[]>(() => [...new Set([
+        ...(problem.constraints?.requiredAbilities ?? []),
+        ...(problem.constraints?.minChipRecovery ? ["chipRecovery"] : []),
+    ])]);
+    const [minChipRecovery, setMinChipRecovery] = React.useState<ChipRecoveryMinimum>(
+        problem.constraints?.minChipRecovery ?? 10
     );
+    const [minBusterStats, setMinBusterStats] = React.useState<Partial<Record<BusterStat, number>>>(
+        () => getBusterMinimums(problem.constraints)
+    );
+    const [minCustom, setMinCustom] = React.useState(problem.constraints?.minCustom ?? 0);
     const [reqSpecialMove, setReqSpecialMove] = React.useState<string>(
         problem.constraints?.requiredSpecialMove ?? ""
     );
@@ -1027,9 +1043,10 @@ function AutoOptimizerPanel({
     const [reqBusterAddition, setReqBusterAddition] = React.useState<string>(
         problem.constraints?.requiredBusterAddition ?? ""
     );
-    const [reqBody, setReqBody] = React.useState<string>(
-        problem.constraints?.requiredBody ?? ""
-    );
+    const [allowedBodies, setAllowedBodies] = React.useState<BodyElement[]>(() => BODY_ELEMENTS.filter(body =>
+        (problem.constraints?.allowedBodies === undefined || problem.constraints.allowedBodies.includes(body)) &&
+        (!problem.constraints?.requiredBody || problem.constraints.requiredBody.toLowerCase() === body.toLowerCase())
+    ));
     const [reqGauge, setReqGauge] = React.useState<string>(
         problem.constraints?.requiredGauge ?? ""
     );
@@ -1039,13 +1056,14 @@ function AutoOptimizerPanel({
 
     const numConfiguredBugs = Object.values(bugRules).filter(v => v !== "forbidden").length;
     const activeConstraintCount =
-        reqAbilities.length +
+        reqAbilities.length + Object.values(minBusterStats).filter(value => value > 1).length +
+        (minCustom > 0 ? 1 : 0) +
         (reqSpecialMove ? 1 : 0) +
         (reqBLeft ? 1 : 0) +
         (reqBButton ? 1 : 0) +
         (reqChargeAddition ? 1 : 0) +
         (reqBusterAddition ? 1 : 0) +
-        (reqBody ? 1 : 0) +
+        (allowedBodies.length !== BODY_ELEMENTS.length ? 1 : 0) +
         (reqGauge ? 1 : 0) +
         numConfiguredBugs;
     const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
@@ -1082,75 +1100,91 @@ function AutoOptimizerPanel({
     const numRequiredBugs = Object.values(bugRules).filter(v => v === "required").length;
     const numAllowedBugs = Object.values(bugRules).filter(v => v === "allowed" || v === "allowed_any" || v === "allowed_lv1").length;
 
+    const optimizerRef = React.useRef<AsyncOptimizer | null>(null);
+    const bestRef = React.useRef<OptimizeResult | null>(null);
+    const previewDataRef = React.useRef(data);
+    const [preview, setPreview] = React.useState<OptimizeResult | null>(null);
+    const [checkedBuilds, setCheckedBuilds] = React.useState(0);
+
+    React.useEffect(() => () => optimizerRef.current?.stop(), []);
+
+    React.useEffect(() => {
+        if (bestRef.current?.problem === problem && previewDataRef.current === data) return;
+        setPreview(null);
+        bestRef.current = null;
+        if (optimizerRef.current) {
+            optimizerRef.current.stop();
+            optimizerRef.current = null;
+            setIsOptimizing(false);
+            setStatusMessage({ type: "error", text: t("optInputsChanged", lang) });
+        }
+    }, [data, problem]);
+
+    const handleStop = () => {
+        optimizerRef.current?.stop();
+        optimizerRef.current = null;
+        setIsOptimizing(false);
+        const best = bestRef.current;
+        setStatusMessage({ type: best ? "success" : "error",
+            text: t(best ? "optStoppedWithResult" : "optStoppedNoResult", lang) });
+        if (best) onChange(best.problem, best.solution);
+    };
+
     const handleOptimize = () => {
+        optimizerRef.current?.stop();
+        bestRef.current = null;
+        previewDataRef.current = data;
+        setPreview(null);
+        setCheckedBuilds(0);
         setIsOptimizing(true);
         setStatusMessage(null);
-
-        setTimeout(() => {
-            try {
-                const constraints: BuildConstraints = {
-                    ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
-                    ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
-                    ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
-                    ...(reqBButton ? { requiredBButton: reqBButton } : {}),
-                    ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
-                    ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
-                    ...(reqBody ? { requiredBody: reqBody } : {}),
-                    ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
-                    ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
-                };
-
-                const policy: BugPolicy = {
-                    type: Object.keys(bugRules).length > 0 ? "custom" : "no_bugs",
-                    customRules: bugRules,
-                };
-
-                const result = optimizeBuild({
-                    data,
-                    problem,
-                    policy,
-                    target,
-                    timeoutMs: 3500,
-                    modCardMode: hasModCards ? modCardMode : "none",
-                    constraints,
-                });
-
-                if (!result || (result.addedPartIndices.length === 0 && (!result.addedCardIds || result.addedCardIds.length === 0))) {
-                    setStatusMessage({
-                        type: "error",
-                        text: t("optNoSolution", lang),
-                    });
-                } else {
-                    onChange(result.problem);
-                    const names = result.addedPartIndices.map(idx => getPartName(data.partMetas[idx], lang));
-                    let cardNames: string[] = [];
-                    if (result.addedCardIds && result.addedCardIds.length > 0) {
-                        cardNames = result.addedCardIds.map(cid => {
-                            const card = getModCard(cid, data.gameId);
-                            return card ? getCardDisplayName(card, lang) : cid;
-                        });
-                    }
-                    const countsDesc: string[] = [];
-                    if (names.length > 0) countsDesc.push(`+${names.length} parts`);
-                    if (cardNames.length > 0) countsDesc.push(`+${cardNames.length} cards`);
-                    const countsStr = countsDesc.length > 0 ? ` (${countsDesc.join(", ")}, HP: ${result.stats.finalHp})` : ` (HP: ${result.stats.finalHp})`;
-
-                    setStatusMessage({
-                        type: "success",
-                        text: `${t("optSuccessNotice", lang)}${countsStr}`,
-                        details: names,
-                        cardDetails: cardNames,
-                    });
+        const constraints: BuildConstraints = {
+            ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
+            ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
+            ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
+            ...(minCustom > 0 ? { minCustom } : {}),
+            ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
+            ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
+            ...(reqBButton ? { requiredBButton: reqBButton } : {}),
+            ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
+            ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
+            ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
+            ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
+            ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
+        };
+        const policy: BugPolicy = {
+            type: Object.keys(bugRules).length > 0 ? "custom" : "no_bugs",
+            customRules: bugRules,
+        };
+        try {
+            const worker = new AsyncOptimizer({ data, problem, policy, target,
+                modCardMode: hasModCards ? modCardMode : "none", constraints }, message => {
+                if (optimizerRef.current !== worker) return;
+                if (message.type === "error") {
+                    optimizerRef.current = null;
+                    setIsOptimizing(false);
+                    setStatusMessage({ type: "error", text: message.message });
+                    if (bestRef.current) onChange(bestRef.current.problem, bestRef.current.solution);
+                    return;
                 }
-            } catch (err: any) {
-                setStatusMessage({
-                    type: "error",
-                    text: err?.message || String(err),
-                });
-            } finally {
-                setIsOptimizing(false);
-            }
-        }, 50);
+                setCheckedBuilds(message.checkedBuilds);
+                if (message.best) {
+                    bestRef.current = message.best;
+                    setPreview(message.best);
+                }
+                if (message.type === "done") {
+                    optimizerRef.current = null;
+                    setIsOptimizing(false);
+                    setStatusMessage({ type: message.best ? "success" : "error",
+                        text: t(message.best ? "optSearchComplete" : "optNoSolution", lang) });
+                    if (message.best) onChange(message.best.problem, message.best.solution);
+                }
+            });
+            optimizerRef.current = worker;
+        } catch (error) {
+            setIsOptimizing(false);
+            setStatusMessage({ type: "error", text: error instanceof Error ? error.message : String(error) });
+        }
     };
 
     return (
@@ -1186,6 +1220,7 @@ function AutoOptimizerPanel({
                             {t("autoOptimizeDesc", lang)}
                         </p>
 
+                        <fieldset disabled={isOptimizing}>
                         {/* 1. Optimization Goal / Target Selector (Placed at top for instant access) */}
                         <div className="mb-2">
                             <label className="form-label small fw-semibold mb-1">{t("optTarget", lang)}:</label>
@@ -1299,6 +1334,47 @@ function AutoOptimizerPanel({
                                         {t("buildConstraintsDesc", lang)}
                                     </div>
 
+                                    <div className="mb-3">
+                                        <label htmlFor="optimizer-custom-min" className="form-label small fw-semibold mb-1">
+                                            {t("minCustomTitle", lang)}
+                                        </label>
+                                        <select id="optimizer-custom-min" className="form-select form-select-sm"
+                                            value={minCustom} onChange={event => setMinCustom(Number(event.target.value))}>
+                                            <option value={0}>{t("anyOption", lang)}</option>
+                                            {[5, 6, 7, 8, 9, 10].map(value => (
+                                                <option key={value} value={value}>≥ {value}</option>
+                                            ))}
+                                        </select>
+                                        <div className="small text-muted mt-1">{t("minCustomDesc", lang)}</div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="form-label small fw-semibold mb-1">{t("minBusterStatsTitle", lang)}</div>
+                                        <div className="row g-2">
+                                            {BUSTER_STATS.map(stat => (
+                                                <label key={stat} className="col-4 small">
+                                                    <span className="d-block mb-1">{t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}</span>
+                                                    <select className="form-select form-select-sm" value={minBusterStats[stat] ?? 0}
+                                                        onChange={event => {
+                                                            const value = Number(event.target.value);
+                                                            setMinBusterStats(prev => {
+                                                                const next = { ...prev };
+                                                                if (value === 0) delete next[stat];
+                                                                else next[stat] = value;
+                                                                return next;
+                                                            });
+                                                        }}>
+                                                        <option value={0}>{t("anyOption", lang)}</option>
+                                                        {Array.from({ length: getBusterStatLimits(data.gameId)[stat] }, (_, index) => index + 1).map(value => (
+                                                            <option key={value} value={value}>≥ {value}</option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <div className="small text-muted mt-1">{t("minBusterStatsDesc", lang)}</div>
+                                    </div>
+
                                     {/* Required Abilities */}
                                     <div className="mb-2">
                                         <label className="form-label small fw-semibold mb-1 d-block">
@@ -1320,6 +1396,21 @@ function AutoOptimizerPanel({
                                                 );
                                             })}
                                         </div>
+                                        {reqAbilities.includes("chipRecovery") ? (
+                                            <div className="mt-2">
+                                                <label htmlFor="optimizer-chip-recovery-min" className="form-label small fw-semibold mb-1">
+                                                    {t("minChipRecoveryTitle", lang)}
+                                                </label>
+                                                <select id="optimizer-chip-recovery-min" className="form-select form-select-sm"
+                                                    value={minChipRecovery}
+                                                    onChange={event => setMinChipRecovery(Number(event.target.value) as ChipRecoveryMinimum)}>
+                                                    {([10, 20, 30, 40] as const).map(value => (
+                                                        <option key={value} value={value}>≥ {value} HP</option>
+                                                    ))}
+                                                </select>
+                                                <div className="small text-muted mt-1">{t("minChipRecoveryDesc", lang)}</div>
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     {/* Mod Card Specific Battle Specs & Controls */}
@@ -1439,25 +1530,32 @@ function AutoOptimizerPanel({
                                                 </div>
                                             </div>
 
-                                            {/* Row 4: Body Element */}
-                                            <div className="row g-2 mb-2">
-                                                <div className="col-12 col-md-6">
-                                                    <label className="form-label small fw-semibold mb-1">
-                                                        {t("reqBodyTitle", lang)}:
-                                                    </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqBody}
-                                                        onChange={e => setReqBody(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {BODY_OPTIONS.map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+
+                                        </div>
+                                    )}
+
+                                    {hasModCards && (
+                                        <div className="row g-2 mb-2">
+                                            <div className="col-12">
+                                                <div className="form-label small fw-semibold mb-1">{t("allowedBodiesTitle", lang)}</div>
+                                                <div className="d-flex flex-wrap gap-3" role="group" aria-label={t("allowedBodiesTitle", lang)}>
+                                                    {BODY_OPTIONS.map(opt => {
+                                                        const body = opt.id as BodyElement;
+                                                        return (
+                                                            <label key={body} className="form-check small mb-0">
+                                                                <input type="checkbox" className="form-check-input"
+                                                                    checked={allowedBodies.includes(body)}
+                                                                    onChange={() => setAllowedBodies(prev => prev.includes(body)
+                                                                        ? prev.filter(value => value !== body) : [...prev, body])} />
+                                                                <span className="form-check-label">{opt.name[lang] || opt.name.en}</span>
+                                                            </label>
+                                                        );
+                                                    })}
                                                 </div>
+                                                <div className="small text-muted mt-1">{t("allowedBodiesDesc", lang)}</div>
+                                                {allowedBodies.length === 0 ? (
+                                                    <div className="small text-danger mt-1" role="alert">{t("allowedBodiesEmpty", lang)}</div>
+                                                ) : null}
                                             </div>
                                         </div>
                                     )}
@@ -1549,24 +1647,65 @@ function AutoOptimizerPanel({
                             )}
                         </div>
 
+                        </fieldset>
                         {/* 5. Sticky Action Button */}
                         <div className="sticky-bottom bg-body pt-2 pb-1 border-top mt-2" style={{ zIndex: 2 }}>
                             <button
                                 type="button"
                                 className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
-                                disabled={isOptimizing}
-                                onClick={handleOptimize}
+                                disabled={!isOptimizing && allowedBodies.length === 0}
+                                onClick={isOptimizing ? handleStop : handleOptimize}
                             >
                                 {isOptimizing ? (
                                     <>
                                         <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                        <span>{t("optimizing", lang)}</span>
+                                        <span>{t("optStopSearch", lang)}</span>
                                     </>
                                 ) : (
                                     <span>{t("autoOptimizeBtn", lang)}</span>
                                 )}
                             </button>
                         </div>
+
+                        {isOptimizing ? (
+                            <div className="small text-muted mt-2" role="status" aria-live="polite">
+                                {t(preview ? "optSearchingBetter" : "optSearchingFeasible", lang)}
+                                {" "}{t("optCheckedBuilds", lang)}: {checkedBuilds.toLocaleString()}
+                            </div>
+                        ) : null}
+                        {preview && previewDataRef.current === data ? (
+                            <div className="border rounded p-2 mt-2">
+                                <div className="fw-semibold small mb-2">{t("optCurrentBest", lang)} · HP: {preview.stats.finalHp}</div>
+                                <div className="small text-muted mb-2">
+                                    {t("statAttack", lang)}: {preview.stats.attack} · {t("statRapid", lang)}: {preview.stats.rapid} · {t("statCharge", lang)}: {preview.stats.charge}
+                                    {" · "}{t("statCustom", lang)}: {preview.stats.custom}
+                                </div>
+                                <div className="small text-muted mb-2">
+                                    {t("reqBodyTitle", lang)}: {BODY_OPTIONS.find(opt => opt.id === (preview.stats.modBody ?? "Normal"))?.name[lang] ?? preview.stats.modBody ?? "Normal"}
+                                </div>
+                                {preview.stats.modChipRecovery ? (
+                                    <div className="small text-muted mb-2">{tAbility("chipRecovery", lang)}: {preview.stats.modChipRecovery} HP</div>
+                                ) : null}
+                                <div className="d-flex justify-content-center overflow-auto">
+                                    <Navicust
+                                        key={JSON.stringify([preview.problem.requirements, preview.solution])}
+                                        parts={data.parts} colors={data.colors}
+                                        requirements={preview.problem.requirements}
+                                        gridSettings={makeGridSettings(data, preview.problem)}
+                                        cells={placeAll(data.parts, preview.problem.requirements, preview.solution, makeGridSettings(data, preview.problem))}
+                                    />
+                                </div>
+                                <SolutionBugStatus analysis={preview.analysis} lang={lang} />
+                                {preview.problem.modCards && preview.problem.modCards.length > 0 ? (
+                                    <div className="small text-muted mt-2">
+                                        {t("optAddedModCards", lang)}: {preview.problem.modCards.map(id => {
+                                            const card = getModCard(id, data.gameId);
+                                            return card ? getCardDisplayName(card, lang) : id;
+                                        }).join(", ")}
+                                    </div>
+                                ) : null}
+                            </div>
+                        ) : null}
 
                         {/* 6. Status notice */}
                         {statusMessage ? (
@@ -1599,7 +1738,7 @@ function PartSelector({
 }: {
     data: Data;
     problem: Problem;
-    onChange: (problem: Problem) => void;
+    onChange: (problem: Problem, solution?: Solution) => void;
     onNavigateToResults?: () => void;
 }) {
     const { lang } = useLang();
@@ -2493,19 +2632,21 @@ function Results({
     onNavigateToSetup,
     onExportSav,
     onSolutionFound,
+    initialSolution,
 }: {
     problem: Problem;
     data: Data;
     onNavigateToSetup?: () => void;
     onExportSav?: (solution: Solution, index: number) => void;
     onSolutionFound?: (solution: Solution) => void;
+    initialSolution?: Solution;
 }) {
     const { lang } = useLang();
     const gs = makeGridSettings(data, problem);
 
     const [pending, setPending] = React.useState(false);
     const [done, setDone] = React.useState(false);
-    const [solutions, setSolutions] = React.useState<Solution[]>([]);
+    const [solutions, setSolutions] = React.useState<Solution[]>(initialSolution ? [initialSolution] : []);
     const solverRef = React.useRef<AsyncSolver | null>(null);
 
     const { ref, inView } = useInView({});
@@ -2709,6 +2850,7 @@ function App() {
 
     const [isBuildLibraryOpen, setIsBuildLibraryOpen] = React.useState(false);
     const [exportSavTarget, setExportSavTarget] = React.useState<{ solution: Solution; index: number } | null>(null);
+    const [optimizedLayout, setOptimizedLayout] = React.useState<{ problem: Problem; solution: Solution } | null>(null);
     const [latestSolution, setLatestSolution] = React.useState<Solution | undefined>(undefined);
 
     React.useEffect(() => {
@@ -2873,7 +3015,9 @@ function App() {
                         <PartSelector
                             data={data}
                             problem={problem}
-                            onChange={(problem) => {
+                            onChange={(problem, solution) => {
+                                setOptimizedLayout(solution ? { problem, solution } : null);
+                                setLatestSolution(solution);
                                 setProblem(problem);
                             }}
                             onNavigateToResults={() => setMobileTab("results")}
@@ -2901,7 +3045,8 @@ function App() {
                         </div>
                     ) : data != null && problem != null ? (
                         <Results
-                            key={JSON.stringify(problem)}
+                            key={JSON.stringify([problem, optimizedLayout?.problem === problem ? optimizedLayout.solution : null])}
+                            initialSolution={optimizedLayout?.problem === problem ? optimizedLayout.solution : undefined}
                             data={data}
                             problem={problem}
                             onNavigateToSetup={() => setMobileTab("setup")}

@@ -263,7 +263,9 @@ export function* solve(
     parts: Part[],
     requirements: Requirement[],
     gridSettings: GridSettings,
-    spinnableColors: boolean[]
+    spinnableColors: boolean[],
+    shouldStop: () => boolean = () => false,
+    deduplicate: boolean = true
 ): Iterable<Solution> {
     if (gridSettings.commandLineRow > gridSettings.height) {
         return;
@@ -393,6 +395,8 @@ export function* solve(
         const partCellValue = requirements[reqIdx].partIndex + 1;
 
         for (const candidate of cands) {
+            // Let bounded callers stop even when no complete layout is yielded.
+            if (shouldStop()) return;
             if (!candidateFits(candidate, reqIdx)) {
                 continue;
             }
@@ -405,8 +409,8 @@ export function* solve(
             placedBaseBugLevels[reqIdx] = candidate.baseBugLevel;
 
             const gridByParts = String.fromCharCode(...partCells);
-            if (!visited.has(gridByParts)) {
-                visited.add(gridByParts);
+            if (!deduplicate || !visited.has(gridByParts)) {
+                if (deduplicate) visited.add(gridByParts);
 
                 for (const solution of helper(candidateIdx + 1)) {
                     solution.push({ reqIdx, placement: candidate.placement });
@@ -814,4 +818,16 @@ export function placeAll(
         cells[i] = grid.cells[i] < 0 ? null : grid.cells[i];
     }
     return cells;
+}
+
+/** Removal preserves geometry, but can break retained parts' minimum bug levels. */
+export function meetsPlacementBugConstraints(
+    parts: Part[], requirements: Requirement[], placements: Placement[], settings: GridSettings
+): boolean {
+    const grid = new Grid(settings);
+    const cells = placeAll(parts, requirements, placements, settings);
+    for (let i = 0; i < cells.length; i++) {
+        if (cells[i] !== null) grid.cells[i] = cells[i]!;
+    }
+    return solutionIsAdmissible(parts, requirements, grid);
 }

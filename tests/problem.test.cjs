@@ -112,3 +112,37 @@ test("deleted parts fail explicitly instead of selecting their old array positio
     assert.throws(() => fromHashString(JSON.stringify(legacy(data)), changed), /Unknown part/);
     assert.throws(() => fromHashString(JSON.stringify(valid), changed), /Unknown part/);
 });
+
+test("max Buster stat constraints survive shared links and validate attribute names", () => {
+    const game = games.find(g => g.id === "bn6");
+    const data = parseGameData(require("../data/bn6.json"), game);
+    const problem = emptyProblem(data);
+    problem.constraints = { requiredMaxBusterStats: ["attack", "charge"] };
+    const saved = toHashString(problem, data);
+    assert.deepEqual(fromHashString(saved, data).constraints, problem.constraints);
+    const invalid = JSON.parse(saved);
+    invalid.bc.bs = ["hp"];
+    assert.throws(() => fromHashString(JSON.stringify(invalid), data));
+    const legacy = JSON.parse(saved);
+    delete legacy.bc.bs;
+    assert.equal(fromHashString(JSON.stringify(legacy), data).constraints.requiredMaxBusterStats, undefined);
+});
+
+test("Chip Recovery minimum tiers round-trip in shared links and reject unsupported values", () => {
+    const game = games.find(g => g.id === "bn6");
+    const data = parseGameData(require("../data/bn6.json"), game);
+    for (const tier of [10, 20, 30, 40]) {
+        const problem = { ...emptyProblem(data), constraints: { minChipRecovery: tier } };
+        const saved = toHashString(problem, data);
+        assert.deepEqual(fromHashString(saved, data).constraints, problem.constraints);
+        if (tier === 30) {
+            for (const invalid of [0, -10, 25, 50, "30"]) {
+                const malformed = JSON.parse(saved);
+                malformed.bc.cr = invalid;
+                assert.throws(() => fromHashString(JSON.stringify(malformed), data));
+            }
+        }
+    }
+    const old = { ...emptyProblem(data), constraints: { requiredAbilities: ["chipRecovery"] } };
+    assert.equal(fromHashString(toHashString(old, data), data).constraints.minChipRecovery, undefined);
+});

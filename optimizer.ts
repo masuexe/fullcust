@@ -6,6 +6,8 @@ import {
     findPartIndexByAbility,
     getEffectiveInBattleBugs,
     getPartEffect,
+    getBusterStatLimits,
+    GAME_PART_BUG_TYPES,
     isBenignBug,
     isSolutionAcceptable,
     normalizeBugType,
@@ -18,8 +20,8 @@ import {
     computeDeckStats,
     ModCard,
 } from "./modcards";
-import { BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
-import { placeAll, solve, Requirement, Solution } from "./solver";
+import { BODY_ELEMENTS, BUSTER_STATS, getBusterMinimums, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { meetsPlacementBugConstraints, placeAll, solve, GridSettings, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_buster" | "balanced";
 export type ModCardMode = "none" | "auto" | "keep";
@@ -44,6 +46,48 @@ export interface OptimizeResult {
     addedCardIds?: string[];
 }
 
+export function occupiedBuildCells(data: Data, result: OptimizeResult): number {
+    return result.solution.reduce((sum, placement, index) => {
+        const part = data.parts[result.problem.requirements[index].partIndex];
+        return sum + (placement.compressed ? part.compressedMask : part.uncompressedMask).filter(Boolean).length;
+    }, 0);
+}
+
+/** Clean a valid completed build, without pruning intermediate search states. */
+export function removeRedundantAbilityParts(options: OptimizeOptions, result: OptimizeResult): OptimizeResult {
+    const { data, problem, constraints = problem.constraints,
+        policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY } = options;
+    const grid = makeGridSettings(data, result.problem);
+    const cards = result.problem.modCards ?? [];
+    let cleaned = result;
+    const candidates = result.problem.requirements.map((req, index) => {
+        const effect = getPartEffect(data.gameId, data.partMetas[req.partIndex].id);
+        const pureAbility = effect?.abilities?.length && !Object.entries(effect).some(([key, value]) => key !== "abilities" && value);
+        return { req, index, abilityCount: effect?.abilities?.length ?? 0, pureAbility };
+    }).filter(c => c.index >= problem.requirements.length && c.pureAbility && c.req.constraint.minBugLevel === 0)
+        .sort((a, b) => a.abilityCount - b.abilityCount || b.index - a.index);
+    const removed = new Set<number>();
+    for (const candidate of candidates) {
+        // Translate the original index after earlier removals; repeated part
+        // indices may have different placement constraints and must stay distinct.
+        const index = candidate.index - [...removed].filter(i => i < candidate.index).length;
+        const requirements = cleaned.problem.requirements.filter((_, i) => i !== index);
+        const solution = cleaned.solution.filter((_, i) => i !== index);
+        const stats = computeBuildStats(data.gameId, requirements.map(req => data.partMetas[req.partIndex].id), cards, problem.baseHp ?? 1000);
+        // Preserve all final effects, including unrequested abilities and stats.
+        if (JSON.stringify(stats) !== JSON.stringify(cleaned.stats)) continue;
+        if (!meetsPlacementBugConstraints(data.parts, requirements, solution, grid)) continue;
+        const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
+            placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
+        if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
+            !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
+        cleaned = { ...cleaned, problem: { ...cleaned.problem, requirements }, solution, stats, analysis,
+            addedPartIndices: requirements.slice(problem.requirements.length).map(req => req.partIndex) };
+        removed.add(candidate.index);
+    }
+    return cleaned;
+}
+
 export interface ModCardOptimizeOptions {
     gameId: string;
     existingCardIds?: string[];
@@ -51,6 +95,22 @@ export interface ModCardOptimizeOptions {
     policy?: BugPolicy;
     constraints?: BuildConstraints;
     lockedCardIds?: string[];
+}
+
+/** Safe upper bounds before packing; a fixed deck cannot change during search. */
+export function busterMinimumsPossible(options: OptimizeOptions): boolean {
+    const { data, problem, constraints = problem.constraints, modCardMode = "keep" } = options;
+    const minimums = getBusterMinimums(constraints);
+    const limits = getBusterStatLimits(data.gameId);
+    if (modCardMode !== "auto" || data.gameId === "bn3") {
+        const cards = modCardMode === "keep" && data.gameId !== "bn3" ? problem.modCards ?? [] : [];
+        const deck = computeDeckStats(cards, data.gameId);
+        const attackCap = (data.gameId === "bn6" && cards.length > 0) || (data.gameId === "bn5" && deck.stats.attackMult > 1) ? 10 : 5;
+        limits.attack = Math.max(1, Math.min(attackCap, 5 * deck.stats.attackMult + deck.stats.attack));
+        limits.rapid = Math.max(1, Math.min(5, 5 + deck.stats.rapid));
+        limits.charge = Math.max(1, Math.min(5, 5 + deck.stats.charge));
+    }
+    return BUSTER_STATS.every(stat => (minimums[stat] ?? 1) <= limits[stat]);
 }
 
 /**
@@ -170,8 +230,16 @@ export function matchBusterAddition(cardBA: string | undefined, req: string): bo
 }
 
 export function matchBody(cardBody: string | undefined, req: string): boolean {
-    if (!cardBody) return false;
-    return cardBody.toLowerCase() === req.toLowerCase();
+    return (cardBody ?? "Normal").toLowerCase() === req.toLowerCase();
+}
+
+export function isBodyAllowed(body: string | undefined, constraints?: BuildConstraints): boolean {
+    return (!constraints?.requiredBody || matchBody(body, constraints.requiredBody)) &&
+        (constraints?.allowedBodies === undefined || constraints.allowedBodies.some(allowed => matchBody(body, allowed)));
+}
+
+export function bodyConstraintsPossible(constraints?: BuildConstraints): boolean {
+    return BODY_ELEMENTS.some(body => isBodyAllowed(body, constraints));
 }
 
 export function matchGauge(cardGauge: string | undefined, req: string): boolean {
@@ -255,11 +323,21 @@ export function orderModCardsForConstraints(
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = matchBody(cardA?.body, constraints.requiredBody!);
-            const bMatches = matchBody(cardB?.body, constraints.requiredBody!);
+            const aMatches = cardA?.body !== undefined && matchBody(cardA.body, constraints.requiredBody!);
+            const bMatches = cardB?.body !== undefined && matchBody(cardB.body, constraints.requiredBody!);
             if (aMatches && !bMatches) return 1;
             if (!aMatches && bMatches) return -1;
             return 0;
+        });
+    }
+
+    if (constraints.allowedBodies !== undefined) {
+        sorted.sort((aId, bId) => {
+            const a = getModCard(aId, gameId);
+            const b = getModCard(bId, gameId);
+            const aMatches = a?.body !== undefined && isBodyAllowed(a.body, constraints);
+            const bMatches = b?.body !== undefined && isBodyAllowed(b.body, constraints);
+            return Number(aMatches) - Number(bMatches);
         });
     }
 
@@ -381,17 +459,21 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     }
 
     // Lock required Body Element if specified
-    if (constraints?.requiredBody && !locked.some(id => {
-        const c = getModCard(id, gameId);
-        return matchBody(c?.body, constraints.requiredBody!);
-    })) {
+    if (constraints?.requiredBody && !matchBody(computeDeckStats(locked, gameId).body, constraints.requiredBody)) {
         const matchingCards = allCards.filter(
-            c => matchBody(c.body, constraints.requiredBody!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            c => c.body !== undefined && matchBody(c.body, constraints.requiredBody!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
             matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
             locked.push(matchingCards[0].id);
         }
+    }
+
+    if (constraints?.allowedBodies !== undefined && !isBodyAllowed(computeDeckStats(locked, gameId).body, constraints)) {
+        const matchingCards = allCards.filter(c => c.body !== undefined && isBodyAllowed(c.body, constraints) &&
+            isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules));
+        matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+        if (matchingCards.length > 0) locked.push(matchingCards[0].id);
     }
 
     // Lock required Gauge speed if specified
@@ -438,7 +520,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             if (c.bButton) return false;
             if (c.busterAddition && !matchBusterAddition(c.busterAddition, constraints.requiredBusterAddition)) return false;
         }
-        if (constraints?.requiredBody && c.body && !matchBody(c.body, constraints.requiredBody)) return false;
+        if (c.body !== undefined && !isBodyAllowed(c.body, constraints)) return false;
         if (constraints?.requiredGauge && c.gauge && !matchGauge(c.gauge, constraints.requiredGauge)) return false;
         return true;
     });
@@ -630,7 +712,7 @@ export function getCandidateFillerParts(data: Data, target: OptimizationTarget =
 /**
  * Evaluates the total fitness score of a build state.
  */
-function evaluateBuildScore(stats: BuildStats, target: OptimizationTarget): number {
+export function evaluateBuildScore(stats: BuildStats, target: OptimizationTarget): number {
     if (target === "max_hp") {
         return stats.finalHp * 1.0 + stats.attack * 20 + stats.custom * 30;
     }
@@ -649,15 +731,57 @@ interface SearchNode {
     addedPartIndices: number[];
 }
 
+/** Push only forbidden placement bugs into the solver; allowed bugs remain searchable. */
+export function requirementsUnderPolicy(
+    data: Data,
+    requirements: Requirement[],
+    policy: BugPolicy,
+    forbiddenBugs: string[],
+    bugRules?: Partial<Record<string, BugTolerance>>,
+    modCards: string[] = []
+): Requirement[] {
+    // BugStop can absorb other parts' placement bugs. Judge those layouts as a whole.
+    if (requirements.some(r => getPartEffect(data.gameId, data.partMetas[r.partIndex].id)?.abilities?.includes("bugStop"))) {
+        return requirements;
+    }
+    // Card repairs can also neutralize placement bugs; leave their interpretation
+    // to the full analysis instead of assuming every local bug remains active.
+    if (modCards.length > 0 && computeDeckStats(modCards, data.gameId).repairedBugs.length > 0) return requirements;
+    const rules = bugRules ?? policy.customRules;
+    return requirements.map(req => {
+        const type = GAME_PART_BUG_TYPES[data.gameId]?.[data.partMetas[req.partIndex].id] ?? "battleHp";
+        const norm = normalizeBugType(type);
+        let forbidden: boolean;
+        if (rules !== undefined || policy.type === "custom") {
+            forbidden = (rules?.[norm] ?? rules?.[type] ?? "forbidden") === "forbidden";
+        } else if (forbiddenBugs.length > 0) {
+            forbidden = forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
+                !(["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1));
+        } else {
+            forbidden = policy.type === "no_bugs" || !isBenignBug(type, 1);
+        }
+        return forbidden ? {
+            ...req,
+            constraint: { ...req.constraint, maxBugLevel: Math.min(req.constraint.maxBugLevel, 0) },
+        } : req;
+    });
+}
+
 /**
  * Verifies whether a completed build satisfies all user constraints.
  */
-function doesBuildSatisfyConstraints(
+export function doesBuildSatisfyConstraints(
     stats: BuildStats,
     analysis: SolutionBugAnalysis,
     constraints?: BuildConstraints
 ): boolean {
     if (!constraints) return true;
+
+    // Check the final capped values, including all card bonuses and penalties.
+    const minimums = getBusterMinimums(constraints);
+    if (BUSTER_STATS.some(stat => stats[stat] < (minimums[stat] ?? 1))) return false;
+    if ((stats.modChipRecovery ?? 0) < (constraints.minChipRecovery ?? 0)) return false;
+    if (constraints.minCustom !== undefined && stats.custom < constraints.minCustom) return false;
 
     if (constraints.requiredAbilities && constraints.requiredAbilities.length > 0) {
         const buildAbilities = new Set(stats.abilities || []);
@@ -690,9 +814,7 @@ function doesBuildSatisfyConstraints(
         if (!matchBusterAddition(stats.modBusterAddition, constraints.requiredBusterAddition)) return false;
     }
 
-    if (constraints.requiredBody) {
-        if (!matchBody(stats.modBody, constraints.requiredBody)) return false;
-    }
+    if (!isBodyAllowed(stats.modBody, constraints)) return false;
 
     if (constraints.requiredGauge) {
         if (!matchGauge(stats.modGauge, constraints.requiredGauge)) return false;
@@ -739,7 +861,7 @@ function runNaviCustBeamSearch(
     modCards: string[],
     policy: BugPolicy,
     target: OptimizationTarget,
-    gridSettings: any,
+    gridSettings: GridSettings,
     spinnableColors: boolean[],
     baseHp: number,
     allCandidates: number[],
@@ -749,25 +871,21 @@ function runNaviCustBeamSearch(
     timeoutMs: number,
     beamWidth: number
 ): SearchNode | null {
-    const initialSolIter = solve(data.parts, initialReqs, gridSettings, spinnableColors);
-    let rootSolution: Solution | null = null;
-    let rootAnalysis: SolutionBugAnalysis | null = null;
-
-    let initSteps = 0;
-    for (const value of initialSolIter) {
-        if (++initSteps > 50) break;
-        const occ = placeAll(data.parts, initialReqs, value, gridSettings);
-        const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, initialReqs, occ, gridSettings, "en", modCards);
-        if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
-            rootSolution = value;
-            rootAnalysis = analysis;
-            break;
+    const shouldStop = () => Date.now() - startTime >= timeoutMs;
+    const findPlacement = (requirements: Requirement[]) => {
+        const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards);
+        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop)) {
+            if (shouldStop()) break;
+            const occ = placeAll(data.parts, requirements, solution, gridSettings);
+            const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occ, gridSettings, "en", modCards);
+            if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
+                return { solution, analysis };
+            }
         }
-    }
-
-    if (!rootSolution || !rootAnalysis) {
         return null;
-    }
+    };
+    const root = findPlacement(initialReqs);
+    if (!root) return null;
 
     const rootPartIds = initialReqs.map(r => data.partMetas[r.partIndex].id);
     const rootStats = computeBuildStats(data.gameId, rootPartIds, modCards, baseHp);
@@ -775,9 +893,9 @@ function runNaviCustBeamSearch(
 
     const rootNode: SearchNode = {
         requirements: initialReqs,
-        solution: rootSolution,
+        solution: root.solution,
         stats: rootStats,
-        analysis: rootAnalysis,
+        analysis: root.analysis,
         score: rootScore,
         addedPartIndices: [],
     };
@@ -796,13 +914,11 @@ function runNaviCustBeamSearch(
 
             const existingIndices = new Set(node.requirements.map(r => r.partIndex));
             const existingColors = new Set(node.requirements.map(r => data.parts[r.partIndex].color));
-            const hasBugStop = node.analysis.bugStopActive;
 
             for (const candIdx of allCandidates) {
                 if (Date.now() - startTime >= timeoutMs) break;
                 if (existingIndices.has(candIdx)) continue;
 
-                const candMeta = data.partMetas[candIdx];
                 const candPart = data.parts[candIdx];
 
                 // Color limit check (4 colors in BN4/5/6)
@@ -818,39 +934,20 @@ function runNaviCustBeamSearch(
                     if (!ok) continue;
                 }
 
-                let onCommandLineConstraint: boolean | null = null;
-                let maxBug = Infinity;
-                if ((policy.type === "no_bugs" || forbiddenBugs.length > 0 || (bugRules && Object.keys(bugRules).length > 0)) && !hasBugStop) {
-                    onCommandLineConstraint = candMeta.isSolid;
-                    maxBug = 0;
-                }
-
                 const candReq: Requirement = {
                     partIndex: candIdx,
                     constraint: {
-                        onCommandLine: onCommandLineConstraint,
+                        onCommandLine: null,
                         minBugLevel: 0,
-                        maxBugLevel: maxBug,
+                        maxBugLevel: Infinity,
                         compressed: true,
                     },
                 };
 
                 const testReqs = [...node.requirements, candReq];
-                const solIter = solve(data.parts, testReqs, gridSettings, spinnableColors);
-                let foundSolution: Solution | null = null;
-                let foundAnalysis: SolutionBugAnalysis | null = null;
-
-                let candSteps = 0;
-                for (const value of solIter) {
-                    if (++candSteps > 25) break;
-                    const occ = placeAll(data.parts, testReqs, value, gridSettings);
-                    const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, testReqs, occ, gridSettings, "en", modCards);
-                    if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
-                        foundSolution = value;
-                        foundAnalysis = analysis;
-                        break;
-                    }
-                }
+                const found = findPlacement(testReqs);
+                const foundSolution = found?.solution;
+                const foundAnalysis = found?.analysis;
 
                 if (foundSolution && foundAnalysis) {
                     const testPartIds = testReqs.map(r => data.partMetas[r.partIndex].id);
@@ -899,6 +996,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         constraints = problem.constraints,
     } = options;
 
+    if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
     const startTime = Date.now();
     const gridSettings = makeGridSettings(data, problem);
     const spinnableColors = problem.spinnableColors;
@@ -910,17 +1008,19 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
     const createReqsForAbilities = (abilities: string[]): Requirement[] | null => {
         const extraReqs: Requirement[] = [];
         const existingIndices = new Set(problem.requirements.map(r => r.partIndex));
+        const covered = new Set(computeBuildStats(data.gameId,
+            problem.requirements.map(req => data.partMetas[req.partIndex].id), [], baseHp).abilities);
         for (const ab of abilities) {
+            if (covered.has(ab)) continue;
             const partIdx = findPartIndexByAbility(data, ab);
             if (partIdx === -1) return null; // NC cannot provide this ability
             if (!existingIndices.has(partIdx)) {
-                const meta = data.partMetas[partIdx];
                 extraReqs.push({
                     partIndex: partIdx,
                     constraint: {
-                        onCommandLine: meta.isSolid ? true : false,
+                        onCommandLine: null,
                         minBugLevel: 0,
-                        maxBugLevel: 0,
+                        maxBugLevel: Infinity,
                         compressed: true,
                     },
                 });
@@ -1003,10 +1103,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             const deck = computeDeckStats(modCards, data.gameId);
             if (!matchBusterAddition(deck.busterAddition, constraints.requiredBusterAddition)) return null;
         }
-        if (constraints?.requiredBody) {
-            const deck = computeDeckStats(modCards, data.gameId);
-            if (!matchBody(deck.body, constraints.requiredBody)) return null;
-        }
+        if (!isBodyAllowed(computeDeckStats(modCards, data.gameId).body, constraints)) return null;
         if (constraints?.requiredGauge) {
             const deck = computeDeckStats(modCards, data.gameId);
             if (!matchGauge(deck.gauge, constraints.requiredGauge)) return null;
@@ -1028,8 +1125,12 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
     let bestResult: OptimizeResult | null = null;
     let bestScore = -Infinity;
 
-    for (const branch of branches) {
+    for (const [branchIndex, branch] of branches.entries()) {
         if (Date.now() - startTime >= timeoutMs) break;
+
+        // Reserve time for each alternative NC/card allocation.
+        const elapsed = Date.now() - startTime;
+        const branchDeadline = elapsed + (timeoutMs - elapsed) / (branches.length - branchIndex);
 
         const node = runNaviCustBeamSearch(
             data,
@@ -1045,7 +1146,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             forbiddenBugs,
             constraints?.bugRules,
             startTime,
-            timeoutMs,
+            branchDeadline,
             beamWidth
         );
 
@@ -1068,11 +1169,14 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                 solution: node.solution,
                 stats: node.stats,
                 analysis: node.analysis,
-                addedPartIndices: node.addedPartIndices,
+                addedPartIndices: [
+                    ...branch.reqs.slice(problem.requirements.length).map(r => r.partIndex),
+                    ...node.addedPartIndices,
+                ],
                 addedCardIds: branch.isAutoCards ? branch.modCards : [],
             };
         }
     }
 
-    return bestResult;
+    return bestResult ? removeRedundantAbilityParts(options, bestResult) : null;
 }

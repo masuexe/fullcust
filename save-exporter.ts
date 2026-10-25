@@ -474,8 +474,8 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     );
 
     if (gameId === "bn6") {
-        // Buster stats: 0-based in GBA memory (0..4 for level 1..5)
-        buf[bn6NaviStatsOffset + 0x01] = Math.max(0, Math.min(4, stats.attack - 1));
+        // Buster stats are zero-based; card-enhanced Attack can reach level 10.
+        buf[bn6NaviStatsOffset + 0x01] = Math.max(0, Math.min(9, stats.attack - 1));
         buf[bn6NaviStatsOffset + 0x02] = Math.max(0, Math.min(4, stats.rapid - 1));
         buf[bn6NaviStatsOffset + 0x03] = Math.max(0, Math.min(4, stats.charge - 1));
 
@@ -491,7 +491,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn6NaviStatsOffset + 0x07] = bLeft;
 
         // Custom window: clamped 5..10
-        buf[bn6NaviStatsOffset + 0x0a] = Math.max(5, Math.min(10, stats.custom));
+        buf[bn6NaviStatsOffset + 0x0a] = Math.max(2, Math.min(10, stats.custom));
         // Folder limits: mega 0..10, giga 0..10
         buf[bn6NaviStatsOffset + 0x0b] = Math.max(0, Math.min(10, stats.megaFolder));
         buf[bn6NaviStatsOffset + 0x0c] = Math.max(0, Math.min(10, stats.gigaFolder));
@@ -529,8 +529,8 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     } else if (gameId === "bn5") {
         const bn5NaviStatsOffset = 0x52a8;
 
-        // Buster stats: 0-based in GBA memory (0..4 for level 1..5)
-        buf[bn5NaviStatsOffset + 0x01] = Math.max(0, Math.min(4, stats.attack - 1));
+        // Buster stats are zero-based; doubled Attack can reach level 10.
+        buf[bn5NaviStatsOffset + 0x01] = Math.max(0, Math.min(9, stats.attack - 1));
         buf[bn5NaviStatsOffset + 0x02] = Math.max(0, Math.min(4, stats.rapid - 1));
         buf[bn5NaviStatsOffset + 0x03] = Math.max(0, Math.min(4, stats.charge - 1));
 
@@ -549,7 +549,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn5NaviStatsOffset + 0x07] = bLeft;
 
         // Custom window: clamped 5..10
-        buf[bn5NaviStatsOffset + 0x0a] = Math.max(5, Math.min(10, stats.custom));
+        buf[bn5NaviStatsOffset + 0x0a] = Math.max(2, Math.min(10, stats.custom));
         // Folder limits: mega 0..10, giga 0..10
         buf[bn5NaviStatsOffset + 0x0b] = Math.max(0, Math.min(10, stats.megaFolder));
         buf[bn5NaviStatsOffset + 0x0c] = Math.max(0, Math.min(10, stats.gigaFolder));
@@ -625,7 +625,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         buf[bn4NaviOffset + 0x0c] = bLeft;
 
         // Custom window: clamped 5..8
-        buf[bn4NaviOffset + 0x12] = Math.max(5, Math.min(8, stats.custom));
+        buf[bn4NaviOffset + 0x12] = Math.max(2, Math.min(8, stats.custom));
         // Folder limits: mega 0..10, giga 0..10
         buf[bn4NaviOffset + 0x13] = Math.max(0, Math.min(10, stats.megaFolder));
         buf[bn4NaviOffset + 0x14] = Math.max(0, Math.min(10, stats.gigaFolder));

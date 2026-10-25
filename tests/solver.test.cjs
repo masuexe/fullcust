@@ -31,3 +31,17 @@ for (const game of games.filter(game => game.legacyCatalog)) {
         });
     }
 }
+
+test("bounded solving can stop backtracking before yielding a complete layout", () => {
+    const data = parseGameData(require("../data/bn6.json"), games.find(g => g.id === "bn6"));
+    const problem = emptyProblem(data);
+    problem.requirements = [1, 11].map(id => ({
+        partIndex: data.partMetas.findIndex(p => p.id === id),
+        constraint: { onCommandLine: null, minBugLevel: 100, maxBugLevel: Infinity, compressed: true },
+    }));
+    let checks = 0;
+    const solutions = [...solve(data.parts, problem.requirements, makeGridSettings(data, problem),
+        problem.spinnableColors, () => ++checks > 100)];
+    assert.deepEqual(solutions, []);
+    assert.ok(checks > 100 && checks < 110, "Cancellation must propagate out of recursive search");
+});

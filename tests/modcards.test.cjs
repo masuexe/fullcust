@@ -418,3 +418,20 @@ test("BN4 computeBuildStats and searchModCards function properly", () => {
     assert.ok(synchroResult.allCards.length > 0);
     assert.ok(synchroResult.allCards.some(c => c.id === "134-045"));
 });
+
+test("Chip Recovery is a required ability and respects enable/disable loading order", () => {
+    const enabled = computeDeckStats(["137-B017"], "bn6");
+    assert.equal(enabled.chipRecovery, 40);
+    assert.ok(enabled.activeAbilities.includes("chipRecovery"));
+    const disabled = computeDeckStats(["137-B017", "137-B001"], "bn6");
+    assert.equal(disabled.chipRecovery, undefined);
+    assert.ok(!disabled.activeAbilities.includes("chipRecovery"));
+    assert.ok(disabled.disabledAbilities.includes("chipRecovery"));
+    const restored = computeDeckStats(["137-B001", "137-B017"], "bn6");
+    assert.equal(restored.chipRecovery, 40);
+    assert.ok(restored.activeAbilities.includes("chipRecovery"));
+    assert.ok(!restored.disabledAbilities.includes("chipRecovery"));
+    const stats = computeBuildStats("bn6", [], ["137-B001", "137-B017"], 1000);
+    assert.ok(stats.abilities.includes("chipRecovery"));
+    assert.equal(stats.modChipRecovery, 40);
+});

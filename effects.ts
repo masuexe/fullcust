@@ -1,6 +1,6 @@
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug } from "./modcards";
-import { BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
+import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -239,6 +239,10 @@ export function getPartEffect(gameId: string, partId: number): PartEffect | unde
     return GAME_EFFECTS[gameId]?.[partId];
 }
 
+export function getBusterStatLimits(gameId: string): Record<BusterStat, number> {
+    return { attack: gameId === "bn5" || gameId === "bn6" ? 10 : 5, rapid: 5, charge: 5 };
+}
+
 export function computeBuildStats(
     gameId: string,
     partIds: number[],
@@ -307,12 +311,15 @@ export function computeBuildStats(
     let repairedBugs: string[] | undefined;
     let disabledAbilitiesFromCards: string[] | undefined;
 
-    let baseAttack = attackMax ? 5 : (1 + attackBonus);
-    let baseRapid = rapidMax ? 5 : (1 + rapidBonus);
-    let baseCharge = chargeMax ? 5 : (1 + chargeBonus);
+    // NC alone supplies at most five; card effects are applied afterwards.
+    let baseAttack = attackMax ? 5 : Math.max(1, Math.min(5, 1 + attackBonus));
+    let baseRapid = rapidMax ? 5 : Math.max(1, Math.min(5, 1 + rapidBonus));
+    let baseCharge = chargeMax ? 5 : Math.max(1, Math.min(5, 1 + chargeBonus));
+    let attackLimit = 5;
 
     if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
         const deck = computeDeckStats(modCardIds, gameId);
+        if (gameId === "bn6" || (gameId === "bn5" && deck.stats.attackMult > 1)) attackLimit = 10;
         modMbUsed = deck.totalMb;
         modCardCount = modCardIds.length;
         modBugCount = deck.activeBugs.length;
@@ -374,10 +381,10 @@ export function computeBuildStats(
     }
     const finalHp = Math.max(1, runningHp);
 
-    const attack = Math.max(1, Math.min(5, baseAttack));
+    const attack = Math.max(1, Math.min(attackLimit, baseAttack));
     const rapid = Math.max(1, Math.min(5, baseRapid));
     const charge = Math.max(1, Math.min(5, baseCharge));
-    const custom = numberOpen ? 10 : Math.max(5, Math.min(10, 5 + customBonus));
+    const custom = numberOpen ? 10 : Math.max(2, Math.min(10, 5 + customBonus));
     const megaFolder = Math.max(0, 5 + megaFolderBonus);
     const gigaFolder = Math.max(0, 1 + gigaFolderBonus);
 
@@ -389,7 +396,7 @@ export function computeBuildStats(
         attack,
         rapid,
         charge,
-        attackMax: attack === 5,
+        attackMax: attack === attackLimit,
         rapidMax: rapid === 5,
         chargeMax: charge === 5,
         custom,
@@ -419,6 +426,7 @@ export function computeBuildStats(
 }
 
 export const ABILITY_NAMES: Record<string, { en: string; ja: string; zh: string }> = {
+    chipRecovery: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" },
     allGuard: { en: "All Guard", ja: "オールガード", zh: "全御防御" },
     fullSynchro: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" },
     statusGuard: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" },

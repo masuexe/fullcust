@@ -696,3 +696,98 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
     assert.ok(deckBarrier100.activeAbilities.includes("firstBarrier100"), "Deck must include firstBarrier100");
     assert.ok(cardsBarrier100.includes("137-A005"), "Deck must include Heady (137-A005)");
 });
+
+test("optimizer finds valid core layouts beyond the old first-50 cutoff", () => {
+    const data = getGameData("bn6");
+    const problem = emptyProblem(data);
+    problem.requirements = [1, 11].map(id => ({
+        partIndex: data.partMetas.findIndex(p => p.id === id),
+        constraint: { onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity, compressed: true },
+    }));
+    const { makeGridSettings } = require("../problem.ts");
+    const grid = makeGridSettings(data, problem);
+    let checked = 0;
+    for (const solution of solve(data.parts, problem.requirements, grid, problem.spinnableColors)) {
+        checked++;
+        const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, problem.requirements,
+            placeAll(data.parts, problem.requirements, solution, grid), grid, "en");
+        if (isSolutionAcceptable(analysis, { type: "no_bugs" })) break;
+    }
+    assert.ok(checked > 50, "Fixture must exercise the original false negative");
+    const original = JSON.stringify(problem);
+    const result = optimizeBuild({ data, problem, timeoutMs: 1000, modCardMode: "none" });
+    assert.ok(result);
+    assert.ok(isSolutionAcceptable(result.analysis, { type: "no_bugs" }));
+    assert.equal(JSON.stringify(problem), original, "Search must preserve the user's input constraints");
+});
+
+test("allowed placement bugs can be used when adding filler parts", () => {
+    // A one-row board forces the HP part onto the command line. It fits only
+    // if its explicitly allowed battle HP bug is respected by the search.
+    const { from } = require("../array2d.ts");
+    const data = getGameData("bn6");
+    const indices = [1, 46].map(id => data.partMetas.findIndex(p => p.id === id));
+    data.partMetas = indices.map((i, n) => ({ ...data.partMetas[i], color: n + 1 }));
+    data.parts = indices.map((i, n) => ({
+        ...data.parts[i], color: n + 1,
+        compressedMask: from([true, false], 1, 2),
+        uncompressedMask: from([true, false], 1, 2),
+    }));
+    data.gridOptions = [{ label: "fixture", settings: { height: 1, width: 2, commandLineRow: 0, hasOob: false } }];
+    const problem = emptyProblem(data);
+    problem.expansionMemories = 0;
+    problem.requirements = [{ partIndex: 0, constraint: { onCommandLine: true, minBugLevel: 0, maxBugLevel: 0, compressed: true } }];
+    const constraints = { bugRules: { battleHp: "allowed_any" } };
+    const result = optimizeBuild({ data, problem, constraints, timeoutMs: 500, modCardMode: "none" });
+    assert.ok(result);
+    assert.deepEqual(result.addedPartIndices, [1]);
+    assert.equal(result.stats.finalHp, 1500);
+    assert.ok(isSolutionAcceptable(result.analysis, { type: "no_bugs" }, [], constraints.bugRules));
+});
+
+test("a valid core with no available fillers remains a successful result", () => {
+    const data = getGameData("bn6");
+    data.partMetas = data.partMetas.slice(0, 1);
+    data.parts = data.parts.slice(0, 1);
+    const problem = emptyProblem(data);
+    problem.requirements = [{ partIndex: 0, constraint: { onCommandLine: true, minBugLevel: 0, maxBugLevel: 0, compressed: true } }];
+    const result = optimizeBuild({ data, problem, modCardMode: "none" });
+    assert.ok(result);
+    assert.deepEqual(result.addedPartIndices, []);
+    assert.ok(isSolutionAcceptable(result.analysis, { type: "no_bugs" }));
+});
+
+test("required NC abilities are reported among added parts", () => {
+    const data = getGameData("bn6");
+    data.partMetas = data.partMetas.slice(0, 1);
+    data.parts = data.parts.slice(0, 1);
+    const result = optimizeBuild({ data, problem: emptyProblem(data), modCardMode: "none",
+        constraints: { requiredAbilities: ["superArmor"] } });
+    assert.ok(result);
+    assert.deepEqual(result.addedPartIndices, [0]);
+    assert.ok(result.stats.abilities.includes("superArmor"));
+});
+
+test("BugStop layouts beyond the old cutoff remain searchable", () => {
+    const data = getGameData("bn6");
+    const indices = [31, 1, 11].map(id => data.partMetas.findIndex(p => p.id === id));
+    data.partMetas = indices.map(i => data.partMetas[i]);
+    data.parts = indices.map(i => data.parts[i]);
+    const problem = emptyProblem(data);
+    problem.requirements = indices.map((_, partIndex) => ({
+        partIndex,
+        constraint: { onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity, compressed: true },
+    }));
+    const result = optimizeBuild({ data, problem, timeoutMs: 1000, modCardMode: "none" });
+    assert.ok(result);
+    assert.ok(result.analysis.bugStopActive);
+    assert.ok(isSolutionAcceptable(result.analysis, { type: "no_bugs" }));
+});
+
+test("policy pruning preserves explicit core placement constraints", () => {
+    const data = getGameData("bn6");
+    const problem = emptyProblem(data);
+    problem.requirements = [{ partIndex: 0,
+        constraint: { onCommandLine: false, minBugLevel: 1, maxBugLevel: 1, compressed: true } }];
+    assert.equal(optimizeBuild({ data, problem, modCardMode: "none" }), null);
+});

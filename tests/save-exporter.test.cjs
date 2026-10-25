@@ -480,3 +480,35 @@ test("BN3 buildGbaSave produces valid 64KB SRAM with checksum", () => {
     // Check BN3 HP memory count at 0x1a20
     assert.ok(sram[0x1a20] >= 40, "BN3 HP memory count at 0x1a20 must be set");
 });
+
+for (const edition of SAVE_EDITIONS.filter(e => e.gameId === "bn6" && e.variant === "gregar")) {
+    test(`${edition.id}: card-enhanced Attack 10 is preserved in cached save stats`, () => {
+        const data = getGameData("bn6");
+        const problem = emptyProblem(data);
+        problem.modCards = ["137-A036"];
+        problem.requirements = [{ partIndex: data.partMetas.findIndex(meta => meta.id === 38),
+            constraint: { onCommandLine: null, compressed: true, minBugLevel: 0, maxBugLevel: Infinity } }];
+        const solution = solve(data.parts, problem.requirements, makeGridSettings(data, problem), problem.spinnableColors).next().value;
+        assert.ok(solution);
+        const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+        const { canonical } = readBn6Save(buildGbaSave({ edition, templateBytes, problem, solution, data }));
+        assert.equal(canonical[0x47cc + 1], 9, "Attack 10 is stored zero-based, without truncation to five");
+        assert.equal(canonical[0x47cc + 2], 0);
+        assert.equal(canonical[0x47cc + 3], 0);
+    });
+}
+
+for (const edition of SAVE_EDITIONS.filter(e => e.gameId === "bn6" && e.variant === "gregar")) {
+    test(`${edition.id}: negative Custom card effects are preserved below the base five`, () => {
+        const data = getGameData("bn6");
+        const problem = emptyProblem(data);
+        problem.modCards = ["137-A050"];
+        problem.requirements = [{ partIndex: data.partMetas.findIndex(meta => meta.id === 13),
+            constraint: { onCommandLine: null, compressed: true, minBugLevel: 0, maxBugLevel: Infinity } }];
+        const solution = solve(data.parts, problem.requirements, makeGridSettings(data, problem), problem.spinnableColors).next().value;
+        assert.ok(solution);
+        const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+        const { canonical } = readBn6Save(buildGbaSave({ edition, templateBytes, problem, solution, data }));
+        assert.equal(canonical[0x47cc + 0x0a], 4);
+    });
+}
