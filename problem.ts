@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { Data } from "./game-data";
 import type { Requirement } from "./solver";
 
-export type BugTolerance = "forbidden" | "allowed_lv1" | "allowed_any" | "required";
+export type BugTolerance = "forbidden" | "allowed" | "required" | "allowed_lv1" | "allowed_any";
 export type BugPolicyType = "no_bugs" | "benign_allowed" | "custom";
 
 export interface BugPolicy {
@@ -20,6 +20,7 @@ export interface BuildConstraints {
     requiredSpecialMove?: string;
     requiredBLeft?: string;
     forbiddenBugs?: string[];
+    bugRules?: Record<string, BugTolerance>;
 }
 
 export interface Problem {
@@ -69,6 +70,7 @@ const SavedProblem = z.object({
         cs: z.string().optional(),
         bl: z.string().optional(),
         fb: z.array(z.string()).optional(),
+        br: z.record(z.string()).optional(),
     }).optional(),
 });
 
@@ -140,6 +142,7 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.cs ? { requiredSpecialMove: saved.bc.cs } : {}),
         ...(saved.bc.bl ? { requiredBLeft: saved.bc.bl } : {}),
         ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb } : {}),
+        ...(saved.bc.br ? { bugRules: saved.bc.br as Record<string, BugTolerance> } : {}),
     } : undefined;
 
     return {
@@ -186,13 +189,15 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.requiredAbilities?.length ||
             problem.constraints.requiredSpecialMove ||
             problem.constraints.requiredBLeft ||
-            problem.constraints.forbiddenBugs?.length
+            problem.constraints.forbiddenBugs?.length ||
+            (problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0)
         ) ? {
             bc: {
                 ...(problem.constraints.requiredAbilities?.length ? { a: problem.constraints.requiredAbilities } : {}),
                 ...(problem.constraints.requiredSpecialMove ? { cs: problem.constraints.requiredSpecialMove } : {}),
                 ...(problem.constraints.requiredBLeft ? { bl: problem.constraints.requiredBLeft } : {}),
                 ...(problem.constraints.forbiddenBugs?.length ? { fb: problem.constraints.forbiddenBugs } : {}),
+                ...(problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0 ? { br: problem.constraints.bugRules } : {}),
             },
         } : {}),
     };

@@ -324,3 +324,118 @@ test("problem hash serialization round-trips BuildConstraints", () => {
     assert.equal(restored.constraints.requiredBLeft, "AntiDamage");
     assert.deepEqual(restored.constraints.forbiddenBugs, ["movement", "custom"]);
 });
+
+test("isSolutionAcceptable strictly enforces tri-state bugRules (forbidden, allowed, required)", () => {
+    const cleanAnalysis = {
+        hasBugs: false,
+        bugStopActive: false,
+        activeBugs: [],
+        tooManyColors: false,
+    };
+    const busterBugAnalysis = {
+        hasBugs: true,
+        bugStopActive: false,
+        activeBugs: [{ bugType: "buster", level: 1, isModCardBug: true }],
+        tooManyColors: false,
+    };
+    const multiBugAnalysis = {
+        hasBugs: true,
+        bugStopActive: false,
+        activeBugs: [
+            { bugType: "buster", level: 1, isModCardBug: true },
+            { bugType: "movement", level: 1, isModCardBug: true },
+        ],
+        tooManyColors: false,
+    };
+
+    // 1. Default (all forbidden / empty rules)
+    assert.equal(isSolutionAcceptable(cleanAnalysis, { type: "custom" }, undefined, {}), true);
+    assert.equal(isSolutionAcceptable(busterBugAnalysis, { type: "custom" }, undefined, {}), false);
+
+    // 2. Allowed bug
+    const allowBuster = { buster: "allowed" };
+    assert.equal(isSolutionAcceptable(cleanAnalysis, { type: "custom" }, undefined, allowBuster), true);
+    assert.equal(isSolutionAcceptable(busterBugAnalysis, { type: "custom" }, undefined, allowBuster), true);
+    // movement is still forbidden by default
+    assert.equal(isSolutionAcceptable(multiBugAnalysis, { type: "custom" }, undefined, allowBuster), false);
+
+    // 3. Required bug
+    const requireBuster = { buster: "required" };
+    // cleanAnalysis doesn't have buster -> rejected
+    assert.equal(isSolutionAcceptable(cleanAnalysis, { type: "custom" }, undefined, requireBuster), false);
+    // busterBugAnalysis has buster -> accepted
+    assert.equal(isSolutionAcceptable(busterBugAnalysis, { type: "custom" }, undefined, requireBuster), true);
+    // multiBugAnalysis has buster BUT also forbidden movement -> rejected
+    assert.equal(isSolutionAcceptable(multiBugAnalysis, { type: "custom" }, undefined, requireBuster), false);
+
+    // 4. Required bug + Allowed bug
+    const reqBusterAllowMove = { buster: "required", movement: "allowed" };
+    assert.equal(isSolutionAcceptable(multiBugAnalysis, { type: "custom" }, undefined, reqBusterAllowMove), true);
+});
+
+test("optimizeBuild with bugRules: required buster bug selects build with Buster blank bug", () => {
+    const data = getGameData("bn6");
+    const problem = emptyProblem(data);
+
+    const result = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "auto",
+        constraints: {
+            bugRules: {
+                buster: "required",
+            },
+        },
+        timeoutMs: 3000,
+    });
+
+    assert.ok(result, "Expected to find an optimal solution satisfying required buster bug");
+    const effectiveBugs = result.analysis.activeBugs || [];
+    assert.ok(
+        effectiveBugs.some(b => b.bugType.toLowerCase() === "buster" && b.level >= 1),
+        "Result must trigger the required Buster blank bug"
+    );
+
+    // Verify rejecting when required bug is impossible to trigger (modCardMode: none and clean NC)
+    const impossible = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "none",
+        constraints: {
+            bugRules: {
+                buster: "required",
+            },
+        },
+        timeoutMs: 1000,
+    });
+    assert.equal(impossible, null, "Should return null when required bug cannot be triggered in modCardMode none");
+});
+
+test("problem hash serialization round-trips bugRules", () => {
+    const data = getGameData("bn6");
+    const { toHashString, fromHashString } = require("../problem.ts");
+
+    const prob = emptyProblem(data);
+    prob.constraints = {
+        requiredAbilities: ["superArmor"],
+        bugRules: {
+            buster: "required",
+            movement: "forbidden",
+            customHp: "allowed",
+        },
+    };
+
+    const hash = toHashString(prob, data);
+    const restored = fromHashString(hash, data);
+
+    assert.ok(restored);
+    assert.ok(restored.constraints);
+    assert.deepEqual(restored.constraints.requiredAbilities, ["superArmor"]);
+    assert.deepEqual(restored.constraints.bugRules, {
+        buster: "required",
+        movement: "forbidden",
+        customHp: "allowed",
+    });
+});

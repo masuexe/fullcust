@@ -811,6 +811,46 @@ export const translations = {
         ja: "厳禁バグ（実戦発生禁止）",
         zh: "严格禁止的 BUG（禁止发生）",
     },
+    bugRulesTitle: {
+        en: "Battle Bug Rules & Requirements",
+        ja: "実戦バグ仕様・要件",
+        zh: "实战 Bug 规则与要求",
+    },
+    bugRulesDesc: {
+        en: "Configure combat tolerance for each bug: Forbidden (0 bugs default), Allowed (tolerated for high stats), or Required (mandatory for bug gimmicks like Bug Death Thunder).",
+        ja: "各バグの実戦仕様を設定：禁止（デフォルト・実質バグ0）、容認（ステータス重視で許容）、または必須（バグデスサンダー等の固有戦術用）。",
+        zh: "为各项 BUG 独立设定对战规则：禁止（默认纯净 0 BUG）、容许（为高收益属性可承受）、或必须（用于Bug死亡雷/Bug蓄力等特定战术构筑）。",
+    },
+    bugRuleForbidden: {
+        en: "✕ Forbidden",
+        ja: "✕ 禁止",
+        zh: "✕ 禁止",
+    },
+    bugRuleAllowed: {
+        en: "○ Allowed",
+        ja: "○ 容認",
+        zh: "○ 容许",
+    },
+    bugRuleRequired: {
+        en: "★ Required",
+        ja: "★ 必須",
+        zh: "★ 必须",
+    },
+    resetAllBugsForbidden: {
+        en: "🛡️ Reset All to Forbidden (Pure 0 Bugs)",
+        ja: "🛡️ 全て禁止にリセット（完壁・バグ0）",
+        zh: "🛡️ 一键全禁止（纯净 0 BUG）",
+    },
+    bugRuleStatusPure: {
+        en: "🛡️ Pure Build (0 Bugs)",
+        ja: "🛡️ 完壁（バグ0）",
+        zh: "🛡️ 纯净构筑（0 BUG）",
+    },
+    bugRuleStatusCustom: {
+        en: "Custom Bug Rules",
+        ja: "カスタムバグ設定",
+        zh: "自定义 Bug 规则",
+    },
     anyOption: {
         en: "None / Any",
         ja: "指定なし",

@@ -4,9 +4,11 @@ import {
     analyzeSolutionBugs,
     computeBuildStats,
     findPartIndexByAbility,
+    getEffectiveInBattleBugs,
     getPartEffect,
     isBenignBug,
     isSolutionAcceptable,
+    normalizeBugType,
     BuildStats,
     SolutionBugAnalysis,
 } from "./effects";
@@ -16,7 +18,7 @@ import {
     computeDeckStats,
     ModCard,
 } from "./modcards";
-import { BugPolicy, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { placeAll, solve, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_buster" | "balanced";
@@ -52,16 +54,36 @@ export interface ModCardOptimizeOptions {
 }
 
 /**
- * Checks whether a mod card's inherent bugs comply with the user's BugPolicy and forbidden bugs.
+ * Checks whether a mod card's inherent bugs comply with the user's BugPolicy, forbidden bugs, and bug rules.
  */
-function isCardAcceptableUnderPolicy(card: ModCard, policy: BugPolicy, forbiddenBugs?: string[]): boolean {
+function isCardAcceptableUnderPolicy(
+    card: ModCard,
+    policy: BugPolicy,
+    forbiddenBugs?: string[],
+    bugRules?: Partial<Record<string, BugTolerance>>
+): boolean {
+    const activeRules = bugRules || policy.customRules;
+    if (activeRules && Object.keys(activeRules).length > 0) {
+        if (!card.bugs || card.bugs.length === 0) return true;
+        for (const b of card.bugs) {
+            const norm = normalizeBugType(b.type);
+            const rule = activeRules[norm] ?? activeRules[b.type] ?? "forbidden";
+            if (rule === "forbidden") return false;
+            if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
+        }
+        return true;
+    }
+
     if (!card.bugs || card.bugs.length === 0) return true;
     if (forbiddenBugs && forbiddenBugs.length > 0) {
-        if (card.bugs.some(b => forbiddenBugs.some(fb => fb.toLowerCase() === b.type.toLowerCase()))) {
+        if (card.bugs.some(b => {
+            const norm = normalizeBugType(b.type).toLowerCase();
+            return forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm);
+        })) {
             return false;
         }
         return card.bugs.every(b => {
-            const norm = b.type.toLowerCase();
+            const norm = normalizeBugType(b.type).toLowerCase();
             return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level ?? 1);
         });
     }
@@ -69,22 +91,13 @@ function isCardAcceptableUnderPolicy(card: ModCard, policy: BugPolicy, forbidden
     if (policy.type === "benign_allowed") {
         return card.bugs.every(b => isBenignBug(b.type, b.level ?? 1));
     }
-    if (policy.type === "custom") {
-        const rules = policy.customRules || {};
-        for (const b of card.bugs) {
-            const rule = rules[b.type] ?? "forbidden";
-            if (rule === "forbidden") return false;
-            if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
-        }
-        return true;
-    }
     return true;
 }
 
 /**
  * Evaluates the fitness score of a mod card based on the target.
  */
-function evaluateCardScore(card: ModCard, target: OptimizationTarget): number {
+function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBugs?: string[]): number {
     const hp = (card.stats.hp ?? 0) + (card.stats.hpPercent ? card.stats.hpPercent * 15 : 0);
     const attack = (card.stats.attack ?? 0) + (card.stats.attackMult && card.stats.attackMult > 1 ? 5 : 0);
     const charge = card.stats.charge ?? 0;
@@ -100,6 +113,15 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget): number {
         if (card.abilities.includes("airShoes")) abilityBonus += 30;
         if (card.abilities.includes("underShirt")) abilityBonus += 20;
         if (card.abilities.includes("statusGuard")) abilityBonus += 40;
+    }
+
+    if (requiredBugs && requiredBugs.length > 0 && card.bugs) {
+        for (const b of card.bugs) {
+            const norm = normalizeBugType(b.type).toLowerCase();
+            if (requiredBugs.some(rb => normalizeBugType(rb).toLowerCase() === norm)) {
+                abilityBonus += 300;
+            }
+        }
     }
 
     if (target === "max_hp") {
@@ -133,6 +155,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     if (!allCards || allCards.length === 0) return [...existingCardIds];
 
     const forbiddenBugs = constraints?.forbiddenBugs || [];
+    const bugRules = constraints?.bugRules || policy.customRules;
+    const requiredBugs = bugRules
+        ? Object.entries(bugRules).filter(([_, tol]) => tol === "required").map(([b]) => b)
+        : [];
     const locked = [...existingCardIds, ...lockedCardIds];
 
     // Lock required special move (Charge Shot) if specified
@@ -141,10 +167,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         return c?.bPwrAtk === constraints.requiredSpecialMove;
     })) {
         const matchingCards = allCards.filter(
-            c => c.bPwrAtk === constraints.requiredSpecialMove && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)
+            c => c.bPwrAtk === constraints.requiredSpecialMove && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
-            matchingCards.sort((a, b) => evaluateCardScore(b, target) - evaluateCardScore(a, target));
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
             locked.push(matchingCards[0].id);
         }
     }
@@ -155,10 +181,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         return c?.bLeft === constraints.requiredBLeft;
     })) {
         const matchingCards = allCards.filter(
-            c => c.bLeft === constraints.requiredBLeft && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)
+            c => c.bLeft === constraints.requiredBLeft && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
-            matchingCards.sort((a, b) => evaluateCardScore(b, target) - evaluateCardScore(a, target));
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
             locked.push(matchingCards[0].id);
         }
     }
@@ -167,7 +193,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
 
     const candidateCards = allCards.filter(c => {
         if (lockedSet.has(c.id)) return false;
-        if (!isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)) return false;
+        if (!isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)) return false;
         if (constraints?.requiredSpecialMove && c.bPwrAtk && c.bPwrAtk !== constraints.requiredSpecialMove) return false;
         if (constraints?.requiredBLeft && c.bLeft && c.bLeft !== constraints.requiredBLeft) return false;
         return true;
@@ -187,7 +213,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             if (usedSlots.has(slot)) continue;
             const slotCandidates = candidateCards
                 .filter(c => c.slot === slot)
-                .map(c => ({ card: c, score: evaluateCardScore(c, target) }))
+                .map(c => ({ card: c, score: evaluateCardScore(c, target, requiredBugs) }))
                 .filter(item => item.score > 0)
                 .sort((a, b) => b.score - a.score);
 
@@ -235,7 +261,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
 
     for (const card of candidateCards) {
         const weight = card.mb;
-        const baseVal = evaluateCardScore(card, target);
+        const baseVal = evaluateCardScore(card, target, requiredBugs);
         if (baseVal <= 0 || weight > remainingMb) continue;
 
         let cardMask = 0;
@@ -406,10 +432,29 @@ function doesBuildSatisfyConstraints(
         }
     }
 
-    if (constraints.forbiddenBugs && constraints.forbiddenBugs.length > 0) {
-        const effectiveBugs = analysis.activeBugs || [];
+    const effectiveBugs = getEffectiveInBattleBugs(analysis);
+
+    if (constraints.bugRules && Object.keys(constraints.bugRules).length > 0) {
         for (const b of effectiveBugs) {
-            if (constraints.forbiddenBugs.some(fb => fb.toLowerCase() === b.bugType.toLowerCase())) {
+            const norm = normalizeBugType(b.bugType);
+            const tolerance = constraints.bugRules[norm] ?? constraints.bugRules[b.bugType] ?? "forbidden";
+            if (tolerance === "forbidden") return false;
+            if (tolerance === "allowed_lv1" && b.level > 1) return false;
+        }
+
+        for (const [bugType, tolerance] of Object.entries(constraints.bugRules)) {
+            if (tolerance === "required") {
+                const norm = normalizeBugType(bugType).toLowerCase();
+                const found = effectiveBugs.some(
+                    b => normalizeBugType(b.bugType).toLowerCase() === norm && b.level >= 1
+                );
+                if (!found) return false;
+            }
+        }
+    } else if (constraints.forbiddenBugs && constraints.forbiddenBugs.length > 0) {
+        for (const b of effectiveBugs) {
+            const norm = normalizeBugType(b.bugType).toLowerCase();
+            if (constraints.forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm)) {
                 return false;
             }
         }
@@ -433,6 +478,7 @@ function runNaviCustBeamSearch(
     baseHp: number,
     allCandidates: number[],
     forbiddenBugs: string[],
+    bugRules: Partial<Record<string, BugTolerance>> | undefined,
     startTime: number,
     timeoutMs: number,
     beamWidth: number
@@ -446,7 +492,7 @@ function runNaviCustBeamSearch(
         if (++initSteps > 50) break;
         const occ = placeAll(data.parts, initialReqs, value, gridSettings);
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, initialReqs, occ, gridSettings, "en", modCards);
-        if (isSolutionAcceptable(analysis, policy, forbiddenBugs)) {
+        if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
             rootSolution = value;
             rootAnalysis = analysis;
             break;
@@ -508,7 +554,7 @@ function runNaviCustBeamSearch(
 
                 let onCommandLineConstraint: boolean | null = null;
                 let maxBug = Infinity;
-                if ((policy.type === "no_bugs" || forbiddenBugs.length > 0) && !hasBugStop) {
+                if ((policy.type === "no_bugs" || forbiddenBugs.length > 0 || (bugRules && Object.keys(bugRules).length > 0)) && !hasBugStop) {
                     onCommandLineConstraint = candMeta.isSolid;
                     maxBug = 0;
                 }
@@ -533,7 +579,7 @@ function runNaviCustBeamSearch(
                     if (++candSteps > 25) break;
                     const occ = placeAll(data.parts, testReqs, value, gridSettings);
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, testReqs, occ, gridSettings, "en", modCards);
-                    if (isSolutionAcceptable(analysis, policy, forbiddenBugs)) {
+                    if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
                         foundSolution = value;
                         foundAnalysis = analysis;
                         break;
@@ -711,6 +757,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             baseHp,
             allCandidates,
             forbiddenBugs,
+            constraints?.bugRules,
             startTime,
             timeoutMs,
             beamWidth

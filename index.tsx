@@ -26,6 +26,7 @@ import {
     toHashString,
     BugPolicy,
     BugPolicyType,
+    BugTolerance,
     BuildConstraints,
 } from "./problem";
 import { optimizeBuild, OptimizationTarget, ModCardMode } from "./optimizer";
@@ -41,6 +42,7 @@ import {
     SPECIAL_CS_OPTIONS,
     BLEFT_OPTIONS,
     FORBIDDEN_BUG_OPTIONS,
+    BUG_SPEC_OPTIONS,
 } from "./effects";
 import {
     BN6_MOD_CARDS,
@@ -934,7 +936,6 @@ function AutoOptimizerPanel({
     const [modCardMode, setModCardMode] = React.useState<ModCardMode>(
         userAlreadyHasCards ? "keep" : "none"
     );
-    const [policyType, setPolicyType] = React.useState<BugPolicyType>(problem.bugPolicy?.type ?? "no_bugs");
     const [target, setTarget] = React.useState<OptimizationTarget>("max_hp");
     const [reqAbilities, setReqAbilities] = React.useState<string[]>(
         problem.constraints?.requiredAbilities ?? []
@@ -945,14 +946,16 @@ function AutoOptimizerPanel({
     const [reqBLeft, setReqBLeft] = React.useState<string>(
         problem.constraints?.requiredBLeft ?? ""
     );
-    const [forbiddenBugs, setForbiddenBugs] = React.useState<string[]>(
-        problem.constraints?.forbiddenBugs ?? []
-    );
+    const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
+        return problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {};
+    });
+
+    const numConfiguredBugs = Object.values(bugRules).filter(v => v !== "forbidden").length;
     const activeConstraintCount =
         reqAbilities.length +
         (reqSpecialMove ? 1 : 0) +
         (reqBLeft ? 1 : 0) +
-        forbiddenBugs.length;
+        numConfiguredBugs;
     const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
     const [isOptimizing, setIsOptimizing] = React.useState(false);
     const [statusMessage, setStatusMessage] = React.useState<{
@@ -968,11 +971,24 @@ function AutoOptimizerPanel({
         );
     };
 
-    const toggleForbiddenBug = (bugId: string) => {
-        setForbiddenBugs(prev =>
-            prev.includes(bugId) ? prev.filter(x => x !== bugId) : [...prev, bugId]
-        );
+    const handleSetBugTolerance = (bugId: string, tol: BugTolerance) => {
+        setBugRules(prev => {
+            const next = { ...prev };
+            if (tol === "forbidden") {
+                delete next[bugId];
+            } else {
+                next[bugId] = tol;
+            }
+            return next;
+        });
     };
+
+    const handleResetAllBugs = () => {
+        setBugRules({});
+    };
+
+    const numRequiredBugs = Object.values(bugRules).filter(v => v === "required").length;
+    const numAllowedBugs = Object.values(bugRules).filter(v => v === "allowed" || v === "allowed_any" || v === "allowed_lv1").length;
 
     const handleOptimize = () => {
         setIsOptimizing(true);
@@ -980,16 +996,16 @@ function AutoOptimizerPanel({
 
         setTimeout(() => {
             try {
-                const policy: BugPolicy = {
-                    type: policyType,
-                    customRules: problem.bugPolicy?.customRules,
-                };
-
                 const constraints: BuildConstraints = {
                     ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
                     ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
                     ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
-                    ...(forbiddenBugs.length > 0 ? { forbiddenBugs } : {}),
+                    ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
+                };
+
+                const policy: BugPolicy = {
+                    type: Object.keys(bugRules).length > 0 ? "custom" : "no_bugs",
+                    customRules: bugRules,
                 };
 
                 const result = optimizeBuild({
@@ -1156,49 +1172,7 @@ function AutoOptimizerPanel({
                             </div>
                         )}
 
-                        {/* 3. Bug Policy Selector (Compact) */}
-                        <div className="mb-2">
-                            <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
-                            <div className="d-flex flex-column gap-1">
-                                <div className="form-check mb-0">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="optBugPolicy"
-                                        id="policyNoBugs"
-                                        checked={policyType === "no_bugs"}
-                                        onChange={() => {
-                                            setPolicyType("no_bugs");
-                                            onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
-                                        }}
-                                    />
-                                    <label className="form-check-label small" htmlFor="policyNoBugs">
-                                        <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
-                                    </label>
-                                </div>
-                                <div className="form-check mb-0">
-                                    <input
-                                        className="form-check-input"
-                                        type="radio"
-                                        name="optBugPolicy"
-                                        id="policyBenign"
-                                        checked={policyType === "benign_allowed"}
-                                        onChange={() => {
-                                            setPolicyType("benign_allowed");
-                                            onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
-                                        }}
-                                    />
-                                    <label className="form-check-label small" htmlFor="policyBenign">
-                                        <span className="fw-semibold">{t("policyBenign", lang)}</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div className="text-muted mt-1" style={{ fontSize: "0.74rem" }}>
-                                {policyType === "no_bugs" ? t("policyNoBugsDesc", lang) : t("policyBenignDesc", lang)}
-                            </div>
-                        </div>
-
-                        {/* 4. Declarative Build Constraints (Collapsible Card with Active Badge) */}
+                        {/* 3. Declarative Build Constraints (Collapsible Card with Active Badge) */}
                         <div className="card mb-2 border-secondary-subtle bg-body-tertiary">
                             <div
                                 className="card-header py-1 px-2 d-flex align-items-center justify-content-between"
@@ -1291,26 +1265,84 @@ function AutoOptimizerPanel({
                                         </div>
                                     )}
 
-                                    {/* Forbidden Bugs */}
-                                    <div className="mb-1">
-                                        <label className="form-label small fw-semibold mb-1 d-block text-danger">
-                                            🚫 {t("forbiddenBugsTitle", lang)}:
-                                        </label>
-                                        <div className="d-flex flex-wrap gap-2">
-                                            {FORBIDDEN_BUG_OPTIONS.map(opt => {
-                                                const active = forbiddenBugs.includes(opt.id);
+                                    {/* Unified Bug Rules & Requirements */}
+                                    <div className="mb-2 pt-2 border-top border-secondary-subtle">
+                                        <div className="d-flex align-items-center justify-content-between mb-1">
+                                            <div className="d-flex align-items-center gap-1">
+                                                <span className="small fw-semibold">{t("bugRulesTitle", lang)}</span>
+                                                {numRequiredBugs > 0 ? (
+                                                    <span className="badge bg-primary-subtle text-primary border border-primary-subtle" style={{ fontSize: "0.72rem" }}>
+                                                        ★ {numRequiredBugs} {t("bugRuleRequired", lang).replace("★ ", "")}
+                                                    </span>
+                                                ) : numAllowedBugs > 0 ? (
+                                                    <span className="badge bg-warning-subtle text-warning border border-warning-subtle" style={{ fontSize: "0.72rem" }}>
+                                                        ○ {numAllowedBugs} {t("bugRuleAllowed", lang).replace("○ ", "")}
+                                                    </span>
+                                                ) : (
+                                                    <span className="badge bg-success-subtle text-success border border-success-subtle" style={{ fontSize: "0.72rem" }}>
+                                                        {t("bugRuleStatusPure", lang)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {Object.keys(bugRules).length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-link p-0 text-decoration-none text-muted"
+                                                    style={{ fontSize: "0.72rem" }}
+                                                    onClick={handleResetAllBugs}
+                                                >
+                                                    {t("resetAllBugsForbidden", lang)}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="text-muted small mb-2" style={{ fontSize: "0.74rem" }}>
+                                            {t("bugRulesDesc", lang)}
+                                        </div>
+
+                                        <div className="d-flex flex-column gap-1">
+                                            {BUG_SPEC_OPTIONS.map(opt => {
+                                                const currentTol: BugTolerance = bugRules[opt.id] ?? "forbidden";
                                                 return (
-                                                    <div key={opt.id} className="form-check form-check-inline me-1 mb-1">
-                                                        <input
-                                                            className="form-check-input"
-                                                            type="checkbox"
-                                                            id={`fbug-${opt.id}`}
-                                                            checked={active}
-                                                            onChange={() => toggleForbiddenBug(opt.id)}
-                                                        />
-                                                        <label className="form-check-label small" htmlFor={`fbug-${opt.id}`} style={{ fontSize: "0.8rem" }}>
-                                                            {opt.name[lang] || opt.name.en}
-                                                        </label>
+                                                    <div
+                                                        key={opt.id}
+                                                        className="d-flex align-items-center justify-content-between py-1 px-1 rounded bg-body"
+                                                        style={{ fontSize: "0.78rem" }}
+                                                    >
+                                                        <div className="d-flex flex-column" style={{ maxWidth: "58%" }}>
+                                                            <span className="fw-semibold text-truncate">{opt.name[lang] || opt.name.en}</span>
+                                                            <span className="text-muted text-truncate" style={{ fontSize: "0.70rem" }}>
+                                                                {opt.desc[lang] || opt.desc.en}
+                                                            </span>
+                                                        </div>
+                                                        <div className="btn-group btn-group-sm" role="group">
+                                                            <button
+                                                                type="button"
+                                                                className={`btn py-0 px-2 ${currentTol === "forbidden" ? "btn-danger text-light" : "btn-outline-secondary"}`}
+                                                                style={{ fontSize: "0.72rem" }}
+                                                                onClick={() => handleSetBugTolerance(opt.id, "forbidden")}
+                                                                title={t("bugRuleForbidden", lang)}
+                                                            >
+                                                                {t("bugRuleForbidden", lang)}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`btn py-0 px-2 ${currentTol === "allowed" || currentTol === "allowed_any" ? "btn-warning text-dark" : "btn-outline-secondary"}`}
+                                                                style={{ fontSize: "0.72rem" }}
+                                                                onClick={() => handleSetBugTolerance(opt.id, "allowed")}
+                                                                title={t("bugRuleAllowed", lang)}
+                                                            >
+                                                                {t("bugRuleAllowed", lang)}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`btn py-0 px-2 ${currentTol === "required" ? "btn-primary text-light" : "btn-outline-secondary"}`}
+                                                                style={{ fontSize: "0.72rem" }}
+                                                                onClick={() => handleSetBugTolerance(opt.id, "required")}
+                                                                title={t("bugRuleRequired", lang)}
+                                                            >
+                                                                {t("bugRuleRequired", lang)}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 );
                                             })}

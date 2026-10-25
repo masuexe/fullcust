@@ -1,6 +1,6 @@
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug } from "./modcards";
-import { BugPolicy, DEFAULT_BUG_POLICY } from "./problem";
+import { BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -477,13 +477,69 @@ export const BLEFT_OPTIONS: ConstraintOption[] = [
     { id: "RiskyHoney", name: { en: "B+Left: RiskyHoney (HoneyBomber)", ja: "B+左: リスキーハニー（ハニーボマー）", zh: "B+左: 危险蜂蜜 (RiskyHoney / 蜜蜂)" } },
 ];
 
-export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = [
-    { id: "movement", name: { en: "Movement Warp Bug", ja: "移動バグ", zh: "边界瞬移 BUG" } },
-    { id: "custom", name: { en: "Custom Screen Bug (-1 chip/turn)", ja: "カスタムバグ", zh: "改装视窗 BUG (选卡减少)" } },
-    { id: "battleHp", name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP 流失 BUG" } },
-    { id: "buster", name: { en: "Buster Blank Bug", ja: "空打ちバグ", zh: "普通射击空包弹 BUG" } },
-    { id: "customHp", name: { en: "Custom Screen HP Drain", ja: "カスタム画面HP減少", zh: "选卡菜单 HP 流失 BUG" } },
+export interface BugSpecOption {
+    id: string;
+    name: { en: string; ja: string; zh: string };
+    desc: { en: string; ja: string; zh: string };
+}
+
+export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
+    {
+        id: "movement",
+        name: { en: "Movement Warp", ja: "移動バグ", zh: "边界瞬移 BUG" },
+        desc: { en: "Warps to screen edge on move", ja: "移動時に最端マスへワープ", zh: "移动时直接瞬移至边缘格子" },
+    },
+    {
+        id: "custom",
+        name: { en: "Custom Screen -1", ja: "カスタム減少", zh: "改装视窗减少 BUG" },
+        desc: { en: "Reduces initial chip selection by 1", ja: "カスタム画面の選択枠-1", zh: "选芯片视窗每回合少选 1 枚" },
+    },
+    {
+        id: "battleHp",
+        name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP 流失 BUG" },
+        desc: { en: "Steadily loses HP during combat", ja: "戦闘中にHPが継続減少", zh: "战斗中自身 HP 持续流失" },
+    },
+    {
+        id: "buster",
+        name: { en: "Buster Blank", ja: "空打ちバグ", zh: "普通射击空包弹 BUG" },
+        desc: { en: "Buster shots may misfire or blank", ja: "射撃が不発またはチャージ暴発", zh: "普通射击有几率卡壳打出空包弹" },
+    },
+    {
+        id: "customHp",
+        name: { en: "Custom Menu HP Drain", ja: "カスタム画面HP減少", zh: "选卡菜单 HP 流失 BUG" },
+        desc: { en: "Loses HP while selecting chips", ja: "カスタム画面を開いている間HP減少", zh: "在芯片选择菜单中停留时持续扣血" },
+    },
+    {
+        id: "panel",
+        name: { en: "Panel Break / Poison", ja: "パネル変化バグ", zh: "面板变化 / 破裂 BUG" },
+        desc: { en: "Cracks or poisons stepped/initial panels", ja: "歩行時や開始時にパネルがヒビ・毒沼化", zh: "走过地板开裂或开局场地变为毒沼" },
+    },
+    {
+        id: "status",
+        name: { en: "Status Abnormality", ja: "状態異常バグ", zh: "战斗状态异常 BUG" },
+        desc: { en: "Starts combat confused, blind, or flashing", ja: "戦闘開始時に混乱・盲目等の異常", zh: "开局处于混乱、失明或闪烁等异常" },
+    },
+    {
+        id: "emotion",
+        name: { en: "Emotion / Humor Bug", ja: "感情・ユーモアバグ", zh: "情绪 / 幽默感 BUG" },
+        desc: { en: "Uncontrolled emotional shifts or jokes", ja: "感情が不安/怒り暴走、または被弾時ギャグ", zh: "情绪极度动摇/愤怒，或受击时讲冷笑话" },
+    },
 ];
+
+export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
+
+export function normalizeBugType(type: string): string {
+    const t = type.toLowerCase();
+    if (t === "involuntarymove" || t === "player" || t === "movement") return "movement";
+    if (t === "damagebattlehp" || t === "battlehp") return "battleHp";
+    if (t === "customdamage" || t === "customhp") return "customHp";
+    if (t === "damageconfusion" || t === "status" || t === "colorstatus") return "status";
+    if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
+    if (t === "customscreenminus" || t === "custom") return "custom";
+    if (t === "buster") return "buster";
+    if (t === "emotion") return "emotion";
+    return type;
+}
 
 export function findPartIndexByAbility(data: { gameId: string; partMetas: { id: number; name: string }[] }, ability: string): number {
     const effects = GAME_EFFECTS[data.gameId];
@@ -2006,12 +2062,13 @@ export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis): ActiveB
 }
 
 /**
- * Evaluates whether a solution's bug analysis satisfies the given BugPolicy.
+ * Evaluates whether a solution's bug analysis satisfies the given BugPolicy, forbidden bugs, or bug rules.
  */
 export function isSolutionAcceptable(
     analysis: SolutionBugAnalysis,
     policy: BugPolicy = DEFAULT_BUG_POLICY,
-    forbiddenBugs?: string[]
+    forbiddenBugs?: string[],
+    bugRules?: Partial<Record<string, BugTolerance>>
 ): boolean {
     // 1. Color limit check: >4 colors is always an illegal build on GBA
     if (analysis.tooManyColors) {
@@ -2021,16 +2078,44 @@ export function isSolutionAcceptable(
     // 2. Get the bugs that actually affect MegaMan in battle (after BugStop absorption)
     const effectiveBugs = getEffectiveInBattleBugs(analysis);
 
-    // 3. If explicit forbiddenBugs are specified, strictly reject if any is present
+    // 3. If explicit bugRules are specified (or present in policy.customRules), apply tri-state logic
+    const activeRules: Partial<Record<string, BugTolerance>> | undefined =
+        bugRules || policy.customRules;
+
+    if (activeRules !== undefined || policy.type === "custom") {
+        const rules = activeRules || {};
+        // Every bug in effectiveBugs must not be forbidden
+        for (const bug of effectiveBugs) {
+            const norm = normalizeBugType(bug.bugType);
+            const rule = rules[norm] ?? rules[bug.bugType] ?? "forbidden";
+            if (rule === "forbidden") return false;
+            if (rule === "allowed_lv1" && bug.level > 1) return false;
+        }
+
+        // Every required bug must be present in effectiveBugs with level >= 1
+        for (const [bugType, tolerance] of Object.entries(rules)) {
+            if (tolerance === "required") {
+                const norm = normalizeBugType(bugType).toLowerCase();
+                const found = effectiveBugs.some(
+                    b => normalizeBugType(b.bugType).toLowerCase() === norm && b.level >= 1
+                );
+                if (!found) return false;
+            }
+        }
+        return true;
+    }
+
+    // 4. If explicit forbiddenBugs are specified (legacy constraint format)
     if (forbiddenBugs && forbiddenBugs.length > 0) {
-        const hasForbidden = effectiveBugs.some(b =>
-            forbiddenBugs.some(fb => fb.toLowerCase() === b.bugType.toLowerCase())
-        );
+        const hasForbidden = effectiveBugs.some(b => {
+            const norm = normalizeBugType(b.bugType).toLowerCase();
+            return forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm);
+        });
         if (hasForbidden) return false;
 
         // When explicit forbidden bugs are provided, other bugs that are benign or standard buster/emotion are tolerated
         return effectiveBugs.every(b => {
-            const norm = b.bugType.toLowerCase();
+            const norm = normalizeBugType(b.bugType).toLowerCase();
             return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level);
         });
     }
@@ -2043,24 +2128,6 @@ export function isSolutionAcceptable(
     if (policy.type === "benign_allowed") {
         // Every effective bug must be benign
         return effectiveBugs.every(b => isBenignBug(b.bugType, b.level));
-    }
-
-    if (policy.type === "custom") {
-        const rules = policy.customRules || {};
-        for (const bug of effectiveBugs) {
-            const rule = rules[bug.bugType] ?? "forbidden";
-            if (rule === "forbidden") return false;
-            if (rule === "allowed_lv1" && bug.level > 1) return false;
-        }
-
-        // Check required bugs
-        for (const [bugType, tolerance] of Object.entries(rules)) {
-            if (tolerance === "required") {
-                const found = effectiveBugs.some(b => b.bugType.toLowerCase() === bugType.toLowerCase() && b.level >= 1);
-                if (!found) return false;
-            }
-        }
-        return true;
     }
 
     return true;
