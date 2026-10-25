@@ -23,7 +23,7 @@ import {
 import { BODY_ELEMENTS, BUSTER_STATS, getBusterMinimums, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { meetsPlacementBugConstraints, placeAll, solve, GridSettings, Requirement, Solution } from "./solver";
 
-export type OptimizationTarget = "max_hp" | "max_buster" | "balanced";
+export type OptimizationTarget = "max_hp" | "max_attack";
 export type ModCardMode = "none" | "auto" | "keep";
 
 export interface OptimizeOptions {
@@ -160,11 +160,6 @@ function isCardAcceptableUnderPolicy(
 function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBugs?: string[]): number {
     const hp = (card.stats.hp ?? 0) + (card.stats.hpPercent ? card.stats.hpPercent * 15 : 0);
     const attack = (card.stats.attack ?? 0) + (card.stats.attackMult && card.stats.attackMult > 1 ? 5 : 0);
-    const charge = card.stats.charge ?? 0;
-    const rapid = card.stats.rapid ?? 0;
-    const custom = card.stats.custom ?? 0;
-    const mega = card.stats.megaFolder ?? 0;
-    const giga = card.stats.gigaFolder ?? 0;
 
     let abilityBonus = 0;
     if (card.abilities) {
@@ -184,13 +179,7 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
         }
     }
 
-    if (target === "max_hp") {
-        return hp * 1.0 + (attack * 10) + (custom * 20) + abilityBonus;
-    }
-    if (target === "max_buster") {
-        return (attack * 120) + (charge * 60) + (rapid * 40) + (hp * 0.2) + abilityBonus;
-    }
-    return (hp * 0.6) + (custom * 100) + (mega * 80) + (giga * 120) + (attack * 50) + abilityBonus;
+    return (target === "max_attack" ? attack * 120 + hp * 0.2 : hp + attack * 10) + abilityBonus;
 }
 
 export function matchSpecialMove(cardBPwrAtk: string | undefined, req: string): boolean {
@@ -662,20 +651,7 @@ function evaluatePartScore(gameId: string, partMeta: { id: number; name: string 
 
     const hp = effect.hp ?? 0;
     const attack = effect.attackMax ? 5 : (effect.attack ?? 0);
-    const charge = effect.chargeMax ? 5 : (effect.charge ?? 0);
-    const rapid = effect.rapidMax ? 5 : (effect.rapid ?? 0);
-    const custom = effect.numberOpen ? 10 : (effect.custom ?? 0);
-    const mega = effect.megaFolder ?? 0;
-    const giga = effect.gigaFolder ?? 0;
-
-    if (target === "max_hp") {
-        return hp * 1.0 + (attack * 10) + (custom * 20);
-    }
-    if (target === "max_buster") {
-        return (attack * 120) + (charge * 60) + (rapid * 40) + (hp * 0.2);
-    }
-    // balanced
-    return (hp * 0.6) + (custom * 100) + (mega * 80) + (giga * 120) + (attack * 50);
+    return target === "max_attack" ? attack * 120 + hp * 0.2 : hp + attack * 10;
 }
 
 /**
@@ -709,17 +685,11 @@ export function getCandidateFillerParts(data: Data, target: OptimizationTarget =
     return scored.map(s => s.partIndex);
 }
 
-/**
- * Evaluates the total fitness score of a build state.
- */
-export function evaluateBuildScore(stats: BuildStats, target: OptimizationTarget): number {
-    if (target === "max_hp") {
-        return stats.finalHp * 1.0 + stats.attack * 20 + stats.custom * 30;
-    }
-    if (target === "max_buster") {
-        return (stats.attack * 200) + (stats.charge * 100) + (stats.rapid * 80) + stats.finalHp * 0.2;
-    }
-    return (stats.finalHp * 0.6) + (stats.custom * 120) + (stats.megaFolder * 80) + (stats.gigaFolder * 150) + (stats.attack * 60);
+/** Positive means a is better. Hard constraints are checked before ranking builds. */
+export function compareBuildStats(a: BuildStats, b: BuildStats, target: OptimizationTarget): number {
+    return target === "max_attack"
+        ? a.attack - b.attack || a.finalHp - b.finalHp
+        : a.finalHp - b.finalHp || a.attack - b.attack;
 }
 
 interface SearchNode {
@@ -727,7 +697,6 @@ interface SearchNode {
     solution: Solution;
     stats: BuildStats;
     analysis: SolutionBugAnalysis;
-    score: number;
     addedPartIndices: number[];
 }
 
@@ -889,14 +858,12 @@ function runNaviCustBeamSearch(
 
     const rootPartIds = initialReqs.map(r => data.partMetas[r.partIndex].id);
     const rootStats = computeBuildStats(data.gameId, rootPartIds, modCards, baseHp);
-    const rootScore = evaluateBuildScore(rootStats, target);
 
     const rootNode: SearchNode = {
         requirements: initialReqs,
         solution: root.solution,
         stats: rootStats,
         analysis: root.analysis,
-        score: rootScore,
         addedPartIndices: [],
     };
 
@@ -952,20 +919,18 @@ function runNaviCustBeamSearch(
                 if (foundSolution && foundAnalysis) {
                     const testPartIds = testReqs.map(r => data.partMetas[r.partIndex].id);
                     const testStats = computeBuildStats(data.gameId, testPartIds, modCards, baseHp);
-                    const testScore = evaluateBuildScore(testStats, target);
 
                     const childNode: SearchNode = {
                         requirements: testReqs,
                         solution: foundSolution,
                         stats: testStats,
                         analysis: foundAnalysis,
-                        score: testScore,
                         addedPartIndices: [...node.addedPartIndices, candIdx],
                     };
 
                     nextNodes.push(childNode);
 
-                    if (testScore > bestNode.score) {
+                    if (compareBuildStats(testStats, bestNode.stats, target) > 0) {
                         bestNode = childNode;
                     }
                 }
@@ -973,7 +938,7 @@ function runNaviCustBeamSearch(
         }
 
         if (nextNodes.length === 0) break;
-        nextNodes.sort((a, b) => b.score - a.score);
+        nextNodes.sort((a, b) => compareBuildStats(b.stats, a.stats, target));
         beam = nextNodes.slice(0, beamWidth);
     }
 
@@ -1123,7 +1088,6 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
     }
 
     let bestResult: OptimizeResult | null = null;
-    let bestScore = -Infinity;
 
     for (const [branchIndex, branch] of branches.entries()) {
         if (Date.now() - startTime >= timeoutMs) break;
@@ -1156,8 +1120,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             continue;
         }
 
-        if (node.score > bestScore) {
-            bestScore = node.score;
+        if (!bestResult || compareBuildStats(node.stats, bestResult.stats, target) > 0) {
             bestResult = {
                 problem: {
                     ...problem,

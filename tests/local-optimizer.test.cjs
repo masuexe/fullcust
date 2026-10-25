@@ -6,7 +6,7 @@ const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
 const { BUG_SPEC_OPTIONS, computeBuildStats, isSolutionAcceptable } = require("../effects.ts");
 const { computeDeckStats } = require("../modcards.ts");
-const { doesBuildSatisfyConstraints, evaluateBuildScore } = require("../optimizer.ts");
+const { doesBuildSatisfyConstraints, compareBuildStats } = require("../optimizer.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const { improveBuildLocally, neighboringDecks } = require("../local-optimizer.ts");
 
@@ -39,14 +39,13 @@ test("local card iterations use remaining MB while preserving the full DrillArm 
     const original = JSON.stringify([options.problem, first]);
     const deadline = Date.now() + 800;
     const updates = [];
-    let score = evaluateBuildScore(first.stats, options.target);
+    let previous = first.stats;
     const best = improveBuildLocally({ ...options, initialBest: first,
         shouldStop: () => Date.now() >= deadline,
         onImprove: result => {
             assertValid(options, result);
-            const next = evaluateBuildScore(result.stats, options.target);
-            assert.ok(next > score, "Every published iteration must improve actual build value");
-            score = next;
+            assert.ok(compareBuildStats(result.stats, previous, options.target) > 0, "Every published iteration must improve actual build value");
+            previous = result.stats;
             updates.push(result);
         } });
     assert.ok(updates.length > 0);

@@ -176,3 +176,31 @@ test("the worker incrementally fills NC to meet a minimum Custom count", async (
     assert.equal(events.at(-1).type, "done");
     assert.equal(events.at(-1).best.stats.custom, 7);
 });
+
+test("worker updates keep the selected priority order through every search phase", async () => {
+    const { BUG_SPEC_OPTIONS } = require("../effects.ts");
+    const real = parseGameData(require("../data/bn6.json"), games.find(g => g.id === "bn6"));
+    const data = tinyData();
+    const indices = [38, 46].map(id => real.partMetas.findIndex(part => part.id === id));
+    data.partMetas = indices.map(i => real.partMetas[i]);
+    data.parts = indices.map(i => ({ ...real.parts[i], compressedMask: from([true, false], 1, 2),
+        uncompressedMask: from([true, false], 1, 2) }));
+    for (const [target, minimum, expected] of [["max_hp", undefined, [2000, 1]],
+        ["max_attack", undefined, [1500, 5]], ["max_hp", 5, [1500, 5]]]) {
+        const events = await run({ data, problem: emptyProblem(data), modCardMode: "none", target,
+            constraints: { bugRules: Object.fromEntries(BUG_SPEC_OPTIONS.map(bug => [bug.id, "allowed_any"])),
+                minBusterStats: minimum ? { attack: minimum } : undefined } });
+        const stats = events.filter(event => event.best).map(event => event.best.stats);
+        assert.ok(stats.length > 0);
+        for (let i = 0; i < stats.length; i++) {
+            if (minimum) assert.ok(stats[i].attack >= minimum);
+            if (i === 0) continue;
+            const primary = target === "max_hp" ? "finalHp" : "attack";
+            const secondary = target === "max_hp" ? "attack" : "finalHp";
+            assert.ok(stats[i][primary] > stats[i - 1][primary] ||
+                (stats[i][primary] === stats[i - 1][primary] && stats[i][secondary] >= stats[i - 1][secondary]));
+        }
+        assert.deepEqual([stats.at(-1).finalHp, stats.at(-1).attack], expected);
+        assert.equal(events.at(-1).completed, true);
+    }
+});

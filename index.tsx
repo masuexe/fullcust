@@ -1234,19 +1234,13 @@ function AutoOptimizerPanel({
                                 </button>
                                 <button
                                     type="button"
-                                    className={`btn ${target === "max_buster" ? "btn-primary" : "btn-outline-secondary"}`}
-                                    onClick={() => setTarget("max_buster")}
+                                    className={`btn ${target === "max_attack" ? "btn-primary" : "btn-outline-secondary"}`}
+                                    onClick={() => setTarget("max_attack")}
                                 >
-                                    {t("targetMaxBuster", lang)}
-                                </button>
-                                <button
-                                    type="button"
-                                    className={`btn ${target === "balanced" ? "btn-primary" : "btn-outline-secondary"}`}
-                                    onClick={() => setTarget("balanced")}
-                                >
-                                    {t("targetBalanced", lang)}
+                                    {t("targetMaxAttack", lang)}
                                 </button>
                             </div>
+                            <div className="form-text small">{t("optTargetDesc", lang)}</div>
                         </div>
 
                         {/* 2. Mod Card Format Selector (Compact) */}

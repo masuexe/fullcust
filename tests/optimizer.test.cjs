@@ -12,6 +12,7 @@ const {
     isBenignBug,
 } = require("../effects.ts");
 const {
+    compareBuildStats,
     getCandidateFillerParts,
     optimizeBuild,
     optimizeModCards,
@@ -542,7 +543,7 @@ test("Extended build constraints: BButton, Additions, Body, Gauge and URL round-
     // 4. Optimize with requiredBButton: none (pure standard buster)
     const cardsNoBButton = optimizeModCards({
         gameId: "bn6",
-        target: "max_buster",
+        target: "max_attack",
         policy: { type: "custom" },
         constraints: { requiredBButton: "none" },
     });
@@ -790,4 +791,23 @@ test("policy pruning preserves explicit core placement constraints", () => {
     problem.requirements = [{ partIndex: 0,
         constraint: { onCommandLine: false, minBugLevel: 1, maxBugLevel: 1, compressed: true } }];
     assert.equal(optimizeBuild({ data, problem, modCardMode: "none" }), null);
+});
+
+
+test("HP priority never trades HP for Attack or unrelated bonuses", () => {
+    const hp = { finalHp: 1001, attack: 1, rapid: 1, charge: 1, custom: 5 };
+    const attack = { finalHp: 1000, attack: 10, rapid: 5, charge: 5, custom: 10 };
+    assert.ok(compareBuildStats(hp, attack, "max_hp") > 0);
+    assert.ok(compareBuildStats(attack, hp, "max_hp") < 0);
+    assert.ok(compareBuildStats({ ...hp, attack: 2 }, hp, "max_hp") > 0);
+    assert.equal(compareBuildStats({ ...hp, rapid: 5, charge: 5, custom: 10 }, hp, "max_hp"), 0);
+});
+
+test("Attack priority never trades Attack for HP, then maximizes HP at equal Attack", () => {
+    const attack = { finalHp: 1, attack: 10 };
+    const hp = { finalHp: 1000000000, attack: 9 };
+    assert.ok(compareBuildStats(attack, hp, "max_attack") > 0);
+    assert.ok(compareBuildStats(hp, attack, "max_attack") < 0);
+    assert.ok(compareBuildStats({ ...attack, finalHp: 2 }, attack, "max_attack") > 0);
+    assert.equal(compareBuildStats({ ...attack, rapid: 5, charge: 5, custom: 10 }, attack, "max_attack"), 0);
 });

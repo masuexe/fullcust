@@ -4,7 +4,7 @@ import { computeDeckStats, getModCards, ModCard } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll, Requirement, solve } from "./solver";
 import {
-    doesBuildSatisfyConstraints, evaluateBuildScore, getCandidateFillerParts,
+    doesBuildSatisfyConstraints, compareBuildStats, getCandidateFillerParts,
     OptimizeOptions, OptimizeResult, requirementsUnderPolicy,
     occupiedBuildCells, removeRedundantAbilityParts,
     bodyConstraintsPossible,
@@ -68,7 +68,6 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         doesBuildSatisfyConstraints(initial.stats, initial.analysis, constraints);
     const progress: SearchProgress = { checkedBuilds: 0, best: validInitial ? initial : null };
     if (progress.best) onProgress?.({ ...progress });
-    let bestScore = progress.best ? evaluateBuildScore(progress.best.stats, target) : -Infinity;
     let bestCells = progress.best ? occupiedBuildCells(data, progress.best) : Infinity;
     let lastReport = 0;
     const stopped = () => {
@@ -155,16 +154,15 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                         placeAll(data.parts, requirements, solution, grid), grid, "en", modCards);
                     if (!isSolutionAcceptable(analysis, policy, forbidden, constraints?.bugRules) ||
                         !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
-                    const score = evaluateBuildScore(stats, target);
-                    if (score >= bestScore) {
+                    const comparison = progress.best ? compareBuildStats(stats, progress.best.stats, target) : 1;
+                    if (comparison >= 0) {
                         const candidate = removeRedundantAbilityParts(options, {
                             problem: { ...problem, requirements: [...requirements], modCards: [...modCards], bugPolicy: policy, constraints },
                             solution, stats, analysis, addedPartIndices: [...added],
                             addedCardIds: modCardMode === "auto" ? [...modCards] : [],
                         });
                         const cells = occupiedBuildCells(data, candidate);
-                        if (score > bestScore || (cells < bestCells && JSON.stringify(candidate.stats) === JSON.stringify(progress.best?.stats))) {
-                            bestScore = score;
+                        if (comparison > 0 || (cells < bestCells && JSON.stringify(candidate.stats) === JSON.stringify(progress.best?.stats))) {
                             bestCells = cells;
                             progress.best = candidate;
                             lastReport = Date.now();

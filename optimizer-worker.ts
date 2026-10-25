@@ -1,4 +1,4 @@
-import { evaluateBuildScore, optimizeBuild, OptimizeOptions } from "./optimizer";
+import { compareBuildStats, optimizeBuild, OptimizeOptions } from "./optimizer";
 import { searchBuilds, SearchProgress } from "./exhaustive-optimizer";
 import { findFeasibleBuild } from "./feasible-optimizer";
 import { colorCompatibility } from "./compatibility";
@@ -28,8 +28,7 @@ self.onmessage = (event: MessageEvent<OptimizerRequest>) => {
             timeoutMs: 500,
         });
         if (improved && !colorCompatibility(event.data.data, improved.problem).error &&
-            (!best || evaluateBuildScore(improved.stats, event.data.target ?? "max_hp") >
-                evaluateBuildScore(best.stats, event.data.target ?? "max_hp"))) {
+            (!best || compareBuildStats(improved.stats, best.stats, event.data.target ?? "max_hp") > 0)) {
             best = {
                 ...improved,
                 addedPartIndices: [...(baseline?.addedPartIndices ?? []), ...improved.addedPartIndices],

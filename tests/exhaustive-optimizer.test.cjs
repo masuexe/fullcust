@@ -6,8 +6,7 @@ const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
 const { from } = require("../array2d.ts");
 const { searchBuilds, enumerateCardDecks } = require("../exhaustive-optimizer.ts");
-const { isSolutionAcceptable, computeBuildStats, analyzeSolutionBugs } = require("../effects.ts");
-const { evaluateBuildScore } = require("../optimizer.ts");
+const { BUG_SPEC_OPTIONS, isSolutionAcceptable, computeBuildStats, analyzeSolutionBugs } = require("../effects.ts");
 const { solve, placeAll } = require("../solver.ts");
 
 function fixture(ids, height = 1, width = 2) {
@@ -96,8 +95,9 @@ test("small exhaustive searches match an independent enumeration including repea
     const problem = emptyProblem(data);
     const grid = data.gridOptions[0].settings;
     for (const policy of [{ type: "no_bugs" }, { type: "custom", customRules: { battleHp: "allowed_any" } }]) {
-        for (const target of ["max_hp", "max_buster", "balanced"]) {
-            let expected = -Infinity;
+        for (const target of ["max_hp", "max_attack"]) {
+            let expected = null;
+            const order = target === "max_attack" ? ["attack", "finalHp"] : ["finalHp", "attack"];
             // Every ordered inventory of up to two cells; no heuristic pruning.
             for (const indices of [[], [0], [1], [0, 0], [0, 1], [1, 0], [1, 1]]) {
                 const requirements = indices.map(i => req(i));
@@ -105,14 +105,16 @@ test("small exhaustive searches match an independent enumeration including repea
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, "en", []);
                     if (isSolutionAcceptable(analysis, policy)) {
-                        expected = Math.max(expected, evaluateBuildScore(computeBuildStats(data.gameId,
-                            indices.map(i => data.partMetas[i].id), [], 1000), target));
+                        const stats = computeBuildStats(data.gameId, indices.map(i => data.partMetas[i].id), [], 1000);
+                        const values = order.map(key => stats[key]);
+                        if (!expected || values[0] > expected[0] ||
+                            (values[0] === expected[0] && values[1] > expected[1])) expected = values;
                     }
                 }
             }
             const result = searchBuilds({ data, problem, policy, target, modCardMode: "none" });
             assert.equal(result.completed, true);
-            assert.equal(evaluateBuildScore(result.best.stats, target), expected);
+            assert.deepEqual(order.map(key => result.best.stats[key]), expected);
         }
     }
 });
@@ -208,4 +210,29 @@ test("a MAX requirement in one attribute does not require the other two", () => 
     assert.equal(result.completed, true);
     assert.deepEqual([result.best.stats.attack, result.best.stats.rapid, result.best.stats.charge], [1, 1, 5]);
     assert.equal(result.best.stats.finalHp, 1500);
+});
+
+
+test("both search passes honor strict priorities and hard Attack minima", () => {
+    const { optimizeBuild } = require("../optimizer.ts");
+    const data = fixture([38, 46], 1, 1); // AttackMAX and HP+500 compete for one cell.
+    const problem = emptyProblem(data);
+    for (const search of [searchBuilds, options => ({ best: optimizeBuild({ ...options, timeoutMs: 2000 }) })]) {
+        const options = { data, problem, modCardMode: "none", policy: { type: "custom",
+            customRules: Object.fromEntries(BUG_SPEC_OPTIONS.map(bug => [bug.id, "allowed_any"])) } };
+        const hp = search(options).best; // Default is HP first.
+        assert.ok(hp);
+        assert.deepEqual([hp.stats.finalHp, hp.stats.attack], [1500, 1]);
+        const attack = search({ ...options, target: "max_attack" }).best;
+        assert.ok(attack);
+        assert.deepEqual([attack.stats.finalHp, attack.stats.attack], [1000, 5]);
+        const twoCells = fixture([38, 46]);
+        const tied = search({ ...options, data: twoCells, problem: emptyProblem(twoCells), target: "max_attack" }).best;
+        assert.deepEqual([tied.stats.finalHp, tied.stats.attack], [1500, 5]);
+        const required = search({ ...options, target: "max_hp", constraints: { minBusterStats: { attack: 5 } } }).best;
+        // The initial heuristic may not reach a required minimum; it must never publish an invalid result.
+        if (required) assert.deepEqual([required.stats.finalHp, required.stats.attack], [1000, 5]);
+        if (search === searchBuilds) assert.ok(required);
+        assert.equal(search({ ...options, target: "max_attack", constraints: { minBusterStats: { attack: 6 } } }).best, null);
+    }
 });

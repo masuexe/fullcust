@@ -1,8 +1,8 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, computeBuildStats, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, isSolutionAcceptable } from "./effects";
 import { findFeasibleBuild } from "./feasible-optimizer";
 import { computeDeckStats, getModCards } from "./modcards";
-import { doesBuildSatisfyConstraints, evaluateBuildScore, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
+import { doesBuildSatisfyConstraints, compareBuildStats, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll } from "./solver";
 
@@ -44,7 +44,6 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         target = "max_hp", modCardMode = "keep" } = options;
     if (shouldStop()) return initialBest;
     let best = removeRedundantAbilityParts(options, initialBest);
-    let bestScore = evaluateBuildScore(best.stats, target);
     let bestCells = occupiedBuildCells(data, best);
     if (best !== initialBest) onImprove?.(best);
     const grid = makeGridSettings(data, problem);
@@ -60,16 +59,15 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         if (deck.isOverCapacity || deck.hasSlotConflict || colorCompatibility(data, result.problem).error ||
             !isSolutionAcceptable(result.analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
             !doesBuildSatisfyConstraints(result.stats, result.analysis, constraints)) return;
-        const score = evaluateBuildScore(result.stats, target);
+        const comparison = compareBuildStats(result.stats, best.stats, target);
         const cells = occupiedBuildCells(data, result);
-        if (score < bestScore || (score === bestScore &&
+        if (comparison < 0 || (comparison === 0 &&
             (cells >= bestCells || JSON.stringify(result.stats) !== JSON.stringify(best.stats)))) return;
         best = { ...result,
             problem: { ...result.problem, constraints, bugPolicy: policy },
             addedPartIndices: result.problem.requirements.slice(problem.requirements.length).map(req => req.partIndex),
             addedCardIds: modCardMode === "auto" ? result.problem.modCards : [],
         };
-        bestScore = score;
         bestCells = cells;
         onImprove?.(best);
     };
@@ -90,14 +88,14 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
     const repacked = new Set<string>();
     const triedRemovals = new Set<string>();
     while (!shouldStop()) {
-        const roundScore = bestScore;
+        const roundStats = best.stats;
         const roundCells = bestCells;
-        const improvedThisRound = () => bestScore > roundScore || bestCells < roundCells;
+        const improvedThisRound = () => compareBuildStats(best.stats, roundStats, target) > 0 || bestCells < roundCells;
         const base = best;
         const partIds = base.problem.requirements.map(req => data.partMetas[req.partIndex].id);
         const cells = placeAll(data.parts, base.problem.requirements, base.solution, grid);
         const seen = new Set<string>();
-        const candidates: { cards: string[]; score: number; changesSupply: boolean }[] = [];
+        const candidates: { cards: string[]; stats: BuildStats; changesSupply: boolean }[] = [];
         const signature = supplySignature(base.problem.modCards ?? []);
         const neighbors = ids.length > 0 ? neighboringDecks(base.problem.modCards ?? [], ids) : [base.problem.modCards ?? []];
         for (const cards of neighbors) {
@@ -109,16 +107,16 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             if (deck.isOverCapacity || deck.hasSlotConflict) continue;
             const stats = computeBuildStats(data.gameId, partIds, cards, problem.baseHp ?? 1000);
             if (!doesBuildSatisfyConstraints(stats, emptyAnalysis, cardConstraints)) continue;
-            candidates.push({ cards, score: evaluateBuildScore(stats, target), changesSupply: supplySignature(cards) !== signature });
+            candidates.push({ cards, stats, changesSupply: supplySignature(cards) !== signature });
         }
-        candidates.sort((a, b) => b.score - a.score);
+        candidates.sort((a, b) => compareBuildStats(b.stats, a.stats, target));
         // First evaluate all card moves on the known layout. This is cheap and
         // yields an improvement without waiting for NC repacking to finish.
-        for (const { cards, score, changesSupply } of candidates) {
+        for (const { cards, stats, changesSupply } of candidates) {
             if (shouldStop()) return best;
-            if (score < bestScore || (score === bestScore && !changesSupply)) continue;
+            const comparison = compareBuildStats(stats, best.stats, target);
+            if (comparison < 0 || (comparison === 0 && !changesSupply)) continue;
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, base.problem.requirements, cells, grid, "en", cards);
-            const stats = computeBuildStats(data.gameId, partIds, cards, problem.baseHp ?? 1000);
             accept({ ...base, problem: { ...base.problem, modCards: cards }, stats, analysis });
         }
         // Follow a successful card move immediately, so another useful small

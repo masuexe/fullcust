@@ -677,19 +677,19 @@ export const translations = {
         zh: "优化偏好",
     },
     targetMaxHp: {
-        en: "❤️ Maximize HP",
-        ja: "❤️ 最大HP優先",
-        zh: "❤️ HP 最大化",
+        en: "❤️ HP → Attack (default)",
+        ja: "❤️ HP → 攻撃力（既定）",
+        zh: "❤️ HP → 攻击（默认）",
     },
-    targetMaxBuster: {
-        en: "💥 Maximize Buster",
-        ja: "💥 バスター優先",
-        zh: "💥 Buster 属性优先",
+    targetMaxAttack: {
+        en: "💥 Attack → HP",
+        ja: "💥 攻撃力 → HP",
+        zh: "💥 攻击 → HP",
     },
-    targetBalanced: {
-        en: "⚖️ Balanced Rotation",
-        ja: "⚖️ バランス・回転重視",
-        zh: "⚖️ 综合轮转优先",
+    optTargetDesc: {
+        en: "All requirements must be met. Compare the first stat, then the second only when tied. Set minimum Rapid, Charge, and Custom values in the requirements below.",
+        ja: "すべての条件を満たした上で、先の値を優先し、同値なら次の値を比較します。連射・チャージ・カスタムの最低値は下の条件で指定できます。",
+        zh: "先满足全部条件，再优先比较前一项，相同时比较后一项。连射、集气和改装数量等最低值可在下方条件中设置。",
     },
     bugPolicyTitle: {
         en: "Bug Policy in Battle",
