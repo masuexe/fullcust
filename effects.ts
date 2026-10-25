@@ -430,6 +430,74 @@ export function tAbility(ability: string, lang: Lang): string {
     return entry ? entry[lang] : ability;
 }
 
+export interface ConstraintOption {
+    id: string;
+    name: { en: string; ja: string; zh: string };
+}
+
+export const CORE_ABILITY_OPTIONS: ConstraintOption[] = [
+    { id: "superArmor", name: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" } },
+    { id: "airShoes", name: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" } },
+    { id: "floatShoes", name: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" } },
+    { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
+    { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
+    { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
+    { id: "fastGauge", name: { en: "FastGauge", ja: "クイックゲージ", zh: "快速量表" } },
+    { id: "slowGauge", name: { en: "SlowGauge", ja: "ヘビーゲージ", zh: "缓慢量表" } },
+    { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
+    { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
+    { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
+];
+
+export const SPECIAL_CS_OPTIONS: ConstraintOption[] = [
+    { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" } },
+    { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" } },
+    { id: "Thunder", name: { en: "CS: Thunder (CloudMan)", ja: "CS: サンダー（クラウドマン）", zh: "CS: 雷击 (Thunder / 云人)" } },
+    { id: "M-Cannon", name: { en: "CS: M-Cannon (Canodumb)", ja: "CS: Mキャノン（キャノーダム）", zh: "CS: M加农炮 (M-Cannon / 加农弹)" } },
+    { id: "Invisible", name: { en: "CS: Invisible (Shadow)", ja: "CS: インビジブル（シャドー）", zh: "CS: 隐身 (Invisible / 暗影)" } },
+    { id: "StepSword", name: { en: "CS: StepSword (KillerMan)", ja: "CS: フミコミザン（キラーマン）", zh: "CS: 接近斩 (StepSword / 杀手人)" } },
+    { id: "BlackBomb", name: { en: "CS: BlackBomb (MeteorFire)", ja: "CS: ブラックボム（メテオファイア）", zh: "CS: 黑色炸弹 (BlackBomb / 流星火焰)" } },
+    { id: "FlashBomb", name: { en: "CS: FlashBomb (BomBoy)", ja: "CS: フラッシュボム（ボムボーイ）", zh: "CS: 闪光炸弹 (FlashBomb / 炸弹小弟)" } },
+    { id: "DrillArm", name: { en: "CS: DrillArm (DrillMan)", ja: "CS: ドリルアーム（ドリルマン）", zh: "CS: 钻椎臂 (DrillArm / 钻头人)" } },
+    { id: "TimeBomb", name: { en: "CS: TimeBomb (TimeMan)", ja: "CS: タイムボム（クロックマン）", zh: "CS: 定时炸弹 (TimeBomb / 定时人)" } },
+    { id: "IceCube", name: { en: "CS: IceCube (ColdBear)", ja: "CS: アイスキューブ（コールドベア）", zh: "CS: 冰块 (IceCube / 冷漠熊)" } },
+    { id: "CornShot", name: { en: "CS: CornShot (Pikkar)", ja: "CS: コーンショット（ピッカー）", zh: "CS: 玉米射击 (CornShot / 皮卡拉)" } },
+    { id: "DarkSword", name: { en: "CS: DarkSword (DarkMegaMan)", ja: "CS: ダークソード（ダークロックマン）", zh: "CS: 黑暗剑 (DarkSword / 黑暗洛克人)" } },
+    { id: "Z Saber", name: { en: "CS: Z Saber (MegaMan Zero)", ja: "CS: Zセイバー（ロックマンゼロ）", zh: "CS: Z光剑 (Z Saber / 洛克人ZERO)" } },
+];
+
+export const BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "AntiDamage", name: { en: "B+Left: AntiDamage (ShadoMan)", ja: "B+左: カワリミ（シャドーマン）", zh: "B+左: 替身魔术 (AntiDamage / 暗影人)" } },
+    { id: "Reflect", name: { en: "B+Left: Reflect (JapanMan)", ja: "B+左: リフレクト（ヤマトマン）", zh: "B+左: 反射盾 (Reflect / 大和人)" } },
+    { id: "Shield", name: { en: "B+Left: Shield (Kettle / Mettaur)", ja: "B+左: シールド（ケトル / メットール）", zh: "B+左: 盾 (Shield / 烧水壶)" } },
+    { id: "Magnetize", name: { en: "B+Left: Magnetize (MagnetMan)", ja: "B+左: マグネット（マグネットマン）", zh: "B+左: 定身 (Magnetize / 磁铁人)" } },
+    { id: "Fan", name: { en: "B+Left: Fan (WindMan)", ja: "B+左: スイコミ（ウインドマン）", zh: "B+左: 抽风机 (Fan / 风人)" } },
+    { id: "Meteor3", name: { en: "B+Left: Meteor3 (PlanetMan)", ja: "B+左: メテオ3（プラネットマン）", zh: "B+左: 流星3 (Meteor3 / 行星人)" } },
+    { id: "RiskyHoney", name: { en: "B+Left: RiskyHoney (HoneyBomber)", ja: "B+左: リスキーハニー（ハニーボマー）", zh: "B+左: 危险蜂蜜 (RiskyHoney / 蜜蜂)" } },
+];
+
+export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = [
+    { id: "movement", name: { en: "Movement Warp Bug", ja: "移動バグ", zh: "边界瞬移 BUG" } },
+    { id: "custom", name: { en: "Custom Screen Bug (-1 chip/turn)", ja: "カスタムバグ", zh: "改装视窗 BUG (选卡减少)" } },
+    { id: "battleHp", name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP 流失 BUG" } },
+    { id: "buster", name: { en: "Buster Blank Bug", ja: "空打ちバグ", zh: "普通射击空包弹 BUG" } },
+    { id: "customHp", name: { en: "Custom Screen HP Drain", ja: "カスタム画面HP減少", zh: "选卡菜单 HP 流失 BUG" } },
+];
+
+export function findPartIndexByAbility(data: { gameId: string; partMetas: { id: number; name: string }[] }, ability: string): number {
+    const effects = GAME_EFFECTS[data.gameId];
+    if (!effects) return -1;
+    for (let idx = 0; idx < data.partMetas.length; idx++) {
+        const meta = data.partMetas[idx];
+        const eff = effects[meta.id];
+        if (eff && eff.abilities && eff.abilities.includes(ability)) {
+            return idx;
+        }
+    }
+    return -1;
+}
+
 export type BugType =
     | "movement"
     | "status"
@@ -1940,7 +2008,11 @@ export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis): ActiveB
 /**
  * Evaluates whether a solution's bug analysis satisfies the given BugPolicy.
  */
-export function isSolutionAcceptable(analysis: SolutionBugAnalysis, policy: BugPolicy = DEFAULT_BUG_POLICY): boolean {
+export function isSolutionAcceptable(
+    analysis: SolutionBugAnalysis,
+    policy: BugPolicy = DEFAULT_BUG_POLICY,
+    forbiddenBugs?: string[]
+): boolean {
     // 1. Color limit check: >4 colors is always an illegal build on GBA
     if (analysis.tooManyColors) {
         return false;
@@ -1948,6 +2020,20 @@ export function isSolutionAcceptable(analysis: SolutionBugAnalysis, policy: BugP
 
     // 2. Get the bugs that actually affect MegaMan in battle (after BugStop absorption)
     const effectiveBugs = getEffectiveInBattleBugs(analysis);
+
+    // 3. If explicit forbiddenBugs are specified, strictly reject if any is present
+    if (forbiddenBugs && forbiddenBugs.length > 0) {
+        const hasForbidden = effectiveBugs.some(b =>
+            forbiddenBugs.some(fb => fb.toLowerCase() === b.bugType.toLowerCase())
+        );
+        if (hasForbidden) return false;
+
+        // When explicit forbidden bugs are provided, other bugs that are benign or standard buster/emotion are tolerated
+        return effectiveBugs.every(b => {
+            const norm = b.bugType.toLowerCase();
+            return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level);
+        });
+    }
 
     if (policy.type === "no_bugs") {
         // Must have zero effective bugs in battle!

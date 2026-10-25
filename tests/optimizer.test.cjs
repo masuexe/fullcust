@@ -257,3 +257,70 @@ test("optimizeBuild with modCardMode none clears existing mod cards", () => {
     assert.deepEqual(result.problem.modCards, [], "modCards should be cleared");
     assert.deepEqual(result.addedCardIds, [], "addedCardIds should be empty");
 });
+
+test("optimizeBuild with cross-domain constraints (SuperArmor, AirShoes, CS DollThunder, no movement/custom bugs)", () => {
+    const data = getGameData("bn6");
+    const problem = emptyProblem(data);
+
+    const result = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "auto",
+        constraints: {
+            requiredAbilities: ["superArmor", "airShoes"],
+            requiredSpecialMove: "DollThunder",
+            forbiddenBugs: ["movement", "custom"],
+        },
+        timeoutMs: 3000,
+    });
+
+    assert.ok(result, "Expected to find an optimal solution satisfying all constraints");
+    assert.equal(result.stats.modBPwrAtk, "DollThunder");
+    assert.ok(result.stats.abilities.includes("superArmor"), "Must include SuperArmor");
+    assert.ok(result.stats.abilities.includes("airShoes"), "Must include AirShoes");
+    assert.ok(result.stats.finalHp >= 2000, `Expected HP >= 2000, got ${result.stats.finalHp}`);
+
+    // Verify forbidden bugs are not present in active bugs
+    for (const b of result.analysis.activeBugs) {
+        assert.notEqual(b.bugType.toLowerCase(), "movement");
+        assert.notEqual(b.bugType.toLowerCase(), "custom");
+    }
+
+    // Verify rejecting when impossible constraints given
+    const impossible = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "auto",
+        constraints: {
+            requiredSpecialMove: "DollThunder",
+            forbiddenBugs: ["buster"],
+        },
+        timeoutMs: 1000,
+    });
+    assert.equal(impossible, null, "Should return null when ScarCrow buster bug is forbidden");
+});
+
+test("problem hash serialization round-trips BuildConstraints", () => {
+    const data = getGameData("bn6");
+    const { toHashString, fromHashString } = require("../problem.ts");
+
+    const prob = emptyProblem(data);
+    prob.constraints = {
+        requiredAbilities: ["superArmor", "airShoes"],
+        requiredSpecialMove: "DollThunder",
+        requiredBLeft: "AntiDamage",
+        forbiddenBugs: ["movement", "custom"],
+    };
+
+    const hash = toHashString(prob, data);
+    const restored = fromHashString(hash, data);
+
+    assert.ok(restored);
+    assert.ok(restored.constraints);
+    assert.deepEqual(restored.constraints.requiredAbilities, ["superArmor", "airShoes"]);
+    assert.equal(restored.constraints.requiredSpecialMove, "DollThunder");
+    assert.equal(restored.constraints.requiredBLeft, "AntiDamage");
+    assert.deepEqual(restored.constraints.forbiddenBugs, ["movement", "custom"]);
+});

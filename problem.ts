@@ -15,6 +15,13 @@ export const DEFAULT_BUG_POLICY: BugPolicy = {
     type: "no_bugs",
 };
 
+export interface BuildConstraints {
+    requiredAbilities?: string[];
+    requiredSpecialMove?: string;
+    requiredBLeft?: string;
+    forbiddenBugs?: string[];
+}
+
 export interface Problem {
     requirements: Requirement[];
     spinnableColors: boolean[];
@@ -24,6 +31,7 @@ export interface Problem {
     modCards?: string[];
     baseHp?: number;
     bugPolicy?: BugPolicy;
+    constraints?: BuildConstraints;
 }
 
 const toggle = z.union([z.literal(-1), z.literal(0), z.literal(1)]);
@@ -55,6 +63,12 @@ const SavedProblem = z.object({
     bp: z.object({
         t: z.union([z.literal("no_bugs"), z.literal("benign_allowed"), z.literal("custom")]),
         r: z.record(z.string()).optional(),
+    }).optional(),
+    bc: z.object({
+        a: z.array(z.string()).optional(),
+        cs: z.string().optional(),
+        bl: z.string().optional(),
+        fb: z.array(z.string()).optional(),
     }).optional(),
 });
 
@@ -121,12 +135,20 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bp.r ? { customRules: saved.bp.r as Record<string, BugTolerance> } : {}),
     } : DEFAULT_BUG_POLICY;
 
+    const constraints: BuildConstraints | undefined = "bc" in saved && saved.bc ? {
+        ...(saved.bc.a ? { requiredAbilities: saved.bc.a } : {}),
+        ...(saved.bc.cs ? { requiredSpecialMove: saved.bc.cs } : {}),
+        ...(saved.bc.bl ? { requiredBLeft: saved.bc.bl } : {}),
+        ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb } : {}),
+    } : undefined;
+
     return {
         requirements,
         spinnableColors: data.colors.map(color => !!colors[color]),
         expansionMemories: saved.x,
         baseHp: "hp" in saved && typeof saved.hp === "number" ? saved.hp : 1000,
         bugPolicy,
+        ...(constraints ? { constraints } : {}),
         ...(hasModCards ? {
             modCards: "c" in saved && Array.isArray(saved.c) ? saved.c : [],
         } : {}),
@@ -158,6 +180,19 @@ export function toHashString(problem: Problem, data: Data): string {
             bp: {
                 t: problem.bugPolicy.type,
                 ...(problem.bugPolicy.customRules ? { r: problem.bugPolicy.customRules as Record<string, string> } : {}),
+            },
+        } : {}),
+        ...(problem.constraints && (
+            problem.constraints.requiredAbilities?.length ||
+            problem.constraints.requiredSpecialMove ||
+            problem.constraints.requiredBLeft ||
+            problem.constraints.forbiddenBugs?.length
+        ) ? {
+            bc: {
+                ...(problem.constraints.requiredAbilities?.length ? { a: problem.constraints.requiredAbilities } : {}),
+                ...(problem.constraints.requiredSpecialMove ? { cs: problem.constraints.requiredSpecialMove } : {}),
+                ...(problem.constraints.requiredBLeft ? { bl: problem.constraints.requiredBLeft } : {}),
+                ...(problem.constraints.forbiddenBugs?.length ? { fb: problem.constraints.forbiddenBugs } : {}),
             },
         } : {}),
     };

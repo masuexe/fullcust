@@ -3,6 +3,7 @@ import { isPartCompatible } from "./compatibility";
 import {
     analyzeSolutionBugs,
     computeBuildStats,
+    findPartIndexByAbility,
     getPartEffect,
     isBenignBug,
     isSolutionAcceptable,
@@ -15,7 +16,7 @@ import {
     computeDeckStats,
     ModCard,
 } from "./modcards";
-import { BugPolicy, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { BugPolicy, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { placeAll, solve, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_buster" | "balanced";
@@ -29,6 +30,7 @@ export interface OptimizeOptions {
     timeoutMs?: number;
     beamWidth?: number;
     modCardMode?: ModCardMode;
+    constraints?: BuildConstraints;
 }
 
 export interface OptimizeResult {
@@ -45,13 +47,24 @@ export interface ModCardOptimizeOptions {
     existingCardIds?: string[];
     target?: OptimizationTarget;
     policy?: BugPolicy;
+    constraints?: BuildConstraints;
+    lockedCardIds?: string[];
 }
 
 /**
- * Checks whether a mod card's inherent bugs comply with the user's BugPolicy.
+ * Checks whether a mod card's inherent bugs comply with the user's BugPolicy and forbidden bugs.
  */
-function isCardAcceptableUnderPolicy(card: ModCard, policy: BugPolicy): boolean {
+function isCardAcceptableUnderPolicy(card: ModCard, policy: BugPolicy, forbiddenBugs?: string[]): boolean {
     if (!card.bugs || card.bugs.length === 0) return true;
+    if (forbiddenBugs && forbiddenBugs.length > 0) {
+        if (card.bugs.some(b => forbiddenBugs.some(fb => fb.toLowerCase() === b.type.toLowerCase()))) {
+            return false;
+        }
+        return card.bugs.every(b => {
+            const norm = b.type.toLowerCase();
+            return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level ?? 1);
+        });
+    }
     if (policy.type === "no_bugs") return false;
     if (policy.type === "benign_allowed") {
         return card.bugs.every(b => isBenignBug(b.type, b.level ?? 1));
@@ -110,6 +123,8 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         existingCardIds = [],
         target = "max_hp",
         policy = DEFAULT_BUG_POLICY,
+        constraints,
+        lockedCardIds = [],
     } = options;
 
     if (gameId === "bn3") return [];
@@ -117,21 +132,56 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     const allCards = getModCards(gameId);
     if (!allCards || allCards.length === 0) return [...existingCardIds];
 
-    const existingSet = new Set(existingCardIds);
+    const forbiddenBugs = constraints?.forbiddenBugs || [];
+    const locked = [...existingCardIds, ...lockedCardIds];
 
-    const candidateCards = allCards.filter(
-        c => !existingSet.has(c.id) && isCardAcceptableUnderPolicy(c, policy)
-    );
+    // Lock required special move (Charge Shot) if specified
+    if (constraints?.requiredSpecialMove && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return c?.bPwrAtk === constraints.requiredSpecialMove;
+    })) {
+        const matchingCards = allCards.filter(
+            c => c.bPwrAtk === constraints.requiredSpecialMove && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target) - evaluateCardScore(a, target));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required B+Left move if specified
+    if (constraints?.requiredBLeft && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return c?.bLeft === constraints.requiredBLeft;
+    })) {
+        const matchingCards = allCards.filter(
+            c => c.bLeft === constraints.requiredBLeft && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target) - evaluateCardScore(a, target));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    const lockedSet = new Set(locked);
+
+    const candidateCards = allCards.filter(c => {
+        if (lockedSet.has(c.id)) return false;
+        if (!isCardAcceptableUnderPolicy(c, policy, forbiddenBugs)) return false;
+        if (constraints?.requiredSpecialMove && c.bPwrAtk && c.bPwrAtk !== constraints.requiredSpecialMove) return false;
+        if (constraints?.requiredBLeft && c.bLeft && c.bLeft !== constraints.requiredBLeft) return false;
+        return true;
+    });
 
     if (gameId === "bn4") {
         const usedSlots = new Set<string>();
-        for (const id of existingCardIds) {
+        for (const id of locked) {
             const card = getModCard(id, gameId);
             if (card && card.slot) usedSlots.add(card.slot);
         }
 
         const mainSlots = ["0A", "0B", "0C", "0D", "0E"];
-        const selected = [...existingCardIds];
+        const selected = [...locked];
 
         for (const slot of mainSlots) {
             if (usedSlots.has(slot)) continue;
@@ -149,50 +199,95 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         return selected;
     }
 
-    // BN5 / BN6: 80 MB 0-1 Knapsack DP
+    // BN5 / BN6: 80 MB Knapsack DP with Bitmask over required abilities
     const maxCapacity = 80;
     let usedMb = 0;
-    for (const id of existingCardIds) {
+    const coveredAbilities = new Set<string>();
+    for (const id of locked) {
         const card = getModCard(id, gameId);
-        if (card) usedMb += card.mb;
+        if (card) {
+            usedMb += card.mb;
+            for (const ab of card.abilities || []) {
+                coveredAbilities.add(ab);
+            }
+        }
     }
 
     const remainingMb = maxCapacity - usedMb;
-    if (remainingMb <= 0) return [...existingCardIds];
+    if (remainingMb <= 0) return [...locked];
+
+    const reqAbilities = (constraints?.requiredAbilities || []).filter(ab => !coveredAbilities.has(ab));
+    const numReq = Math.min(reqAbilities.length, 6);
+    const maxMask = 1 << numReq;
 
     interface DpState {
         score: number;
         items: string[];
     }
 
-    const dp: DpState[] = Array.from({ length: remainingMb + 1 }, () => ({
-        score: 0,
-        items: [],
-    }));
+    const dp: DpState[][] = Array.from({ length: maxMask }, () =>
+        Array.from({ length: remainingMb + 1 }, () => ({
+            score: -1,
+            items: [],
+        }))
+    );
+    dp[0][0] = { score: 0, items: [] };
 
     for (const card of candidateCards) {
         const weight = card.mb;
-        const val = evaluateCardScore(card, target);
-        if (val <= 0 || weight > remainingMb) continue;
+        const baseVal = evaluateCardScore(card, target);
+        if (baseVal <= 0 || weight > remainingMb) continue;
 
-        for (let w = remainingMb; w >= weight; w--) {
-            if (dp[w - weight].score + val > dp[w].score) {
-                dp[w] = {
-                    score: dp[w - weight].score + val,
-                    items: [...dp[w - weight].items, card.id],
-                };
+        let cardMask = 0;
+        for (let i = 0; i < numReq; i++) {
+            if (card.abilities && card.abilities.includes(reqAbilities[i])) {
+                cardMask |= (1 << i);
+            }
+        }
+
+        for (let mask = maxMask - 1; mask >= 0; mask--) {
+            const nextMask = mask | cardMask;
+            const newlyCovered = nextMask ^ mask;
+            let abilityBonus = 0;
+            for (let i = 0; i < numReq; i++) {
+                if (newlyCovered & (1 << i)) {
+                    abilityBonus += 400; // Big bonus for satisfying a required ability
+                }
+            }
+            const val = baseVal + abilityBonus;
+
+            for (let w = remainingMb - weight; w >= 0; w--) {
+                if (dp[mask][w].score < 0) continue;
+                const newScore = dp[mask][w].score + val;
+                if (newScore > dp[nextMask][w + weight].score) {
+                    dp[nextMask][w + weight] = {
+                        score: newScore,
+                        items: [...dp[mask][w].items, card.id],
+                    };
+                }
             }
         }
     }
 
-    let best = dp[0];
-    for (let w = 0; w <= remainingMb; w++) {
-        if (dp[w].score > best.score) {
-            best = dp[w];
+    // Find state covering the most required abilities, then best score
+    let best = dp[0][0];
+    let bestMaskPop = -1;
+
+    for (let mask = maxMask - 1; mask >= 0; mask--) {
+        const pop = mask.toString(2).replace(/0/g, "").length;
+        if (pop < bestMaskPop) continue;
+
+        for (let w = 0; w <= remainingMb; w++) {
+            if (dp[mask][w].score >= 0) {
+                if (pop > bestMaskPop || dp[mask][w].score > best.score) {
+                    best = dp[mask][w];
+                    bestMaskPop = pop;
+                }
+            }
         }
     }
 
-    return [...existingCardIds, ...best.items];
+    return [...locked, ...best.items];
 }
 
 interface RankedCandidate {
@@ -283,59 +378,75 @@ interface SearchNode {
 }
 
 /**
- * Optimizes the build by automatically selecting and packing optimal filler parts
- * onto the remaining NaviCust grid while satisfying the user's BugPolicy.
+ * Verifies whether a completed build satisfies all user constraints.
  */
-export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
-    const {
-        data,
-        problem,
-        policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY,
-        target = "max_hp",
-        timeoutMs = 3000,
-        beamWidth = 6,
-        modCardMode = "keep",
-    } = options;
+function doesBuildSatisfyConstraints(
+    stats: BuildStats,
+    analysis: SolutionBugAnalysis,
+    constraints?: BuildConstraints
+): boolean {
+    if (!constraints) return true;
 
-    const startTime = Date.now();
-    const gridSettings = makeGridSettings(data, problem);
-    const spinnableColors = problem.spinnableColors;
-    const baseHp = problem.baseHp ?? 1000;
-
-    let modCards: string[] = [];
-    let addedCardIds: string[] = [];
-
-    if (data.gameId !== "bn3") {
-        if (modCardMode === "none") {
-            modCards = [];
-        } else if (modCardMode === "auto") {
-            modCards = optimizeModCards({
-                gameId: data.gameId,
-                existingCardIds: [],
-                target,
-                policy,
-            });
-            addedCardIds = [...modCards];
-        } else {
-            // "keep"
-            modCards = problem.modCards || [];
+    if (constraints.requiredAbilities && constraints.requiredAbilities.length > 0) {
+        const buildAbilities = new Set(stats.abilities || []);
+        for (const ab of constraints.requiredAbilities) {
+            if (!buildAbilities.has(ab)) return false;
         }
-    } else {
-        modCards = [];
     }
 
-    // 1. Verify that the initial core requirements can be solved under the policy
-    const initialReqs = problem.requirements;
+    if (constraints.requiredSpecialMove) {
+        if (stats.modBPwrAtk !== constraints.requiredSpecialMove) {
+            return false;
+        }
+    }
+
+    if (constraints.requiredBLeft) {
+        if (stats.modBLeft !== constraints.requiredBLeft) {
+            return false;
+        }
+    }
+
+    if (constraints.forbiddenBugs && constraints.forbiddenBugs.length > 0) {
+        const effectiveBugs = analysis.activeBugs || [];
+        for (const b of effectiveBugs) {
+            if (constraints.forbiddenBugs.some(fb => fb.toLowerCase() === b.bugType.toLowerCase())) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Runs Beam Search to pack filler parts on the NaviCust grid.
+ */
+function runNaviCustBeamSearch(
+    data: Data,
+    baseProblem: Problem,
+    initialReqs: Requirement[],
+    modCards: string[],
+    policy: BugPolicy,
+    target: OptimizationTarget,
+    gridSettings: any,
+    spinnableColors: boolean[],
+    baseHp: number,
+    allCandidates: number[],
+    forbiddenBugs: string[],
+    startTime: number,
+    timeoutMs: number,
+    beamWidth: number
+): SearchNode | null {
     const initialSolIter = solve(data.parts, initialReqs, gridSettings, spinnableColors);
     let rootSolution: Solution | null = null;
     let rootAnalysis: SolutionBugAnalysis | null = null;
 
     let initSteps = 0;
     for (const value of initialSolIter) {
-        if (++initSteps > 40) break;
+        if (++initSteps > 50) break;
         const occ = placeAll(data.parts, initialReqs, value, gridSettings);
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, initialReqs, occ, gridSettings, "en", modCards);
-        if (isSolutionAcceptable(analysis, policy)) {
+        if (isSolutionAcceptable(analysis, policy, forbiddenBugs)) {
             rootSolution = value;
             rootAnalysis = analysis;
             break;
@@ -362,10 +473,6 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
     let bestNode: SearchNode = rootNode;
     let beam: SearchNode[] = [rootNode];
 
-    // 2. Candidate filler parts
-    const allCandidates = getCandidateFillerParts(data, target);
-
-    // 3. Beam Search
     while (beam.length > 0) {
         if (Date.now() - startTime >= timeoutMs) break;
 
@@ -377,8 +484,6 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
 
             const existingIndices = new Set(node.requirements.map(r => r.partIndex));
             const existingColors = new Set(node.requirements.map(r => data.parts[r.partIndex].color));
-
-            // Determine if BugStop is currently active in this node
             const hasBugStop = node.analysis.bugStopActive;
 
             for (const candIdx of allCandidates) {
@@ -394,18 +499,16 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                         continue;
                     }
                 } else if (data.styleColorRules) {
-                    // BN3 Style compatibility check
                     const ok = isPartCompatible(data, {
-                        ...problem,
+                        ...baseProblem,
                         requirements: node.requirements,
                     }, candIdx);
                     if (!ok) continue;
                 }
 
-                // If policy is no_bugs and no BugStop, assign proper command-line constraint
                 let onCommandLineConstraint: boolean | null = null;
                 let maxBug = Infinity;
-                if (policy.type === "no_bugs" && !hasBugStop) {
+                if ((policy.type === "no_bugs" || forbiddenBugs.length > 0) && !hasBugStop) {
                     onCommandLineConstraint = candMeta.isSolid;
                     maxBug = 0;
                 }
@@ -421,8 +524,6 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                 };
 
                 const testReqs = [...node.requirements, candReq];
-
-                // Attempt to solve
                 const solIter = solve(data.parts, testReqs, gridSettings, spinnableColors);
                 let foundSolution: Solution | null = null;
                 let foundAnalysis: SolutionBugAnalysis | null = null;
@@ -432,7 +533,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                     if (++candSteps > 25) break;
                     const occ = placeAll(data.parts, testReqs, value, gridSettings);
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, testReqs, occ, gridSettings, "en", modCards);
-                    if (isSolutionAcceptable(analysis, policy)) {
+                    if (isSolutionAcceptable(analysis, policy, forbiddenBugs)) {
                         foundSolution = value;
                         foundAnalysis = analysis;
                         break;
@@ -463,23 +564,182 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         }
 
         if (nextNodes.length === 0) break;
-
-        // Sort descending by score and pick top beamWidth
         nextNodes.sort((a, b) => b.score - a.score);
         beam = nextNodes.slice(0, beamWidth);
     }
 
-    return {
-        problem: {
-            ...problem,
-            requirements: bestNode.requirements,
-            bugPolicy: policy,
-            modCards,
-        },
-        solution: bestNode.solution,
-        stats: bestNode.stats,
-        analysis: bestNode.analysis,
-        addedPartIndices: bestNode.addedPartIndices,
-        addedCardIds,
+    return bestNode;
+}
+
+/**
+ * Optimizes the build by automatically selecting and packing optimal filler parts
+ * onto the remaining NaviCust grid while satisfying the user's BugPolicy and constraints.
+ */
+export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
+    const {
+        data,
+        problem,
+        policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY,
+        target = "max_hp",
+        timeoutMs = 3000,
+        beamWidth = 6,
+        modCardMode = "keep",
+        constraints = problem.constraints,
+    } = options;
+
+    const startTime = Date.now();
+    const gridSettings = makeGridSettings(data, problem);
+    const spinnableColors = problem.spinnableColors;
+    const baseHp = problem.baseHp ?? 1000;
+    const forbiddenBugs = constraints?.forbiddenBugs || [];
+    const allCandidates = getCandidateFillerParts(data, target);
+
+    // Helper to generate NC requirements for missing abilities
+    const createReqsForAbilities = (abilities: string[]): Requirement[] | null => {
+        const extraReqs: Requirement[] = [];
+        const existingIndices = new Set(problem.requirements.map(r => r.partIndex));
+        for (const ab of abilities) {
+            const partIdx = findPartIndexByAbility(data, ab);
+            if (partIdx === -1) return null; // NC cannot provide this ability
+            if (!existingIndices.has(partIdx)) {
+                const meta = data.partMetas[partIdx];
+                extraReqs.push({
+                    partIndex: partIdx,
+                    constraint: {
+                        onCommandLine: meta.isSolid ? true : false,
+                        minBugLevel: 0,
+                        maxBugLevel: 0,
+                        compressed: true,
+                    },
+                });
+                existingIndices.add(partIdx);
+            }
+        }
+        return [...problem.requirements, ...extraReqs];
     };
+
+    interface CandidateBranch {
+        modCards: string[];
+        reqs: Requirement[];
+        isAutoCards: boolean;
+    }
+
+    const branches: CandidateBranch[] = [];
+
+    if (data.gameId !== "bn3" && modCardMode === "auto") {
+        // Branch 0: Mod Cards prioritized to cover abilities
+        const modCards0 = optimizeModCards({
+            gameId: data.gameId,
+            existingCardIds: [],
+            target,
+            policy,
+            constraints,
+        });
+        const deck0 = computeDeckStats(modCards0, data.gameId);
+        const covered0 = new Set(deck0.activeAbilities || []);
+        const uncovered0 = (constraints?.requiredAbilities || []).filter(ab => !covered0.has(ab));
+        const reqs0 = createReqsForAbilities(uncovered0);
+        if (reqs0) {
+            branches.push({ modCards: modCards0, reqs: reqs0, isAutoCards: true });
+        }
+
+        // Branch 1: NC covers all required abilities that NC can provide, Mod Cards optimize remaining
+        const ncFeasibleAbilities = (constraints?.requiredAbilities || []).filter(
+            ab => findPartIndexByAbility(data, ab) >= 0
+        );
+        const reqs1 = createReqsForAbilities(ncFeasibleAbilities);
+        if (reqs1) {
+            const modConstraints1: BuildConstraints = {
+                ...constraints,
+                requiredAbilities: (constraints?.requiredAbilities || []).filter(
+                    ab => findPartIndexByAbility(data, ab) < 0
+                ),
+            };
+            const modCards1 = optimizeModCards({
+                gameId: data.gameId,
+                existingCardIds: [],
+                target,
+                policy,
+                constraints: modConstraints1,
+            });
+            branches.push({ modCards: modCards1, reqs: reqs1, isAutoCards: true });
+        }
+    } else {
+        // modCardMode === "none" or "keep"
+        let modCards: string[] = [];
+        if (data.gameId !== "bn3" && modCardMode === "keep") {
+            modCards = problem.modCards || [];
+        }
+
+        if (constraints?.requiredSpecialMove) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (deck.bPwrAtk !== constraints.requiredSpecialMove) return null;
+        }
+        if (constraints?.requiredBLeft) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (deck.bLeft !== constraints.requiredBLeft) return null;
+        }
+
+        const deck = computeDeckStats(modCards, data.gameId);
+        const covered = new Set(deck.activeAbilities || []);
+        const uncovered = (constraints?.requiredAbilities || []).filter(ab => !covered.has(ab));
+        const reqs = createReqsForAbilities(uncovered);
+        if (reqs) {
+            branches.push({ modCards, reqs, isAutoCards: false });
+        }
+    }
+
+    if (branches.length === 0) {
+        return null;
+    }
+
+    let bestResult: OptimizeResult | null = null;
+    let bestScore = -Infinity;
+
+    for (const branch of branches) {
+        if (Date.now() - startTime >= timeoutMs) break;
+
+        const node = runNaviCustBeamSearch(
+            data,
+            problem,
+            branch.reqs,
+            branch.modCards,
+            policy,
+            target,
+            gridSettings,
+            spinnableColors,
+            baseHp,
+            allCandidates,
+            forbiddenBugs,
+            startTime,
+            timeoutMs,
+            beamWidth
+        );
+
+        if (!node) continue;
+
+        if (!doesBuildSatisfyConstraints(node.stats, node.analysis, constraints)) {
+            continue;
+        }
+
+        if (node.score > bestScore) {
+            bestScore = node.score;
+            bestResult = {
+                problem: {
+                    ...problem,
+                    requirements: node.requirements,
+                    bugPolicy: policy,
+                    modCards: branch.modCards,
+                    constraints,
+                },
+                solution: node.solution,
+                stats: node.stats,
+                analysis: node.analysis,
+                addedPartIndices: node.addedPartIndices,
+                addedCardIds: branch.isAutoCards ? branch.modCards : [],
+            };
+        }
+    }
+
+    return bestResult;
 }

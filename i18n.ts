@@ -781,6 +781,41 @@ export const translations = {
         ja: "展開",
         zh: "展开",
     },
+    buildConstraintsTitle: {
+        en: "Target Abilities & Battle Specifications",
+        ja: "必須能力・バトル仕様指定",
+        zh: "指定必须能力与对战规格",
+    },
+    buildConstraintsDesc: {
+        en: "Declaratively specify mandatory abilities (from Mod Cards or NaviCust), special charge shot, B+Left moves, and strictly forbidden bugs.",
+        ja: "カードまたはナビカスのいずれからでも、必須アビリティ、CS、B+左、禁止バグを宣言的に指定して最適化します。",
+        zh: "不论通过改造卡还是导航安装盘，声明必须拥有的被动能力、特殊蓄力射击、B+左动作及严格禁止的 BUG。",
+    },
+    reqAbilitiesTitle: {
+        en: "Required Abilities (Any Form)",
+        ja: "必須アビリティ（形態不問）",
+        zh: "必须能力（来源不限）",
+    },
+    reqSpecialMoveTitle: {
+        en: "Special Charge Shot (CS)",
+        ja: "特殊チャージショット（CS）",
+        zh: "特殊蓄力射击（CS）",
+    },
+    reqBLeftTitle: {
+        en: "B + Left Move",
+        ja: "B＋左コマンド技",
+        zh: "B＋左指令技",
+    },
+    forbiddenBugsTitle: {
+        en: "Strictly Forbidden Bugs",
+        ja: "厳禁バグ（実戦発生禁止）",
+        zh: "严格禁止的 BUG（禁止发生）",
+    },
+    anyOption: {
+        en: "None / Any",
+        ja: "指定なし",
+        zh: "不指定",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

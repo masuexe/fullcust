@@ -26,6 +26,7 @@ import {
     toHashString,
     BugPolicy,
     BugPolicyType,
+    BuildConstraints,
 } from "./problem";
 import { optimizeBuild, OptimizationTarget, ModCardMode } from "./optimizer";
 import {
@@ -36,6 +37,10 @@ import {
     tBugCause,
     tBugTitle,
     tBugMechanics,
+    CORE_ABILITY_OPTIONS,
+    SPECIAL_CS_OPTIONS,
+    BLEFT_OPTIONS,
+    FORBIDDEN_BUG_OPTIONS,
 } from "./effects";
 import {
     BN6_MOD_CARDS,
@@ -931,6 +936,18 @@ function AutoOptimizerPanel({
     );
     const [policyType, setPolicyType] = React.useState<BugPolicyType>(problem.bugPolicy?.type ?? "no_bugs");
     const [target, setTarget] = React.useState<OptimizationTarget>("max_hp");
+    const [reqAbilities, setReqAbilities] = React.useState<string[]>(
+        problem.constraints?.requiredAbilities ?? []
+    );
+    const [reqSpecialMove, setReqSpecialMove] = React.useState<string>(
+        problem.constraints?.requiredSpecialMove ?? ""
+    );
+    const [reqBLeft, setReqBLeft] = React.useState<string>(
+        problem.constraints?.requiredBLeft ?? ""
+    );
+    const [forbiddenBugs, setForbiddenBugs] = React.useState<string[]>(
+        problem.constraints?.forbiddenBugs ?? []
+    );
     const [isOptimizing, setIsOptimizing] = React.useState(false);
     const [statusMessage, setStatusMessage] = React.useState<{
         type: "success" | "error";
@@ -938,6 +955,18 @@ function AutoOptimizerPanel({
         details?: string[];
         cardDetails?: string[];
     } | null>(null);
+
+    const toggleAbility = (abId: string) => {
+        setReqAbilities(prev =>
+            prev.includes(abId) ? prev.filter(x => x !== abId) : [...prev, abId]
+        );
+    };
+
+    const toggleForbiddenBug = (bugId: string) => {
+        setForbiddenBugs(prev =>
+            prev.includes(bugId) ? prev.filter(x => x !== bugId) : [...prev, bugId]
+        );
+    };
 
     const handleOptimize = () => {
         setIsOptimizing(true);
@@ -950,6 +979,13 @@ function AutoOptimizerPanel({
                     customRules: problem.bugPolicy?.customRules,
                 };
 
+                const constraints: BuildConstraints = {
+                    ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
+                    ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
+                    ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
+                    ...(forbiddenBugs.length > 0 ? { forbiddenBugs } : {}),
+                };
+
                 const result = optimizeBuild({
                     data,
                     problem,
@@ -957,6 +993,7 @@ function AutoOptimizerPanel({
                     target,
                     timeoutMs: 3500,
                     modCardMode: hasModCards ? modCardMode : "none",
+                    constraints,
                 });
 
                 if (!result || (result.addedPartIndices.length === 0 && (!result.addedCardIds || result.addedCardIds.length === 0))) {
@@ -1128,6 +1165,107 @@ function AutoOptimizerPanel({
                                             {t("policyBenignDesc", lang)}
                                         </div>
                                     </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Declarative Build Constraints */}
+                        <div className="card mb-3 border-secondary-subtle bg-body-tertiary">
+                            <div className="card-header py-1 px-2 d-flex align-items-center justify-content-between">
+                                <span className="small fw-semibold">🎯 {t("buildConstraintsTitle", lang)}</span>
+                            </div>
+                            <div className="card-body p-2">
+                                <div className="text-muted small mb-2" style={{ fontSize: "0.78rem" }}>
+                                    {t("buildConstraintsDesc", lang)}
+                                </div>
+
+                                {/* Required Abilities */}
+                                <div className="mb-2">
+                                    <label className="form-label small fw-semibold mb-1 d-block">
+                                        {t("reqAbilitiesTitle", lang)}:
+                                    </label>
+                                    <div className="d-flex flex-wrap gap-1">
+                                        {CORE_ABILITY_OPTIONS.map(opt => {
+                                            const active = reqAbilities.includes(opt.id);
+                                            return (
+                                                <button
+                                                    key={opt.id}
+                                                    type="button"
+                                                    className={`btn btn-sm py-0 px-2 ${active ? "btn-primary" : "btn-outline-secondary"}`}
+                                                    style={{ fontSize: "0.78rem", borderRadius: "12px" }}
+                                                    onClick={() => toggleAbility(opt.id)}
+                                                >
+                                                    {active ? "✓ " : "+ "}{opt.name[lang] || opt.name.en}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Special CS & B+Left (Available when mod cards enabled) */}
+                                {hasModCards && modCardMode !== "none" && (
+                                    <div className="row g-2 mb-2">
+                                        <div className="col-12 col-md-6">
+                                            <label className="form-label small fw-semibold mb-1">
+                                                {t("reqSpecialMoveTitle", lang)}:
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm"
+                                                value={reqSpecialMove}
+                                                onChange={e => setReqSpecialMove(e.target.value)}
+                                            >
+                                                <option value="">{t("anyOption", lang)}</option>
+                                                {SPECIAL_CS_OPTIONS.map(opt => (
+                                                    <option key={opt.id} value={opt.id}>
+                                                        {opt.name[lang] || opt.name.en}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-12 col-md-6">
+                                            <label className="form-label small fw-semibold mb-1">
+                                                {t("reqBLeftTitle", lang)}:
+                                            </label>
+                                            <select
+                                                className="form-select form-select-sm"
+                                                value={reqBLeft}
+                                                onChange={e => setReqBLeft(e.target.value)}
+                                            >
+                                                <option value="">{t("anyOption", lang)}</option>
+                                                {BLEFT_OPTIONS.map(opt => (
+                                                    <option key={opt.id} value={opt.id}>
+                                                        {opt.name[lang] || opt.name.en}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Forbidden Bugs */}
+                                <div className="mb-1">
+                                    <label className="form-label small fw-semibold mb-1 d-block text-danger">
+                                        🚫 {t("forbiddenBugsTitle", lang)}:
+                                    </label>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {FORBIDDEN_BUG_OPTIONS.map(opt => {
+                                            const active = forbiddenBugs.includes(opt.id);
+                                            return (
+                                                <div key={opt.id} className="form-check form-check-inline me-1 mb-1">
+                                                    <input
+                                                        className="form-check-input"
+                                                        type="checkbox"
+                                                        id={`fbug-${opt.id}`}
+                                                        checked={active}
+                                                        onChange={() => toggleForbiddenBug(opt.id)}
+                                                    />
+                                                    <label className="form-check-label small" htmlFor={`fbug-${opt.id}`} style={{ fontSize: "0.8rem" }}>
+                                                        {opt.name[lang] || opt.name.en}
+                                                    </label>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
