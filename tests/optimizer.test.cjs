@@ -594,3 +594,73 @@ test("Extended build constraints: BButton, Additions, Body, Gauge and URL round-
     assert.equal(restored.constraints.requiredGauge, "fast");
     assert.deepEqual(restored.constraints.bugRules, { buster: "required" });
 });
+
+test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
+    const { getSpecialCsOptions, getBLeftOptions, getBButtonOptions } = require("../effects.ts");
+    const { optimizeModCards } = require("../optimizer.ts");
+    const { computeDeckStats } = require("../modcards.ts");
+
+    // 1. Check counts of complete catalogs
+    const bn6Cs = getSpecialCsOptions("bn6");
+    assert.equal(bn6Cs.length, 43, "BN6 must have all 43 special CS options (including ChargeShot)");
+    const bn5Cs = getSpecialCsOptions("bn5");
+    assert.equal(bn5Cs.length, 32, "BN5 must have 32 CS options (including ChargeShot)");
+    const bn4Cs = getSpecialCsOptions("bn4");
+    assert.equal(bn4Cs.length, 31, "BN4 must have all BN4 CS options");
+
+    const bn6BLeft = getBLeftOptions("bn6");
+    assert.equal(bn6BLeft.length, 8, "BN6 must have 8 B+Left options (including MachineSword)");
+
+    // 2. Test optimizing with CS: Cannon (CanGard)
+    const cardsCannon = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredSpecialMove: "Cannon" },
+    });
+    const deckCannon = computeDeckStats(cardsCannon, "bn6");
+    assert.equal(deckCannon.bPwrAtk, "Cannon", "Must successfully select Cannon CS");
+
+    // 3. Test optimizing with CS: LongSword (ShadowMan)
+    const cardsLongSword = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredSpecialMove: "LongSword" },
+    });
+    const deckLongSword = computeDeckStats(cardsLongSword, "bn6");
+    assert.equal(deckLongSword.bPwrAtk, "LongSword", "Must successfully select LongSword CS");
+
+    // 4. Test optimizing with CS: ElecSword (ThunderMan)
+    const cardsElecSword = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredSpecialMove: "ElecSword" },
+    });
+    const deckElecSword = computeDeckStats(cardsElecSword, "bn6");
+    assert.equal(deckElecSword.bPwrAtk, "ElecSword", "Must successfully select ElecSword CS");
+
+    // 5. Test optimizing with B+Left: MachineSword (Colonel)
+    const cardsMachineSword = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredBLeft: "MachineSword" },
+    });
+    const deckMachineSword = computeDeckStats(cardsMachineSword, "bn6");
+    assert.equal(deckMachineSword.bLeft, "MachineSword", "Must successfully select MachineSword B+Left");
+
+    // 6. Test matching B+Left: Magnetize with card having description 'Magnetize (immobilizes enemy)'
+    const cardsMagnetize = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredBLeft: "Magnetize" },
+    });
+    const deckMagnetize = computeDeckStats(cardsMagnetize, "bn6");
+    assert.ok(
+        deckMagnetize.bLeft && deckMagnetize.bLeft.startsWith("Magnetize"),
+        "Must successfully match Magnetize"
+    );
+});

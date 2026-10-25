@@ -133,6 +133,23 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
     return (hp * 0.6) + (custom * 100) + (mega * 80) + (giga * 120) + (attack * 50) + abilityBonus;
 }
 
+export function matchSpecialMove(cardBPwrAtk: string | undefined, req: string): boolean {
+    if (req === "ChargeShot") {
+        return !cardBPwrAtk || cardBPwrAtk.toLowerCase() === "chargeshot";
+    }
+    if (!cardBPwrAtk) return false;
+    const normCard = cardBPwrAtk.replace(/[\s\-_]/g, "").toLowerCase();
+    const normReq = req.replace(/[\s\-_]/g, "").toLowerCase();
+    return normCard === normReq || normCard.startsWith(normReq) || normReq.startsWith(normCard);
+}
+
+export function matchBLeft(cardBLeft: string | undefined, req: string): boolean {
+    if (!cardBLeft) return false;
+    const normCard = cardBLeft.replace(/[\s\-_]/g, "").toLowerCase();
+    const normReq = req.replace(/[\s\-_]/g, "").toLowerCase();
+    return normCard === normReq || normCard.startsWith(normReq) || normReq.startsWith(normCard);
+}
+
 export function matchBButton(cardBButton: string | undefined, req: string): boolean {
     if (req === "none") return !cardBButton;
     if (!cardBButton) return false;
@@ -178,12 +195,8 @@ export function orderModCardsForConstraints(
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = constraints.requiredSpecialMove === "ChargeShot"
-                ? (!cardA?.bPwrAtk || cardA.bPwrAtk.toLowerCase() === "chargeshot")
-                : cardA?.bPwrAtk === constraints.requiredSpecialMove;
-            const bMatches = constraints.requiredSpecialMove === "ChargeShot"
-                ? (!cardB?.bPwrAtk || cardB.bPwrAtk.toLowerCase() === "chargeshot")
-                : cardB?.bPwrAtk === constraints.requiredSpecialMove;
+            const aMatches = matchSpecialMove(cardA?.bPwrAtk, constraints.requiredSpecialMove!);
+            const bMatches = matchSpecialMove(cardB?.bPwrAtk, constraints.requiredSpecialMove!);
             if (aMatches && !bMatches) return 1;
             if (!aMatches && bMatches) return -1;
             return 0;
@@ -194,8 +207,8 @@ export function orderModCardsForConstraints(
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = cardA?.bLeft === constraints.requiredBLeft;
-            const bMatches = cardB?.bLeft === constraints.requiredBLeft;
+            const aMatches = matchBLeft(cardA?.bLeft, constraints.requiredBLeft!);
+            const bMatches = matchBLeft(cardB?.bLeft, constraints.requiredBLeft!);
             if (aMatches && !bMatches) return 1;
             if (!aMatches && bMatches) return -1;
             return 0;
@@ -296,10 +309,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     // Lock required special move (Charge Shot) if specified
     if (constraints?.requiredSpecialMove && constraints.requiredSpecialMove !== "ChargeShot" && !locked.some(id => {
         const c = getModCard(id, gameId);
-        return c?.bPwrAtk === constraints.requiredSpecialMove;
+        return matchSpecialMove(c?.bPwrAtk, constraints.requiredSpecialMove!);
     })) {
         const matchingCards = allCards.filter(
-            c => c.bPwrAtk === constraints.requiredSpecialMove && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            c => matchSpecialMove(c.bPwrAtk, constraints.requiredSpecialMove!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
             matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
@@ -310,10 +323,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     // Lock required B+Left move if specified
     if (constraints?.requiredBLeft && !locked.some(id => {
         const c = getModCard(id, gameId);
-        return c?.bLeft === constraints.requiredBLeft;
+        return matchBLeft(c?.bLeft, constraints.requiredBLeft!);
     })) {
         const matchingCards = allCards.filter(
-            c => c.bLeft === constraints.requiredBLeft && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            c => matchBLeft(c.bLeft, constraints.requiredBLeft!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
             matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
@@ -404,10 +417,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             if (constraints.requiredSpecialMove === "ChargeShot") {
                 if (c.bPwrAtk && c.bPwrAtk.toLowerCase() !== "chargeshot") return false;
             } else {
-                if (c.bPwrAtk && c.bPwrAtk !== constraints.requiredSpecialMove) return false;
+                if (c.bPwrAtk && !matchSpecialMove(c.bPwrAtk, constraints.requiredSpecialMove)) return false;
             }
         }
-        if (constraints?.requiredBLeft && c.bLeft && c.bLeft !== constraints.requiredBLeft) return false;
+        if (constraints?.requiredBLeft && c.bLeft && !matchBLeft(c.bLeft, constraints.requiredBLeft)) return false;
         if (constraints?.requiredBButton) {
             if (constraints.requiredBButton === "none") {
                 if (c.bButton) return false;
@@ -652,17 +665,13 @@ function doesBuildSatisfyConstraints(
     }
 
     if (constraints.requiredSpecialMove) {
-        if (constraints.requiredSpecialMove === "ChargeShot") {
-            if (stats.modBPwrAtk && stats.modBPwrAtk.toLowerCase() !== "chargeshot") {
-                return false;
-            }
-        } else if (stats.modBPwrAtk !== constraints.requiredSpecialMove) {
+        if (!matchSpecialMove(stats.modBPwrAtk, constraints.requiredSpecialMove)) {
             return false;
         }
     }
 
     if (constraints.requiredBLeft) {
-        if (stats.modBLeft !== constraints.requiredBLeft) {
+        if (!matchBLeft(stats.modBLeft, constraints.requiredBLeft)) {
             return false;
         }
     }
@@ -974,15 +983,11 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
 
         if (constraints?.requiredSpecialMove) {
             const deck = computeDeckStats(modCards, data.gameId);
-            if (constraints.requiredSpecialMove === "ChargeShot") {
-                if (deck.bPwrAtk && deck.bPwrAtk.toLowerCase() !== "chargeshot") return null;
-            } else if (deck.bPwrAtk !== constraints.requiredSpecialMove) {
-                return null;
-            }
+            if (!matchSpecialMove(deck.bPwrAtk, constraints.requiredSpecialMove)) return null;
         }
         if (constraints?.requiredBLeft) {
             const deck = computeDeckStats(modCards, data.gameId);
-            if (deck.bLeft !== constraints.requiredBLeft) return null;
+            if (!matchBLeft(deck.bLeft, constraints.requiredBLeft)) return null;
         }
         if (constraints?.requiredBButton) {
             const deck = computeDeckStats(modCards, data.gameId);

@@ -46,6 +46,10 @@ import {
     BUSTER_ADDITION_OPTIONS,
     BODY_OPTIONS,
     GAUGE_OPTIONS,
+    getSpecialCsOptions,
+    getBLeftOptions,
+    getBButtonOptions,
+    getCoreAbilityOptions,
     FORBIDDEN_BUG_OPTIONS,
     BUG_SPEC_OPTIONS,
 } from "./effects";
@@ -1301,7 +1305,7 @@ function AutoOptimizerPanel({
                                             {t("reqAbilitiesTitle", lang)}:
                                         </label>
                                         <div className="d-flex flex-wrap gap-1">
-                                            {CORE_ABILITY_OPTIONS.map(opt => {
+                                            {getCoreAbilityOptions(data.gameId).map(opt => {
                                                 const active = reqAbilities.includes(opt.id);
                                                 return (
                                                     <button
@@ -1333,7 +1337,7 @@ function AutoOptimizerPanel({
                                                         onChange={e => setReqSpecialMove(e.target.value)}
                                                     >
                                                         <option value="">{t("anyOption", lang)}</option>
-                                                        {SPECIAL_CS_OPTIONS.map(opt => (
+                                                        {getSpecialCsOptions(data.gameId).map(opt => (
                                                             <option key={opt.id} value={opt.id}>
                                                                 {opt.name[lang] || opt.name.en}
                                                             </option>
@@ -1350,7 +1354,7 @@ function AutoOptimizerPanel({
                                                         onChange={e => setReqBLeft(e.target.value)}
                                                     >
                                                         <option value="">{t("anyOption", lang)}</option>
-                                                        {BLEFT_OPTIONS.map(opt => (
+                                                        {getBLeftOptions(data.gameId).map(opt => (
                                                             <option key={opt.id} value={opt.id}>
                                                                 {opt.name[lang] || opt.name.en}
                                                             </option>
@@ -1371,7 +1375,7 @@ function AutoOptimizerPanel({
                                                         onChange={e => setReqBButton(e.target.value)}
                                                     >
                                                         <option value="">{t("anyOption", lang)}</option>
-                                                        {BBUTTON_OPTIONS.map(opt => (
+                                                        {getBButtonOptions(data.gameId).map(opt => (
                                                             <option key={opt.id} value={opt.id}>
                                                                 {opt.name[lang] || opt.name.en}
                                                             </option>

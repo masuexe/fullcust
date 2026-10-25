@@ -461,48 +461,173 @@ export interface ConstraintOption {
     name: { en: string; ja: string; zh: string };
 }
 
-export const CORE_ABILITY_OPTIONS: ConstraintOption[] = [
-    { id: "superArmor", name: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" } },
-    { id: "airShoes", name: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" } },
-    { id: "floatShoes", name: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" } },
-    { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
-    { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
-    { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
-    { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
-    { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
-    { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
-    { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
-];
-
-export const SPECIAL_CS_OPTIONS: ConstraintOption[] = [
+export const BN6_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
     { id: "ChargeShot", name: { en: "Standard ChargeShot (No Special CS)", ja: "通常チャージショット（特殊CSなし）", zh: "标准集气射击 (禁用特殊CS)" } },
-    { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" } },
-    { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" } },
+    // 射击 / 枪炮类
+    { id: "Cannon", name: { en: "CS: Cannon (CanGard)", ja: "CS: キャノン（キャノガード）", zh: "CS: 加农炮 (CanGard / 加农防卫弹)" } },
+    { id: "M-Cannon", name: { en: "CS: M-Cannon (Canodumb)", ja: "CS: Mキャノン（キャノーダム）", zh: "CS: M加农炮 (Canodumb / 加农弹)" } },
+    { id: "Spreader", name: { en: "CS: Spreader (Kettle)", ja: "CS: ショットガン（ヤカーン）", zh: "CS: 散射枪 (Spreader / 沸水壶)" } },
+    { id: "BubbleSpread", name: { en: "CS: BubbleSpread (Puffy)", ja: "CS: バブルスプレッド（プクール）", zh: "CS: 泡沫散射 (BubbleSpread / 河豚尔)" } },
+    { id: "WideShot", name: { en: "CS: WideShot (DiveMan)", ja: "CS: ワイドショット（ダイブマン）", zh: "CS: 广域射击 (WideShot / 潜水人)" } },
+    { id: "CornShot", name: { en: "CS: CornShot (BombCorn)", ja: "CS: コーンショット（ボムコーン）", zh: "CS: 玉米射击 (BombCorn / 炸弹玉米)" } },
+    { id: "MachineGun", name: { en: "CS: MachineGun (Gunner)", ja: "CS: ガンナー（ガンナー）", zh: "CS: 气力机枪 (MachineGun / 枪手)" } },
+    { id: "CircleGun", name: { en: "CS: CircleGun (SearchMan)", ja: "CS: サークルガン（サーチマン）", zh: "CS: 旋转枪 (CircleGun / 侦察人)" } },
+    { id: "SuperVulcan", name: { en: "CS: SuperVulcan (SoulBattler)", ja: "CS: スーパーバルカン（ソウルバトラー）", zh: "CS: 超级火神炮 (SuperVulcan / 魂斗士改装)" } },
+    { id: "ShootingBuster", name: { en: "CS: Shooting Buster (BassBX / BassCross)", ja: "CS: シューティングバスター（フォルテBX / フォルテクロス）", zh: "CS: 疾风射击 (Shooting Buster / 佛鲁迪BX)" } },
+    { id: "Gun del Sol", name: { en: "CS: Gun del Sol (Django)", ja: "CS: ガン・デル・ソル（ジャンゴ）", zh: "CS: 太阳枪 (Gun del Sol / 强戈)" } },
+    // 近战 / 剑类
+    { id: "LongSword", name: { en: "CS: LongSword (ShadowMan)", ja: "CS: ロングソード（シャドーマン）", zh: "CS: 长剑 (LongSword / 阴影人)" } },
+    { id: "WideSword", name: { en: "CS: WideSword (SlashMan)", ja: "CS: ワイドソード（スラッシュマン）", zh: "CS: 宽剑 (WideSword / 利爪人)" } },
+    { id: "ElecSword", name: { en: "CS: ElecSword (ThunderMan)", ja: "CS: エレキソード（サンダーマン）", zh: "CS: 电力剑 (ElecSword / 闪电人)" } },
+    { id: "BambooSword", name: { en: "CS: BambooSword (KendoMan)", ja: "CS: バンブーソード（ケンドーマン）", zh: "CS: 竹剑 (BambooSword / 剑道人)" } },
+    { id: "StepSword", name: { en: "CS: StepSword (BeastMan)", ja: "CS: フミコミザン（ビーストマン）", zh: "CS: 接近斩 (StepSword / 野兽人)" } },
+    { id: "DarkSword", name: { en: "CS: DarkSword (DarkMega)", ja: "CS: ダークソード（ダークロックマン）", zh: "CS: 黑暗剑 (DarkSword / 黑暗洛克人)" } },
+    { id: "Z Saber", name: { en: "CS: Z Saber (Zero)", ja: "CS: Zセイバー（ロックマンゼロ）", zh: "CS: Z光剑 (Z Saber / 洛克人ZERO)" } },
+    { id: "Lance", name: { en: "CS: BambooLance (Kilby)", ja: "CS: バンブーランス（キルブー）", zh: "CS: 竹枪 (Lance / 杀人竹)" } },
+    { id: "Yo-Yo", name: { en: "CS: Yo-Yo (CutMan)", ja: "CS: ヨーヨー（カットマン）", zh: "CS: 溜溜球 (Yo-Yo / 剪刀人)" } },
+    { id: "DrillArm", name: { en: "CS: DrillArm (GroundMan)", ja: "CS: ドリルアーム（グランドマン）", zh: "CS: 钻椎臂 (DrillArm / 地面人)" } },
+    // 元素 / 场地 / 风雷类
+    { id: "Tornado", name: { en: "CS: Tornado (AirMan)", ja: "CS: トルネード（エアーマン）", zh: "CS: 龙卷风 (Tornado / 空气人)" } },
+    { id: "WindRacket", name: { en: "CS: WindRacket (TenguMan)", ja: "CS: フウジンラケット（テングマン）", zh: "CS: 风神球拍 (WindRacket / 天狗人)" } },
     { id: "Thunder", name: { en: "CS: Thunder (CloudMan)", ja: "CS: サンダー（クラウドマン）", zh: "CS: 雷击 (Thunder / 云人)" } },
-    { id: "M-Cannon", name: { en: "CS: M-Cannon (Canodumb)", ja: "CS: Mキャノン（キャノーダム）", zh: "CS: M加农炮 (M-Cannon / 加农弹)" } },
-    { id: "Invisible", name: { en: "CS: Invisible (Shadow)", ja: "CS: インビジブル（シャドー）", zh: "CS: 隐身 (Invisible / 暗影)" } },
-    { id: "StepSword", name: { en: "CS: StepSword (KillerMan)", ja: "CS: フミコミザン（キラーマン）", zh: "CS: 接近斩 (StepSword / 杀手人)" } },
-    { id: "BlackBomb", name: { en: "CS: BlackBomb (MeteorFire)", ja: "CS: ブラックボム（メテオファイア）", zh: "CS: 黑色炸弹 (BlackBomb / 流星火焰)" } },
-    { id: "FlashBomb", name: { en: "CS: FlashBomb (BomBoy)", ja: "CS: フラッシュボム（ボムボーイ）", zh: "CS: 闪光炸弹 (FlashBomb / 炸弹小弟)" } },
-    { id: "DrillArm", name: { en: "CS: DrillArm (DrillMan)", ja: "CS: ドリルアーム（ドリルマン）", zh: "CS: 钻椎臂 (DrillArm / 钻头人)" } },
-    { id: "TimeBomb", name: { en: "CS: TimeBomb (TimeMan)", ja: "CS: タイムボム（クロックマン）", zh: "CS: 定时炸弹 (TimeBomb / 定时人)" } },
+    { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" } },
+    { id: "ElecPulse", name: { en: "CS: ElecPulse (PulseBulb)", ja: "CS: エレキパルス（パルフォロン）", zh: "CS: 电力脉冲 (ElecPulse / 帕尔佛龙)" } },
+    { id: "FireBurn", name: { en: "CS: FireBurn (OldStove)", ja: "CS: ファイアバーン（ダルスト）", zh: "CS: 地狱燃烧者 (FireBurn / 达摩斯托)" } },
+    { id: "BlizzardBall", name: { en: "CS: BlizzardBall (BlizMan)", ja: "CS: ブリザード（ブリザードマン）", zh: "CS: 暴风雪 (BlizzardBall / 暴风雪人)" } },
     { id: "IceCube", name: { en: "CS: IceCube (ColdBear)", ja: "CS: アイスキューブ（コールドベア）", zh: "CS: 冰块 (IceCube / 冷漠熊)" } },
-    { id: "CornShot", name: { en: "CS: CornShot (Pikkar)", ja: "CS: コーンショット（ピッカー）", zh: "CS: 玉米射击 (CornShot / 皮卡拉)" } },
-    { id: "DarkSword", name: { en: "CS: DarkSword (DarkMegaMan)", ja: "CS: ダークソード（ダークロックマン）", zh: "CS: 黑暗剑 (DarkSword / 黑暗洛克人)" } },
-    { id: "Z Saber", name: { en: "CS: Z Saber (MegaMan Zero)", ja: "CS: Zセイバー（ロックマンゼロ）", zh: "CS: Z光剑 (Z Saber / 洛克人ZERO)" } },
+    { id: "IceSeed", name: { en: "CS: IceSeed (IceMan)", ja: "CS: アイスシード（アイスマン）", zh: "CS: 冰之种子 (IceSeed / 冰冻人)" } },
+    { id: "GrassSeed", name: { en: "CS: GrassSeed (KillPlant)", ja: "CS: クサシード（キルプラント）", zh: "CS: 草地种子 (GrassSeed / 杀手植物)" } },
+    { id: "SandWorm", name: { en: "CS: SandWorm (SnakeArm)", ja: "CS: スナーム（スナーム）", zh: "CS: 沙虫 (SandWorm / 石纳姆)" } },
+    // 炸弹类
+    { id: "BlackBomb", name: { en: "CS: BlackBomb (Volcano)", ja: "CS: ブラックボム（ボルカノ）", zh: "CS: 黑色炸弹 (BlackBomb / 火山炮)" } },
+    { id: "BigBomb", name: { en: "CS: BigBomb (NapalmMan)", ja: "CS: ビッグボム（ナパームマン）", zh: "CS: 大型炸弹 (BigBomb / 烧夷弹人)" } },
+    { id: "TimeBomb", name: { en: "CS: TimeBomb (Handi)", ja: "CS: タイムボム（ハンディース）", zh: "CS: 定时炸弹 (TimeBomb / 手迪斯)" } },
+    { id: "FlashBomb", name: { en: "CS: FlashBomb (BigHat)", ja: "CS: フラッシュボム（グラサン）", zh: "CS: 闪光炸弹 (FlashBomb / 墨镜)" } },
+    // 特殊 / 战术类
+    { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" } },
+    { id: "Invisible", name: { en: "CS: Invisible (Shadow / Momogra)", ja: "CS: インビジブル（ダークシャドー / モモグラン）", zh: "CS: 隐身 (Invisible / 暗影 / 鼹地鼠)" } },
+    { id: "PanelGrab", name: { en: "CS: PanelGrab (Slimer)", ja: "CS: エリアスチール（ジェライム）", zh: "CS: 地面窃取 (PanelGrab / 胶莱姆)" } },
+    { id: "GrabBanish", name: { en: "CS: GrabBanish (JudgeMan)", ja: "CS: スチールパニシュ（ジャッジマン）", zh: "CS: 偷窃惩罚 (GrabBanish / 审判人)" } },
+    { id: "Blood Rain", name: { en: "CS: Blood Rain (Count)", ja: "CS: ブラッドレイン（ハクシャク）", zh: "CS: 血雨 (Blood Rain / 伯爵)" } },
+    { id: "HelzRolling", name: { en: "CS: HelzRolling (BassCross Falzar)", ja: "CS: ヘルズローリング（フォルテクロス ファルザー）", zh: "CS: 地狱转轮 (HelzRolling / 佛鲁迪Cross)" } },
 ];
 
-export const BLEFT_OPTIONS: ConstraintOption[] = [
-    { id: "AntiDamage", name: { en: "B+Left: AntiDamage (ShadoMan)", ja: "B+左: カワリミ（シャドーマン）", zh: "B+左: 替身魔术 (AntiDamage / 暗影人)" } },
-    { id: "Reflect", name: { en: "B+Left: Reflect (JapanMan)", ja: "B+左: リフレクト（ヤマトマン）", zh: "B+左: 反射盾 (Reflect / 大和人)" } },
-    { id: "Shield", name: { en: "B+Left: Shield (Kettle / Mettaur)", ja: "B+左: シールド（ケトル / メットール）", zh: "B+左: 盾 (Shield / 烧水壶)" } },
+export const BN5_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
+    { id: "ChargeShot", name: { en: "Standard ChargeShot (No Special CS)", ja: "通常チャージショット（特殊CSなし）", zh: "标准集气射击 (禁用特殊CS)" } },
+    { id: "Invisible", name: { en: "CS: Invisible (Ghost)", ja: "CS: インビジブル（ゴースラー）", zh: "CS: 隐身 (Ghost / 幽灵怪)" } },
+    { id: "LongSword", name: { en: "CS: LongSword (Swordy)", ja: "CS: ロングソード（スウォーデン）", zh: "CS: 长剑 (Swordy / 剑士怪)" } },
+    { id: "WideSword", name: { en: "CS: WideSword (Mayl's Custom)", ja: "CS: ワイドソード（美露改装）", zh: "CS: 宽剑 (Mayl's Custom / 美露改装)" } },
+    { id: "WideBlade", name: { en: "CS: WideBlade (SharkMan)", ja: "CS: ワイドブレード（ブルース）", zh: "CS: 宽刃剑 (SharkMan / 鲨鱼人)" } },
+    { id: "SamuraiSword", name: { en: "CS: SamuraiSword (Champy)", ja: "CS: サムライソード（ザエモン）", zh: "CS: 武士剑 (Champy / 拳击怪)" } },
+    { id: "CrescentKunai", name: { en: "CS: CrescentKunai (Z-Mon-Mon)", ja: "CS: クレセントクナイ（ゲニン）", zh: "CS: 弦月苦无 (Z-Mon-Mon / 骨爪怪)" } },
+    { id: "DarkSword", name: { en: "CS: DarkSword (NebulaGray)", ja: "CS: ダークソード（ネビュラグレイ）", zh: "CS: 黑暗剑 (NebulaGray / 星云灰烬)" } },
+    { id: "ThunderBall", name: { en: "CS: ThunderBall (Billy)", ja: "CS: サンダーボール（ビリー）", zh: "CS: 雷球 (Billy / 雷球怪)" } },
+    { id: "HeatShot", name: { en: "CS: HeatShot (GreenGrumble)", ja: "CS: ヒートショット（ガルー）", zh: "CS: 热量射击 (GreenGrumble / 绿怪兽)" } },
+    { id: "FireArm", name: { en: "CS: FireArm (HeatMan)", ja: "CS: ファイアアーム（ファイアマン）", zh: "CS: 火焰喷射 (HeatMan / 热量人)" } },
+    { id: "Bubbler", name: { en: "CS: Bubbler (Drain)", ja: "CS: バブラー（エビロン）", zh: "CS: 气泡射击 (Drain / 蚊子怪)" } },
+    { id: "WideShot", name: { en: "CS: WideShot (VacuumFan)", ja: "CS: ワイドショット（ゲイラーク）", zh: "CS: 广域射击 (VacuumFan / 吸尘机)" } },
+    { id: "CircleGun", name: { en: "CS: CircleGun (Roll)", ja: "CS: サークルガン（サーキラー）", zh: "CS: 旋转枪 (Roll / 萝露)" } },
+    { id: "PulseBeam", name: { en: "CS: PulseBeam (BurnerMan / NumberMan)", ja: "CS: パルスビーム（シェードマン / パルスバット）", zh: "CS: 脉冲光束 (BurnerMan / NumberMan)" } },
+    { id: "ColonelCannon", name: { en: "CS: ColonelCannon (Serenade)", ja: "CS: カーネルキャノン（カーネル）", zh: "CS: 卡奈尔加农 (Serenade / 小夜曲)" } },
+    { id: "CannonBall", name: { en: "CS: CannonBall (Powie)", ja: "CS: ホウガン（ハルドボルズ）", zh: "CS: 炮丸 (Powie / 重压锤)" } },
+    { id: "MiniBomb", name: { en: "CS: MiniBomb (Bunny)", ja: "CS: ミニボム（カブタンク）", zh: "CS: 迷你炸弹 (Bunny / 电兔怪)" } },
+    { id: "BlackBomb", name: { en: "CS: BlackBomb (BombMan)", ja: "CS: ブラックボム（ボンバーマン）", zh: "CS: 黑色炸弹 (BombMan / 炸弹人)" } },
+    { id: "DrillArm", name: { en: "CS: DrillArm (GutsMan / DesertMan)", ja: "CS: ドリルアーム（ドリクロール / ドリルマン）", zh: "CS: 钻椎臂 (GutsMan / DesertMan)" } },
+    { id: "Tornado", name: { en: "CS: Tornado (DethFire)", ja: "CS: トルネード（ファンカー）", zh: "CS: 龙卷风 (DethFire / 烈火怪)" } },
+    { id: "AirHockey", name: { en: "CS: AirHockey (Apparun)", ja: "CS: エアホッケー（ダーマ）", zh: "CS: 气垫曲棍球 (Apparun / 白幽灵)" } },
+    { id: "Yo-Yo", name: { en: "CS: Yo-Yo (Marina)", ja: "CS: ヨーヨー（ヨーヨット）", zh: "CS: 溜溜球 (Marina / 海妖怪)" } },
+    { id: "Boomerang", name: { en: "CS: Boomerang (WindBox)", ja: "CS: ブーメラン（ラウンダ）", zh: "CS: 回旋镖 (WindBox / 吹风机)" } },
+    { id: "RabidRing", name: { en: "CS: RabidRing (Momogra)", ja: "CS: ラビリング（ラビリー）", zh: "CS: 兔耳光环 (Momogra / 地鼠怪)" } },
+    { id: "Vacuum", name: { en: "CS: Vacuum (Boomer)", ja: "CS: スイコミ（スーンハーク）", zh: "CS: 抽风吸引 (Boomer / 回旋镖怪)" } },
+    { id: "Shield", name: { en: "CS: Shield (Puffy)", ja: "CS: シールド（バジリコ）", zh: "CS: 盾防 (Puffy / 河豚怪)" } },
+    { id: "Reflect", name: { en: "CS: Reflect (Serenade Rare)", ja: "CS: リフレクト（セレナード）", zh: "CS: 反射盾 (Serenade Rare / 小夜曲特典)" } },
+    { id: "OceanSeed", name: { en: "CS: OceanSeed (FlashMan)", ja: "CS: オーシャンシード（アクアマン）", zh: "CS: 海洋种子 (FlashMan / 闪光人)" } },
+    { id: "Poltergeist", name: { en: "CS: Poltergeist (JunkMan)", ja: "CS: ポルターガイスト（ジャンクマン）", zh: "CS: 念动力 (JunkMan / 废铁人)" } },
+    { id: "ShootingBuster", name: { en: "CS: ShootingBuster (BassCross ProtoMan)", ja: "CS: シューティングバスター（フォルテクロス ブルース版）", zh: "CS: 疾风射击 (BassCross 布鲁斯版)" } },
+    { id: "HellsRolling", name: { en: "CS: HellsRolling (BassCross Colonel)", ja: "CS: ヘルズローリング（フォルテクロス カーネル版）", zh: "CS: 地狱转轮 (BassCross 卡奈尔版)" } },
+];
+
+export const BN4_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
+    { id: "Cannon", name: { en: "CS: Cannon", ja: "CS: キャノン", zh: "CS: 加农炮" } },
+    { id: "MiniBomb", name: { en: "CS: MiniBomb", ja: "CS: ミニボム", zh: "CS: 迷你炸弹" } },
+    { id: "HeatShot", name: { en: "CS: HeatShot", ja: "CS: ヒートショット", zh: "CS: 热量射击" } },
+    { id: "BubbleShot", name: { en: "CS: BubbleShot", ja: "CS: バブルショット", zh: "CS: 水泡射击" } },
+    { id: "ThunderBall", name: { en: "CS: ThunderBall", ja: "CS: サンダーボール", zh: "CS: 雷球" } },
+    { id: "Sword", name: { en: "CS: Sword", ja: "CS: ソード", zh: "CS: 剑" } },
+    { id: "WideSword", name: { en: "CS: WideSword", ja: "CS: ワイドソード", zh: "CS: 宽剑" } },
+    { id: "LongSword", name: { en: "CS: LongSword", ja: "CS: ロングソード", zh: "CS: 长剑" } },
+    { id: "WideBlade", name: { en: "CS: WideBlade", ja: "CS: ワイドブレード", zh: "CS: 宽刃剑" } },
+    { id: "LongBlade", name: { en: "CS: LongBlade", ja: "CS: ロングブレード", zh: "CS: 长刃剑" } },
+    { id: "SpreadGun", name: { en: "CS: SpreadGun", ja: "CS: スプレッドガン", zh: "CS: 扩散枪" } },
+    { id: "WideShot", name: { en: "CS: WideShot", ja: "CS: ワイドショット", zh: "CS: 广域射击" } },
+    { id: "WideShot2", name: { en: "CS: WideShot2", ja: "CS: ワイドショット2", zh: "CS: 广域射击2" } },
+    { id: "WideShot3", name: { en: "CS: WideShot3", ja: "CS: ワイドショット3", zh: "CS: 广域射击3" } },
+    { id: "Blizzard", name: { en: "CS: Blizzard", ja: "CS: ブリザード", zh: "CS: 暴风雪" } },
+    { id: "HeatBreath", name: { en: "CS: HeatBreath", ja: "CS: ヒートブレス", zh: "CS: 烈焰吐息" } },
+    { id: "ElecShock", name: { en: "CS: ElecShock", ja: "CS: エレキショック", zh: "CS: 电击" } },
+    { id: "WoodPowder", name: { en: "CS: WoodPowder", ja: "CS: ウッディパウダー", zh: "CS: 树木粉末" } },
+    { id: "DarkHole", name: { en: "CS: DarkHole", ja: "CS: ダークホール", zh: "CS: 暗黑洞" } },
+    { id: "RabidRing", name: { en: "CS: RabidRing", ja: "CS: ラビリング", zh: "CS: 兔耳光环" } },
+    { id: "SandRing", name: { en: "CS: SandRing", ja: "CS: サンドリング", zh: "CS: 沙之环" } },
+    { id: "EnergyBomb", name: { en: "CS: EnergyBomb", ja: "CS: エナジーボム", zh: "CS: 能量炸弹" } },
+    { id: "MegaEnergyBomb", name: { en: "CS: MegaEnergyBomb", ja: "CS: メガエナジーボム", zh: "CS: 大型能量炸弹" } },
+    { id: "CannonBall", name: { en: "CS: CannonBall", ja: "CS: ホウガン", zh: "CS: 炮丸" } },
+    { id: "BugBomb", name: { en: "CS: BugBomb", ja: "CS: バグボム", zh: "CS: BUG炸弹" } },
+    { id: "WindRacket", name: { en: "CS: WindRacket", ja: "CS: フウジンラケット", zh: "CS: 风神球拍" } },
+    { id: "PanelReturn", name: { en: "CS: PanelReturn", ja: "CS: パネルリターン", zh: "CS: 面板复原" } },
+    { id: "PanelRepair", name: { en: "CS: PanelRepair", ja: "CS: リペアー", zh: "CS: 地面修复" } },
+    { id: "TripleCrack", name: { en: "CS: TripleCrack", ja: "CS: トリプルクラック", zh: "CS: 三重砸裂" } },
+    { id: "CopyDamage", name: { en: "CS: CopyDamage", ja: "CS: コピーダメージ", zh: "CS: 复制伤害" } },
+    { id: "FullCustom", name: { en: "CS: FullCustom", ja: "CS: チャージフルカスタム", zh: "CS: 完全客制化" } },
+];
+
+export function getSpecialCsOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_SPECIAL_CS_OPTIONS;
+    if (gameId === "bn4") return BN4_SPECIAL_CS_OPTIONS;
+    return BN6_SPECIAL_CS_OPTIONS;
+}
+
+export const SPECIAL_CS_OPTIONS = BN6_SPECIAL_CS_OPTIONS;
+
+export const BN6_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "AntiDamage", name: { en: "B+Left: AntiDamage (ShadowMan)", ja: "B+左: カワリミ（シャドーマン）", zh: "B+左: 替身魔术 (AntiDamage / 阴影人)" } },
+    { id: "Reflect", name: { en: "B+Left: Reflect (JapanMan / Punk)", ja: "B+左: リフレクト（ヤマトマン / パンク）", zh: "B+左: 反射盾 (Reflect / 大和人 / 庞克)" } },
+    { id: "Shield", name: { en: "B+Left: Shield (Kettle / Mettaur)", ja: "B+左: シールド（ヤカーン / メットール）", zh: "B+左: 盾 (Shield / 沸水壶 / 钢盔怪)" } },
     { id: "Magnetize", name: { en: "B+Left: Magnetize (MagnetMan)", ja: "B+左: マグネット（マグネットマン）", zh: "B+左: 定身 (Magnetize / 磁铁人)" } },
     { id: "Fan", name: { en: "B+Left: Fan (WindMan)", ja: "B+左: スイコミ（ウインドマン）", zh: "B+左: 抽风机 (Fan / 风人)" } },
     { id: "Meteor3", name: { en: "B+Left: Meteor3 (PlanetMan)", ja: "B+左: メテオ3（プラネットマン）", zh: "B+左: 流星3 (Meteor3 / 行星人)" } },
     { id: "RiskyHoney", name: { en: "B+Left: RiskyHoney (HoneyBomber)", ja: "B+左: リスキーハニー（ハニーボマー）", zh: "B+左: 危险蜂蜜 (RiskyHoney / 蜜蜂)" } },
+    { id: "MachineSword", name: { en: "B+Left: MachineSword (Colonel)", ja: "B+左: マシンソード（カーネル）", zh: "B+左: 机器剑 (MachineSword / 卡奈尔)" } },
 ];
 
-export const BBUTTON_OPTIONS: ConstraintOption[] = [
+export const BN5_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "Shield", name: { en: "B+Left: Shield (WindBox / SharkMan)", ja: "B+左: シールド（ラウンダ / ブルース）", zh: "B+左: 盾 (Shield / 吹风机 / 鲨鱼人)" } },
+    { id: "CurseShield", name: { en: "B+Left: CurseShield (Cactikil)", ja: "B+左: カーズシールド（カーズ）", zh: "B+左: 诅咒护盾 (CurseShield / 仙人掌)" } },
+    { id: "MetGuard", name: { en: "B+Left: MetGuard (Mettaur)", ja: "B+左: メットガード（メットール）", zh: "B+左: 钢盔防御 (MetGuard / 钢盔怪)" } },
+];
+
+export const BN4_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "AirShot", name: { en: "B+Left: AirShot", ja: "B+左: エアシュート", zh: "B+左: 空气枪" } },
+    { id: "BugBomb", name: { en: "B+Left: BugBomb", ja: "B+左: バグボム", zh: "B+左: BUG炸弹" } },
+    { id: "CrackOut", name: { en: "B+Left: CrackOut", ja: "B+左: クラックアウト", zh: "B+左: 砸裂地面" } },
+    { id: "DoubleCrack", name: { en: "B+Left: DoubleCrack", ja: "B+左: ダブルクラック", zh: "B+左: 双重砸裂" } },
+    { id: "TripleCrack", name: { en: "B+Left: TripleCrack", ja: "B+左: トリプルクラック", zh: "B+左: 三重砸裂" } },
+    { id: "MegaEnergyBomb", name: { en: "B+Left: MegaEnergyBomb", ja: "B+左: メガエナジーボム", zh: "B+左: 大型能量炸弹" } },
+    { id: "Recover10", name: { en: "B+Left: Recover10", ja: "B+左: リカバリー10", zh: "B+左: 回复10" } },
+    { id: "PanelReturn", name: { en: "B+Left: PanelReturn", ja: "B+左: パネルリターン", zh: "B+左: 面板复原" } },
+    { id: "NorthWind", name: { en: "B+Left: NorthWind", ja: "B+左: スーパーキタカゼ", zh: "B+左: 北风" } },
+    { id: "BambooLance", name: { en: "B+Left: BambooLance", ja: "B+左: バンブーランス", zh: "B+左: 竹枪" } },
+];
+
+export function getBLeftOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_BLEFT_OPTIONS;
+    if (gameId === "bn4") return BN4_BLEFT_OPTIONS;
+    return BN6_BLEFT_OPTIONS;
+}
+
+export const BLEFT_OPTIONS = BN6_BLEFT_OPTIONS;
+
+export const BN6_BBUTTON_OPTIONS: ConstraintOption[] = [
     { id: "none", name: { en: "Standard Buster (No Weapon Override)", ja: "通常バスター（武器上書きなし）", zh: "标准洛克炮 (禁用武器覆盖)" } },
     { id: "Sword", name: { en: "B: Sword (Shadow / Zero)", ja: "B: ソード（シャドー / ゼロ）", zh: "B: 剑 (Sword / 暗影 / ZERO)" } },
     { id: "MiniBomb", name: { en: "B: MiniBomb (Beetle)", ja: "B: ミニボム（ビートル）", zh: "B: 迷你炸弹 (MiniBomb / 甲虫)" } },
@@ -510,6 +635,80 @@ export const BBUTTON_OPTIONS: ConstraintOption[] = [
     { id: "Meteor1", name: { en: "B: Meteor1 (MetFire)", ja: "B: メテオ1（メットファイア）", zh: "B: 流星1 (Meteor1 / 头盔火)" } },
     { id: "Vulcan", name: { en: "B: Vulcan (BowlMan)", ja: "B: バルカン（ボウルマン）", zh: "B: 火神炮 (Vulcan / 保龄球人)" } },
 ];
+
+export const BN5_BBUTTON_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard Buster (No Weapon Override)", ja: "通常バスター（武器上書きなし）", zh: "标准洛克炮 (禁用武器覆盖)" } },
+    { id: "Buster", name: { en: "B: Buster", ja: "B: バスター", zh: "B: 洛克炮" } },
+    { id: "Sword", name: { en: "B: Sword", ja: "B: ソード", zh: "B: 剑" } },
+    { id: "MiniBomb", name: { en: "B: MiniBomb", ja: "B: ミニボム", zh: "B: 迷你炸弹" } },
+    { id: "CrackOut", name: { en: "B: CrackOut", ja: "B: クラックアウト", zh: "B: 砸裂地面" } },
+];
+
+export const BN4_BBUTTON_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard Buster (No Weapon Override)", ja: "通常バスター（武器上書きなし）", zh: "标准洛克炮 (禁用武器覆盖)" } },
+    { id: "MetGuard", name: { en: "B: MetGuard", ja: "B: メットガード", zh: "B: 钢盔防御" } },
+    { id: "CrackOut", name: { en: "B: CrackOut", ja: "B: クラックアウト", zh: "B: 砸裂地面" } },
+    { id: "Reflect", name: { en: "B: Reflect", ja: "B: リフレクト", zh: "B: 反射盾" } },
+    { id: "Flower", name: { en: "B: Flower", ja: "B: フラワー", zh: "B: 花朵" } },
+    { id: "WaterGun", name: { en: "B: WaterGun", ja: "B: ウォーターガン", zh: "B: 水枪" } },
+    { id: "MiniBomb", name: { en: "B: MiniBomb", ja: "B: ミニボム", zh: "B: 迷你炸弹" } },
+];
+
+export function getBButtonOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_BBUTTON_OPTIONS;
+    if (gameId === "bn4") return BN4_BBUTTON_OPTIONS;
+    return BN6_BBUTTON_OPTIONS;
+}
+
+export const BBUTTON_OPTIONS = BN6_BBUTTON_OPTIONS;
+
+export const BN6_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
+    { id: "superArmor", name: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" } },
+    { id: "airShoes", name: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" } },
+    { id: "floatShoes", name: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" } },
+    { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
+    { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
+    { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
+    { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
+    { id: "chipShuffle", name: { en: "ChipShuffle", ja: "サーチシャッフル", zh: "随机切换" } },
+    { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
+    { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
+    { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
+];
+
+export const BN5_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
+    { id: "superArmor", name: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" } },
+    { id: "airShoes", name: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" } },
+    { id: "floatShoes", name: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" } },
+    { id: "underShirt", name: { en: "UnderShirt", ja: "アンダーシャツ", zh: "紧身衣" } },
+    { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
+    { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
+    { id: "autoHeal", name: { en: "AutoHeal", ja: "セルフリカバリー", zh: "自我回复" } },
+    { id: "bugStop", name: { en: "BugStop", ja: "バグストッパー", zh: "BUG停止器" } },
+    { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
+    { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
+    { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
+];
+
+export const BN4_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
+    { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
+    { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
+    { id: "fullSynchro", name: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" } },
+    { id: "allGuard", name: { en: "All Guard", ja: "オールガード", zh: "全御防御" } },
+    { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
+    { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
+    { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
+];
+
+export function getCoreAbilityOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_CORE_ABILITY_OPTIONS;
+    if (gameId === "bn4") return BN4_CORE_ABILITY_OPTIONS;
+    return BN6_CORE_ABILITY_OPTIONS;
+}
+
+export const CORE_ABILITY_OPTIONS = BN6_CORE_ABILITY_OPTIONS;
 
 export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "Paralyze", name: { en: "CS: Paralyze (ToadMan)", ja: "CS: 麻痺（トードマン）", zh: "CS: 麻痹 (Paralyze / 青蛙人)" } },
