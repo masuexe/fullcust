@@ -771,6 +771,16 @@ export const translations = {
         ja: "自動装備された改造カード",
         zh: "自动配备的改造卡",
     },
+    collapse: {
+        en: "Collapse",
+        ja: "折りたたむ",
+        zh: "折叠",
+    },
+    expand: {
+        en: "Expand",
+        ja: "展開",
+        zh: "展开",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

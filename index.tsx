@@ -924,6 +924,24 @@ function AutoOptimizerPanel({
     lang: Lang;
     onNavigateToResults?: () => void;
 }) {
+    const [isExpanded, setIsExpanded] = React.useState<boolean>(() => {
+        try {
+            const saved = localStorage.getItem("fullcust_opt_expanded");
+            if (saved !== null) return saved === "true";
+        } catch {}
+        return false; // Collapsed by default to keep the sidebar compact
+    });
+
+    const toggleExpanded = () => {
+        setIsExpanded(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem("fullcust_opt_expanded", String(next));
+            } catch {}
+            return next;
+        });
+    };
+
     const hasModCards = data.gameId !== "bn3";
     const userAlreadyHasCards = Boolean(problem.modCards && problem.modCards.length > 0);
     const [modCardMode, setModCardMode] = React.useState<ModCardMode>(
@@ -999,182 +1017,218 @@ function AutoOptimizerPanel({
 
     return (
         <div className="card shadow-sm mb-3 border-primary-subtle">
-            <div className="card-header bg-primary-subtle py-2 d-flex justify-content-between align-items-center">
-                <span className="fw-bold d-flex align-items-center gap-1">
-                    <span>✨</span>
-                    <span>{t("autoOptimizeTitle", lang)}</span>
-                </span>
-                <span className="badge bg-primary text-light small">AI Auto-Fill</span>
+            <div
+                className="card-header bg-primary-subtle py-2 d-flex justify-content-between align-items-center"
+                style={{ cursor: "pointer", userSelect: "none" }}
+                onClick={toggleExpanded}
+            >
+                <div className="d-flex align-items-center gap-2 flex-wrap">
+                    <span className="fw-bold d-flex align-items-center gap-1">
+                        <span>✨</span>
+                        <span>{t("autoOptimizeTitle", lang)}</span>
+                    </span>
+                    <span className="badge bg-primary text-light small">AI Auto-Fill</span>
+                    {!isExpanded && statusMessage && (
+                        <span className={`badge ${statusMessage.type === "success" ? "bg-success" : "bg-warning"} small`}>
+                            {statusMessage.type === "success" ? "✓" : "!"}
+                        </span>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary py-0 px-2 d-flex align-items-center gap-1 shadow-none"
+                    aria-label={isExpanded ? t("collapse", lang) : t("expand", lang)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpanded();
+                    }}
+                >
+                    <span style={{ fontSize: "0.75rem" }}>
+                        {isExpanded ? t("collapse", lang) : t("expand", lang)}
+                    </span>
+                    <span
+                        style={{
+                            display: "inline-block",
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s ease-in-out",
+                            fontSize: "0.65rem",
+                        }}
+                    >
+                        ▼
+                    </span>
+                </button>
             </div>
-            <div className="card-body py-2">
-                <p className="text-muted small mb-2">{t("autoOptimizeDesc", lang)}</p>
+            {isExpanded && (
+                <div className="card-body py-2">
+                    <p className="text-muted small mb-2">{t("autoOptimizeDesc", lang)}</p>
 
-                {/* Mod Card Format Selector (BN4 / BN5 / BN6) */}
-                {hasModCards && (
-                    <div className="mb-2">
-                        <label className="form-label small fw-semibold mb-1">{t("optModCardModeTitle", lang)}:</label>
-                        <div className="d-flex flex-column gap-1">
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    type="radio"
-                                    name="optModCardMode"
-                                    id="optModCardNone"
-                                    checked={modCardMode === "none"}
-                                    onChange={() => setModCardMode("none")}
-                                />
-                                <label className="form-check-label small" htmlFor="optModCardNone">
-                                    <span className="fw-semibold">{t("optModCardNone", lang)}</span>
-                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                        {t("optModCardNoneDesc", lang)}
-                                    </div>
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    className="form-check-input"
-                                    type="radio"
-                                    name="optModCardMode"
-                                    id="optModCardAuto"
-                                    checked={modCardMode === "auto"}
-                                    onChange={() => setModCardMode("auto")}
-                                />
-                                <label className="form-check-label small" htmlFor="optModCardAuto">
-                                    <span className="fw-semibold">{t("optModCardAuto", lang)}</span>
-                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                        {t("optModCardAutoDesc", lang)}
-                                    </div>
-                                </label>
-                            </div>
-                            {userAlreadyHasCards && (
+                    {/* Mod Card Format Selector (BN4 / BN5 / BN6) */}
+                    {hasModCards && (
+                        <div className="mb-2">
+                            <label className="form-label small fw-semibold mb-1">{t("optModCardModeTitle", lang)}:</label>
+                            <div className="d-flex flex-column gap-1">
                                 <div className="form-check">
                                     <input
                                         className="form-check-input"
                                         type="radio"
                                         name="optModCardMode"
-                                        id="optModCardKeep"
-                                        checked={modCardMode === "keep"}
-                                        onChange={() => setModCardMode("keep")}
+                                        id="optModCardNone"
+                                        checked={modCardMode === "none"}
+                                        onChange={() => setModCardMode("none")}
                                     />
-                                    <label className="form-check-label small" htmlFor="optModCardKeep">
-                                        <span className="fw-semibold">{t("optModCardKeep", lang)}</span>
+                                    <label className="form-check-label small" htmlFor="optModCardNone">
+                                        <span className="fw-semibold">{t("optModCardNone", lang)}</span>
                                         <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                            {t("optModCardKeepDesc", lang)}
+                                            {t("optModCardNoneDesc", lang)}
                                         </div>
                                     </label>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Bug Policy Selector */}
-                <div className="mb-2">
-                    <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
-                    <div className="d-flex flex-column gap-1">
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="optBugPolicy"
-                                id="policyNoBugs"
-                                checked={policyType === "no_bugs"}
-                                onChange={() => {
-                                    setPolicyType("no_bugs");
-                                    onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
-                                }}
-                            />
-                            <label className="form-check-label small" htmlFor="policyNoBugs">
-                                <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
-                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                    {t("policyNoBugsDesc", lang)}
+                                <div className="form-check">
+                                    <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="optModCardMode"
+                                        id="optModCardAuto"
+                                        checked={modCardMode === "auto"}
+                                        onChange={() => setModCardMode("auto")}
+                                    />
+                                    <label className="form-check-label small" htmlFor="optModCardAuto">
+                                        <span className="fw-semibold">{t("optModCardAuto", lang)}</span>
+                                        <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                            {t("optModCardAutoDesc", lang)}
+                                        </div>
+                                    </label>
                                 </div>
-                            </label>
+                                {userAlreadyHasCards && (
+                                    <div className="form-check">
+                                        <input
+                                            className="form-check-input"
+                                            type="radio"
+                                            name="optModCardMode"
+                                            id="optModCardKeep"
+                                            checked={modCardMode === "keep"}
+                                            onChange={() => setModCardMode("keep")}
+                                        />
+                                        <label className="form-check-label small" htmlFor="optModCardKeep">
+                                            <span className="fw-semibold">{t("optModCardKeep", lang)}</span>
+                                            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                                {t("optModCardKeepDesc", lang)}
+                                            </div>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <div className="form-check">
-                            <input
-                                className="form-check-input"
-                                type="radio"
-                                name="optBugPolicy"
-                                id="policyBenign"
-                                checked={policyType === "benign_allowed"}
-                                onChange={() => {
-                                    setPolicyType("benign_allowed");
-                                    onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
-                                }}
-                            />
-                            <label className="form-check-label small" htmlFor="policyBenign">
-                                <span className="fw-semibold">{t("policyBenign", lang)}</span>
-                                <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-                                    {t("policyBenignDesc", lang)}
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Optimization Target Selector */}
-                <div className="mb-3">
-                    <label className="form-label small fw-semibold mb-1">{t("optTarget", lang)}:</label>
-                    <div className="btn-group btn-group-sm w-100" role="group">
-                        <button
-                            type="button"
-                            className={`btn ${target === "max_hp" ? "btn-primary" : "btn-outline-secondary"}`}
-                            onClick={() => setTarget("max_hp")}
-                        >
-                            {t("targetMaxHp", lang)}
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn ${target === "max_buster" ? "btn-primary" : "btn-outline-secondary"}`}
-                            onClick={() => setTarget("max_buster")}
-                        >
-                            {t("targetMaxBuster", lang)}
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn ${target === "balanced" ? "btn-primary" : "btn-outline-secondary"}`}
-                            onClick={() => setTarget("balanced")}
-                        >
-                            {t("targetBalanced", lang)}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Action button */}
-                <button
-                    type="button"
-                    className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
-                    disabled={isOptimizing}
-                    onClick={handleOptimize}
-                >
-                    {isOptimizing ? (
-                        <>
-                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>{t("optimizing", lang)}</span>
-                        </>
-                    ) : (
-                        <span>{t("autoOptimizeBtn", lang)}</span>
                     )}
-                </button>
 
-                {/* Status notice */}
-                {statusMessage ? (
-                    <div className={`alert alert-${statusMessage.type === "success" ? "success" : "warning"} py-2 px-3 mt-2 mb-0 small`}>
-                        <div className="fw-semibold">{statusMessage.text}</div>
-                        {statusMessage.cardDetails && statusMessage.cardDetails.length > 0 ? (
-                            <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
-                                {t("optAddedModCards", lang)}: {statusMessage.cardDetails.join(", ")}
+                    {/* Bug Policy Selector */}
+                    <div className="mb-2">
+                        <label className="form-label small fw-semibold mb-1">{t("bugPolicyTitle", lang)}:</label>
+                        <div className="d-flex flex-column gap-1">
+                            <div className="form-check">
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="optBugPolicy"
+                                    id="policyNoBugs"
+                                    checked={policyType === "no_bugs"}
+                                    onChange={() => {
+                                        setPolicyType("no_bugs");
+                                        onChange({ ...problem, bugPolicy: { type: "no_bugs" } });
+                                    }}
+                                />
+                                <label className="form-check-label small" htmlFor="policyNoBugs">
+                                    <span className="fw-semibold">{t("policyNoBugs", lang)}</span>
+                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                        {t("policyNoBugsDesc", lang)}
+                                    </div>
+                                </label>
                             </div>
-                        ) : null}
-                        {statusMessage.details && statusMessage.details.length > 0 ? (
-                            <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
-                                {t("optAddedParts", lang)}: {statusMessage.details.join(", ")}
+                            <div className="form-check">
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="optBugPolicy"
+                                    id="policyBenign"
+                                    checked={policyType === "benign_allowed"}
+                                    onChange={() => {
+                                        setPolicyType("benign_allowed");
+                                        onChange({ ...problem, bugPolicy: { type: "benign_allowed" } });
+                                    }}
+                                />
+                                <label className="form-check-label small" htmlFor="policyBenign">
+                                    <span className="fw-semibold">{t("policyBenign", lang)}</span>
+                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                        {t("policyBenignDesc", lang)}
+                                    </div>
+                                </label>
                             </div>
-                        ) : null}
+                        </div>
                     </div>
-                ) : null}
-            </div>
+
+                    {/* Optimization Target Selector */}
+                    <div className="mb-3">
+                        <label className="form-label small fw-semibold mb-1">{t("optTarget", lang)}:</label>
+                        <div className="btn-group btn-group-sm w-100" role="group">
+                            <button
+                                type="button"
+                                className={`btn ${target === "max_hp" ? "btn-primary" : "btn-outline-secondary"}`}
+                                onClick={() => setTarget("max_hp")}
+                            >
+                                {t("targetMaxHp", lang)}
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn ${target === "max_buster" ? "btn-primary" : "btn-outline-secondary"}`}
+                                onClick={() => setTarget("max_buster")}
+                            >
+                                {t("targetMaxBuster", lang)}
+                            </button>
+                            <button
+                                type="button"
+                                className={`btn ${target === "balanced" ? "btn-primary" : "btn-outline-secondary"}`}
+                                onClick={() => setTarget("balanced")}
+                            >
+                                {t("targetBalanced", lang)}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Action button */}
+                    <button
+                        type="button"
+                        className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
+                        disabled={isOptimizing}
+                        onClick={handleOptimize}
+                    >
+                        {isOptimizing ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>{t("optimizing", lang)}</span>
+                            </>
+                        ) : (
+                            <span>{t("autoOptimizeBtn", lang)}</span>
+                        )}
+                    </button>
+
+                    {/* Status notice */}
+                    {statusMessage ? (
+                        <div className={`alert alert-${statusMessage.type === "success" ? "success" : "warning"} py-2 px-3 mt-2 mb-0 small`}>
+                            <div className="fw-semibold">{statusMessage.text}</div>
+                            {statusMessage.cardDetails && statusMessage.cardDetails.length > 0 ? (
+                                <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
+                                    {t("optAddedModCards", lang)}: {statusMessage.cardDetails.join(", ")}
+                                </div>
+                            ) : null}
+                            {statusMessage.details && statusMessage.details.length > 0 ? (
+                                <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
+                                    {t("optAddedParts", lang)}: {statusMessage.details.join(", ")}
+                                </div>
+                            ) : null}
+                        </div>
+                    ) : null}
+                </div>
+            )}
         </div>
     );
 }
