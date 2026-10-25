@@ -41,6 +41,11 @@ import {
     CORE_ABILITY_OPTIONS,
     SPECIAL_CS_OPTIONS,
     BLEFT_OPTIONS,
+    BBUTTON_OPTIONS,
+    CHARGE_ADDITION_OPTIONS,
+    BUSTER_ADDITION_OPTIONS,
+    BODY_OPTIONS,
+    GAUGE_OPTIONS,
     FORBIDDEN_BUG_OPTIONS,
     BUG_SPEC_OPTIONS,
 } from "./effects";
@@ -299,6 +304,20 @@ function BuildStatsView({
                     {stats.abilities.map(ability => (
                         <span key={ability} className="badge bg-dark border border-secondary text-light py-1 px-2">
                             ✨ {tAbility(ability, lang)}
+                        </span>
+                    ))}
+                </div>
+            ) : null}
+
+            {stats.disabledAbilitiesFromCards && stats.disabledAbilitiesFromCards.length > 0 ? (
+                <div className="d-flex flex-wrap gap-1 mt-1">
+                    {stats.disabledAbilitiesFromCards.map(ability => (
+                        <span
+                            key={ability}
+                            className="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-line-through py-1 px-2"
+                            title={t("abilityStrippedNotice", lang)}
+                        >
+                            ❌ {tAbility(ability, lang)} ({t("abilityStrippedNotice", lang)})
                         </span>
                     ))}
                 </div>
@@ -750,6 +769,15 @@ function ModCardManager({
                                     : `Buster Addition [${deck.invalidatedBusterAddition}] is overridden by [${deck.bButton}] and has no effect!`}
                             </div>
                         ) : null}
+                        {deck.disabledAbilities && deck.disabledAbilities.length > 0 ? (
+                            <div className="alert alert-danger py-1 px-2 mb-2 small" style={{ fontSize: "0.78rem" }}>
+                                ⚠️ {lang === "zh"
+                                    ? `卡组包含负面关闭能力：[${deck.disabledAbilities.map(a => tAbility(a, lang)).join(", ")}]，若压盘安装了对应程序将被剥夺失效！`
+                                    : lang === "ja"
+                                    ? `カード構成にアビリティ無効化効果が含まれています：[${deck.disabledAbilities.map(a => tAbility(a, lang)).join(", ")}]。該当ナビカスプログラムは無効化されます！`
+                                    : `Deck disables abilities: [${deck.disabledAbilities.map(a => tAbility(a, lang)).join(", ")}]. Any matching NaviCust programs will be stripped!`}
+                            </div>
+                        ) : null}
 
                         {/* Clear all button */}
                         {cardIds.length > 0 ? (
@@ -986,6 +1014,21 @@ function AutoOptimizerPanel({
     const [reqBLeft, setReqBLeft] = React.useState<string>(
         problem.constraints?.requiredBLeft ?? ""
     );
+    const [reqBButton, setReqBButton] = React.useState<string>(
+        problem.constraints?.requiredBButton ?? ""
+    );
+    const [reqChargeAddition, setReqChargeAddition] = React.useState<string>(
+        problem.constraints?.requiredChargeAddition ?? ""
+    );
+    const [reqBusterAddition, setReqBusterAddition] = React.useState<string>(
+        problem.constraints?.requiredBusterAddition ?? ""
+    );
+    const [reqBody, setReqBody] = React.useState<string>(
+        problem.constraints?.requiredBody ?? ""
+    );
+    const [reqGauge, setReqGauge] = React.useState<string>(
+        problem.constraints?.requiredGauge ?? ""
+    );
     const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
         return problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {};
     });
@@ -995,6 +1038,11 @@ function AutoOptimizerPanel({
         reqAbilities.length +
         (reqSpecialMove ? 1 : 0) +
         (reqBLeft ? 1 : 0) +
+        (reqBButton ? 1 : 0) +
+        (reqChargeAddition ? 1 : 0) +
+        (reqBusterAddition ? 1 : 0) +
+        (reqBody ? 1 : 0) +
+        (reqGauge ? 1 : 0) +
         numConfiguredBugs;
     const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
     const [isOptimizing, setIsOptimizing] = React.useState(false);
@@ -1040,6 +1088,11 @@ function AutoOptimizerPanel({
                     ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
                     ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
                     ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
+                    ...(reqBButton ? { requiredBButton: reqBButton } : {}),
+                    ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
+                    ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
+                    ...(reqBody ? { requiredBody: reqBody } : {}),
+                    ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
                     ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
                 };
 
@@ -1265,42 +1318,142 @@ function AutoOptimizerPanel({
                                         </div>
                                     </div>
 
-                                    {/* Special CS & B+Left (Available when mod cards enabled) */}
+                                    {/* Mod Card Specific Battle Specs & Controls */}
                                     {hasModCards && modCardMode !== "none" && (
-                                        <div className="row g-2 mb-2">
-                                            <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold mb-1">
-                                                    {t("reqSpecialMoveTitle", lang)}:
-                                                </label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={reqSpecialMove}
-                                                    onChange={e => setReqSpecialMove(e.target.value)}
-                                                >
-                                                    <option value="">{t("anyOption", lang)}</option>
-                                                    {SPECIAL_CS_OPTIONS.map(opt => (
-                                                        <option key={opt.id} value={opt.id}>
-                                                            {opt.name[lang] || opt.name.en}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                        <div className="pt-2 border-top border-secondary-subtle">
+                                            {/* Row 1: Special CS & B+Left */}
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqSpecialMoveTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqSpecialMove}
+                                                        onChange={e => setReqSpecialMove(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {SPECIAL_CS_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqBLeftTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqBLeft}
+                                                        onChange={e => setReqBLeft(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {BLEFT_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div className="col-12 col-md-6">
-                                                <label className="form-label small fw-semibold mb-1">
-                                                    {t("reqBLeftTitle", lang)}:
-                                                </label>
-                                                <select
-                                                    className="form-select form-select-sm"
-                                                    value={reqBLeft}
-                                                    onChange={e => setReqBLeft(e.target.value)}
-                                                >
-                                                    <option value="">{t("anyOption", lang)}</option>
-                                                    {BLEFT_OPTIONS.map(opt => (
-                                                        <option key={opt.id} value={opt.id}>
-                                                            {opt.name[lang] || opt.name.en}
-                                                        </option>
-                                                    ))}
-                                                </select>
+
+                                            {/* Row 2: B-Button Override & Gauge Speed */}
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqBButtonTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqBButton}
+                                                        onChange={e => setReqBButton(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {BBUTTON_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqGaugeTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqGauge}
+                                                        onChange={e => setReqGauge(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {GAUGE_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Row 3: CS Addition & Buster Addition */}
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqChargeAdditionTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqChargeAddition}
+                                                        onChange={e => setReqChargeAddition(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {CHARGE_ADDITION_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqBusterAdditionTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqBusterAddition}
+                                                        onChange={e => setReqBusterAddition(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {BUSTER_ADDITION_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* Row 4: Body Element */}
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqBodyTitle", lang)}:
+                                                    </label>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={reqBody}
+                                                        onChange={e => setReqBody(e.target.value)}
+                                                    >
+                                                        <option value="">{t("anyOption", lang)}</option>
+                                                        {BODY_OPTIONS.map(opt => (
+                                                            <option key={opt.id} value={opt.id}>
+                                                                {opt.name[lang] || opt.name.en}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
                                     )}

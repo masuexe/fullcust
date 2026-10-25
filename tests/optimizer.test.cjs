@@ -491,3 +491,106 @@ test("CS and Buster addition invalidation rules and tripleBuster compatibility",
         "ChargeShot constraint must not select any special CS"
     );
 });
+
+test("Mod Card negative properties strip NC abilities and report disabledAbilitiesFromCards", () => {
+    const { computeBuildStats } = require("../effects.ts");
+    // Part ID 1 is SuperArmor in BN6
+    // Card 137-A024 is BigHat, which disables superArmor
+    const statsWithSA = computeBuildStats("bn6", [1], ["137-A024"], 1000);
+    assert.equal(statsWithSA.abilities.includes("superArmor"), false, "SuperArmor must be stripped from final abilities");
+    assert.deepEqual(statsWithSA.disabledAbilitiesFromCards, ["superArmor"], "disabledAbilitiesFromCards must report superArmor");
+});
+
+test("Extended build constraints: BButton, Additions, Body, Gauge and URL round-trip", () => {
+    const { computeDeckStats } = require("../modcards.ts");
+    const { optimizeModCards, orderModCardsForConstraints } = require("../optimizer.ts");
+    const { toHashString, fromHashString } = require("../problem.ts");
+    const data = getGameData("bn6");
+
+    // 1. Optimize with requiredChargeAddition: Paralyze (ToadMan 137-A037)
+    const cardsWithCA = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredChargeAddition: "Paralyze" },
+    });
+    const deckCA = computeDeckStats(cardsWithCA, "bn6");
+    assert.equal(deckCA.chargeAddition, "Paralyze", "Must fulfill requiredChargeAddition: Paralyze");
+    assert.ok(!deckCA.bPwrAtk || deckCA.bPwrAtk.toLowerCase() === "chargeshot", "Must not invalidate chargeAddition with special CS");
+
+    // 2. Optimize with requiredBusterAddition: 1 square knock back (BomBoy 137-A017)
+    const cardsWithBA = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredBusterAddition: "1 square knock back" },
+    });
+    const deckBA = computeDeckStats(cardsWithBA, "bn6");
+    assert.equal(deckBA.busterAddition, "1 square knock back", "Must fulfill requiredBusterAddition");
+    assert.equal(deckBA.bButton, undefined, "Must not invalidate busterAddition with bButton override");
+
+    // 3. Optimize with requiredBButton: Sword
+    const cardsWithSword = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredBButton: "Sword" },
+    });
+    const deckSword = computeDeckStats(cardsWithSword, "bn6");
+    assert.equal(deckSword.bButton, "Sword", "Must fulfill requiredBButton: Sword");
+
+    // 4. Optimize with requiredBButton: none (pure standard buster)
+    const cardsNoBButton = optimizeModCards({
+        gameId: "bn6",
+        target: "max_buster",
+        policy: { type: "custom" },
+        constraints: { requiredBButton: "none" },
+    });
+    const deckNoB = computeDeckStats(cardsNoBButton, "bn6");
+    assert.equal(deckNoB.bButton, undefined, "Must not have any bButton weapon override");
+
+    // 5. Optimize with requiredGauge: fast
+    const cardsFastGauge = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredGauge: "fast" },
+    });
+    const deckGauge = computeDeckStats(cardsFastGauge, "bn6");
+    assert.equal(deckGauge.gauge, "fast", "Must fulfill requiredGauge: fast");
+
+    // 6. Optimize with requiredBody: Wood
+    const cardsWood = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredBody: "Wood" },
+    });
+    const deckWood = computeDeckStats(cardsWood, "bn6");
+    assert.equal(deckWood.body, "Wood", "Must fulfill requiredBody: Wood");
+
+    // 7. Problem hash serialization round-trip for all extended constraints
+    const prob = emptyProblem(data);
+    prob.constraints = {
+        requiredAbilities: ["superArmor"],
+        requiredSpecialMove: "ChargeShot",
+        requiredBLeft: "AntiDamage",
+        requiredBButton: "Sword",
+        requiredChargeAddition: "Paralyze",
+        requiredBusterAddition: "1 square knock back",
+        requiredBody: "Wood",
+        requiredGauge: "fast",
+        bugRules: { buster: "required" },
+    };
+    const hash = toHashString(prob, data);
+    const restored = fromHashString(hash, data);
+    assert.ok(restored && restored.constraints);
+    assert.equal(restored.constraints.requiredSpecialMove, "ChargeShot");
+    assert.equal(restored.constraints.requiredBLeft, "AntiDamage");
+    assert.equal(restored.constraints.requiredBButton, "Sword");
+    assert.equal(restored.constraints.requiredChargeAddition, "Paralyze");
+    assert.equal(restored.constraints.requiredBusterAddition, "1 square knock back");
+    assert.equal(restored.constraints.requiredBody, "Wood");
+    assert.equal(restored.constraints.requiredGauge, "fast");
+    assert.deepEqual(restored.constraints.bugRules, { buster: "required" });
+});

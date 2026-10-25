@@ -19,6 +19,11 @@ export interface BuildConstraints {
     requiredAbilities?: string[];
     requiredSpecialMove?: string;
     requiredBLeft?: string;
+    requiredBButton?: string;
+    requiredChargeAddition?: string;
+    requiredBusterAddition?: string;
+    requiredBody?: string;
+    requiredGauge?: "fast" | "slow" | "normal";
     forbiddenBugs?: string[];
     bugRules?: Record<string, BugTolerance>;
 }
@@ -69,6 +74,11 @@ const SavedProblem = z.object({
         a: z.array(z.string()).optional(),
         cs: z.string().optional(),
         bl: z.string().optional(),
+        bb: z.string().optional(),
+        ca: z.string().optional(),
+        ba: z.string().optional(),
+        bd: z.string().optional(),
+        g: z.enum(["fast", "slow", "normal"]).optional(),
         fb: z.array(z.string()).optional(),
         br: z.record(z.string()).optional(),
     }).optional(),
@@ -141,6 +151,11 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.a ? { requiredAbilities: saved.bc.a } : {}),
         ...(saved.bc.cs ? { requiredSpecialMove: saved.bc.cs } : {}),
         ...(saved.bc.bl ? { requiredBLeft: saved.bc.bl } : {}),
+        ...(saved.bc.bb ? { requiredBButton: saved.bc.bb } : {}),
+        ...(saved.bc.ca ? { requiredChargeAddition: saved.bc.ca } : {}),
+        ...(saved.bc.ba ? { requiredBusterAddition: saved.bc.ba } : {}),
+        ...(saved.bc.bd ? { requiredBody: saved.bc.bd } : {}),
+        ...(saved.bc.g ? { requiredGauge: saved.bc.g } : {}),
         ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb } : {}),
         ...(saved.bc.br ? { bugRules: saved.bc.br as Record<string, BugTolerance> } : {}),
     } : undefined;
@@ -189,6 +204,11 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.requiredAbilities?.length ||
             problem.constraints.requiredSpecialMove ||
             problem.constraints.requiredBLeft ||
+            problem.constraints.requiredBButton ||
+            problem.constraints.requiredChargeAddition ||
+            problem.constraints.requiredBusterAddition ||
+            problem.constraints.requiredBody ||
+            problem.constraints.requiredGauge ||
             problem.constraints.forbiddenBugs?.length ||
             (problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0)
         ) ? {
@@ -196,6 +216,11 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.requiredAbilities?.length ? { a: problem.constraints.requiredAbilities } : {}),
                 ...(problem.constraints.requiredSpecialMove ? { cs: problem.constraints.requiredSpecialMove } : {}),
                 ...(problem.constraints.requiredBLeft ? { bl: problem.constraints.requiredBLeft } : {}),
+                ...(problem.constraints.requiredBButton ? { bb: problem.constraints.requiredBButton } : {}),
+                ...(problem.constraints.requiredChargeAddition ? { ca: problem.constraints.requiredChargeAddition } : {}),
+                ...(problem.constraints.requiredBusterAddition ? { ba: problem.constraints.requiredBusterAddition } : {}),
+                ...(problem.constraints.requiredBody ? { bd: problem.constraints.requiredBody } : {}),
+                ...(problem.constraints.requiredGauge ? { g: problem.constraints.requiredGauge } : {}),
                 ...(problem.constraints.forbiddenBugs?.length ? { fb: problem.constraints.forbiddenBugs } : {}),
                 ...(problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0 ? { br: problem.constraints.bugRules } : {}),
             },

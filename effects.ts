@@ -52,6 +52,7 @@ export interface BuildStats {
     modSlotsUsed?: string[];
     modBugCount?: number;
     repairedBugs?: string[];
+    disabledAbilitiesFromCards?: string[];
 }
 
 export const BN6_PART_EFFECTS: Record<number, PartEffect> = {
@@ -304,6 +305,7 @@ export function computeBuildStats(
     let modSlotsUsed: string[] | undefined;
     let modBugCount: number | undefined;
     let repairedBugs: string[] | undefined;
+    let disabledAbilitiesFromCards: string[] | undefined;
 
     let baseAttack = attackMax ? 5 : (1 + attackBonus);
     let baseRapid = rapidMax ? 5 : (1 + rapidBonus);
@@ -330,8 +332,15 @@ export function computeBuildStats(
         for (const ab of deck.activeAbilities) {
             abilitySet.add(ab);
         }
+        const stripped: string[] = [];
         for (const dab of deck.disabledAbilities) {
+            if (abilitySet.has(dab)) {
+                stripped.push(dab);
+            }
             abilitySet.delete(dab);
+        }
+        if (stripped.length > 0) {
+            disabledAbilitiesFromCards = stripped;
         }
 
         modBody = deck.body;
@@ -405,6 +414,7 @@ export function computeBuildStats(
         modSlotsUsed,
         modBugCount,
         repairedBugs,
+        disabledAbilitiesFromCards,
     };
 }
 
@@ -459,8 +469,6 @@ export const CORE_ABILITY_OPTIONS: ConstraintOption[] = [
     { id: "statusGuard", name: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" } },
     { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
     { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
-    { id: "fastGauge", name: { en: "FastGauge", ja: "クイックゲージ", zh: "快速量表" } },
-    { id: "slowGauge", name: { en: "SlowGauge", ja: "ヘビーゲージ", zh: "缓慢量表" } },
     { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
     { id: "beat", name: { en: "Beat Support", ja: "ビートサポート", zh: "比特支援" } },
     { id: "tango", name: { en: "Tango Support", ja: "タンゴサポート", zh: "探戈支援" } },
@@ -492,6 +500,54 @@ export const BLEFT_OPTIONS: ConstraintOption[] = [
     { id: "Fan", name: { en: "B+Left: Fan (WindMan)", ja: "B+左: スイコミ（ウインドマン）", zh: "B+左: 抽风机 (Fan / 风人)" } },
     { id: "Meteor3", name: { en: "B+Left: Meteor3 (PlanetMan)", ja: "B+左: メテオ3（プラネットマン）", zh: "B+左: 流星3 (Meteor3 / 行星人)" } },
     { id: "RiskyHoney", name: { en: "B+Left: RiskyHoney (HoneyBomber)", ja: "B+左: リスキーハニー（ハニーボマー）", zh: "B+左: 危险蜂蜜 (RiskyHoney / 蜜蜂)" } },
+];
+
+export const BBUTTON_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard Buster (No Weapon Override)", ja: "通常バスター（武器上書きなし）", zh: "标准洛克炮 (禁用武器覆盖)" } },
+    { id: "Sword", name: { en: "B: Sword (Shadow / Zero)", ja: "B: ソード（シャドー / ゼロ）", zh: "B: 剑 (Sword / 暗影 / ZERO)" } },
+    { id: "MiniBomb", name: { en: "B: MiniBomb (Beetle)", ja: "B: ミニボム（ビートル）", zh: "B: 迷你炸弹 (MiniBomb / 甲虫)" } },
+    { id: "CrackShot", name: { en: "B: CrackShot (PlanetMan)", ja: "B: クラックショット（プラネットマン）", zh: "B: 裂缝射击 (CrackShot / 行星人)" } },
+    { id: "Meteor1", name: { en: "B: Meteor1 (MetFire)", ja: "B: メテオ1（メットファイア）", zh: "B: 流星1 (Meteor1 / 头盔火)" } },
+    { id: "Vulcan", name: { en: "B: Vulcan (BowlMan)", ja: "B: バルカン（ボウルマン）", zh: "B: 火神炮 (Vulcan / 保龄球人)" } },
+];
+
+export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "Paralyze", name: { en: "CS: Paralyze (ToadMan)", ja: "CS: 麻痺（トードマン）", zh: "CS: 麻痹 (Paralyze / 青蛙人)" } },
+    { id: "Confusion", name: { en: "CS: Confusion (Punk / Skarab)", ja: "CS: 混乱（パンク / スカラビア）", zh: "CS: 混乱 (Confusion / 庞克 / 骷髅比亚)" } },
+    { id: "Freeze", name: { en: "CS: Freeze (ColdMan)", ja: "CS: 凍結（コールドマン）", zh: "CS: 冻结 (Freeze / 寒冷人)" } },
+    { id: "Bubble", name: { en: "CS: Bubble (StarFish)", ja: "CS: 泡（ヒトデスタ）", zh: "CS: 泡沫 (Bubble / 海星星)" } },
+    { id: "Break element", name: { en: "CS: Break Element (Armadill)", ja: "CS: ブレイク属性（アルマン）", zh: "CS: 破防 (Break / 犰狳)" } },
+    { id: "Pull", name: { en: "CS: Pull (MagTect)", ja: "CS: 引き寄せ（マグテクト）", zh: "CS: 吸引 (Pull / 磁侦特)" } },
+    { id: "Grass Panel", name: { en: "CS: Grass Panel (WuNote / PlantMan)", ja: "CS: 草むらパネル（ウドノート / プラントマン）", zh: "CS: 草地 (Grass / 音符木头 / 植物人)" } },
+    { id: "Ice Panel", name: { en: "CS: Ice Panel (ElmntMan)", ja: "CS: 氷パネル（エレメントマン）", zh: "CS: 冰面 (Ice / 元素人)" } },
+    { id: "Left Arrow Panel", name: { en: "CS: Left Arrow (VideoMan)", ja: "CS: 左矢印パネル（ビデオマン）", zh: "CS: 左箭头 (Left Arrow / 影像人)" } },
+    { id: "Right Arrow Panel", name: { en: "CS: Right Arrow (Magneakr)", ja: "CS: 右矢印パネル（マグニッカー）", zh: "CS: 右箭头 (Right Arrow / 磁蝗虫)" } },
+    { id: "HP Bug LV1", name: { en: "CS: HP Bug LV1 (SkullMan)", ja: "CS: HPバグLV1（スカルマン）", zh: "CS: HP BUG (SkullMan / 骷髅人)" } },
+    { id: "Chip Destruction", name: { en: "CS: Chip Destruction (LarkMan)", ja: "CS: チップ破壊（スワローマン）", zh: "CS: 芯片破坏 (LarkMan / 飞燕人)" } },
+    { id: "Instant Delete", name: { en: "CS: Instant Delete (EraseMan)", ja: "CS: 即死（キラーマン）", zh: "CS: 即死/扣血 (EraseMan / 杀手人)" } },
+];
+
+export const BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "1 square knock back", name: { en: "Knockback 1 Square (BomBoy)", ja: "1マスノックバック（ボムボーイ）", zh: "击退 1 格 (1 square knock back / 炸弹小弟)" } },
+    { id: "Knock back all the way", name: { en: "Knockback to Edge (AirMan)", ja: "端までノックバック（エアーマン）", zh: "击退到底 (Knock back all / 气力人)" } },
+    { id: "Cracked Panel", name: { en: "Cracked Panel (DustMan / Twisty)", ja: "ヒビパネル（ダストマン / ツイスティ）", zh: "裂地面 (Cracked Panel / 尘埃人 / 扭扭虫)" } },
+    { id: "Grass Panel", name: { en: "Grass Panel (Shrubby / ElmntMan)", ja: "草むらパネル（シュラッキー / エレメントマン）", zh: "草地面 (Grass Panel / 灌木怪 / 元素人)" } },
+    { id: "Ice Panel", name: { en: "Ice Panel (FreezeMn)", ja: "氷パネル（フリーズマン）", zh: "冰地面 (Ice Panel / 冷冻人)" } },
+    { id: "Swamp Panel", name: { en: "Swamp Panel (MistMan / DarkMega)", ja: "沼パネル（ミストマン / ダークロックマン）", zh: "毒沼面 (Swamp Panel / 雾人 / 黑暗洛克人)" } },
+];
+
+export const BODY_OPTIONS: ConstraintOption[] = [
+    { id: "Normal", name: { en: "Normal Body", ja: "ノーマルボディ", zh: "一般躯体 (Normal)" } },
+    { id: "Fire", name: { en: "Fire Body", ja: "ヒートボディ", zh: "火之躯体 (Fire)" } },
+    { id: "Aqua", name: { en: "Aqua Body", ja: "アクアボディ", zh: "水之躯体 (Aqua)" } },
+    { id: "Elec", name: { en: "Elec Body", ja: "エレキボディ", zh: "雷之躯体 (Elec)" } },
+    { id: "Wood", name: { en: "Wood Body", ja: "ウッドボディ", zh: "木之躯体 (Wood)" } },
+];
+
+export const GAUGE_OPTIONS: ConstraintOption[] = [
+    { id: "fast", name: { en: "FastGauge", ja: "クイックゲージ", zh: "快速量表 (FastGauge)" } },
+    { id: "slow", name: { en: "SlowGauge", ja: "ヘビーゲージ", zh: "缓慢量表 (SlowGauge)" } },
+    { id: "normal", name: { en: "NormalGauge", ja: "ノーマルゲージ", zh: "普通量表 (NormalGauge)" } },
 ];
 
 export interface BugSpecOption {

@@ -806,6 +806,36 @@ export const translations = {
         ja: "B＋左コマンド技",
         zh: "B＋左指令技",
     },
+    reqBButtonTitle: {
+        en: "B-Button Weapon Override",
+        ja: "Bボタン通常ショット（武器上書き）",
+        zh: "B钮普通攻击（武器覆盖）",
+    },
+    reqChargeAdditionTitle: {
+        en: "ChargeShot Addition",
+        ja: "CS付加効果",
+        zh: "集气射击附加效果",
+    },
+    reqBusterAdditionTitle: {
+        en: "Buster Addition",
+        ja: "バスター付加効果",
+        zh: "洛克炮附加效果",
+    },
+    reqBodyTitle: {
+        en: "Body Element",
+        ja: "ボディ属性",
+        zh: "身体属性",
+    },
+    reqGaugeTitle: {
+        en: "Gauge Speed",
+        ja: "ゲージ速度",
+        zh: "战斗量表速度",
+    },
+    abilityStrippedNotice: {
+        en: "Stripped by Mod Card",
+        ja: "改造カードにより無効化",
+        zh: "已被改造卡效果剥夺关闭",
+    },
     forbiddenBugsTitle: {
         en: "Strictly Forbidden Bugs",
         ja: "厳禁バグ（実戦発生禁止）",

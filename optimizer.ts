@@ -133,8 +133,37 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
     return (hp * 0.6) + (custom * 100) + (mega * 80) + (giga * 120) + (attack * 50) + abilityBonus;
 }
 
+export function matchBButton(cardBButton: string | undefined, req: string): boolean {
+    if (req === "none") return !cardBButton;
+    if (!cardBButton) return false;
+    if (req === "Meteor1") return cardBButton.startsWith("Meteor1");
+    return cardBButton === req || cardBButton.toLowerCase().includes(req.toLowerCase());
+}
+
+export function matchChargeAddition(cardCA: string | undefined, req: string): boolean {
+    if (!cardCA) return false;
+    if (req === "Chip Destruction") return cardCA.startsWith("Chip Destruction");
+    if (req === "Instant Delete") return cardCA.startsWith("Instant Delete");
+    return cardCA === req || cardCA.toLowerCase().includes(req.toLowerCase());
+}
+
+export function matchBusterAddition(cardBA: string | undefined, req: string): boolean {
+    if (!cardBA) return false;
+    return cardBA === req || cardBA.toLowerCase().includes(req.toLowerCase());
+}
+
+export function matchBody(cardBody: string | undefined, req: string): boolean {
+    if (!cardBody) return false;
+    return cardBody.toLowerCase() === req.toLowerCase();
+}
+
+export function matchGauge(cardGauge: string | undefined, req: string): boolean {
+    if (!cardGauge) return false;
+    return cardGauge.toLowerCase() === req.toLowerCase();
+}
+
 /**
- * Orders mod cards sequentially so that required special CS or B+Left moves are placed last
+ * Orders mod cards sequentially so that required moves, additions, and attributes are placed last
  * among cards that modify those attributes, preventing accidental overwriting.
  */
 export function orderModCardsForConstraints(
@@ -144,17 +173,23 @@ export function orderModCardsForConstraints(
 ): string[] {
     if (!constraints || cardIds.length <= 1) return cardIds;
     const sorted = [...cardIds];
+
     if (constraints.requiredSpecialMove) {
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = cardA?.bPwrAtk === constraints.requiredSpecialMove;
-            const bMatches = cardB?.bPwrAtk === constraints.requiredSpecialMove;
+            const aMatches = constraints.requiredSpecialMove === "ChargeShot"
+                ? (!cardA?.bPwrAtk || cardA.bPwrAtk.toLowerCase() === "chargeshot")
+                : cardA?.bPwrAtk === constraints.requiredSpecialMove;
+            const bMatches = constraints.requiredSpecialMove === "ChargeShot"
+                ? (!cardB?.bPwrAtk || cardB.bPwrAtk.toLowerCase() === "chargeshot")
+                : cardB?.bPwrAtk === constraints.requiredSpecialMove;
             if (aMatches && !bMatches) return 1;
             if (!aMatches && bMatches) return -1;
             return 0;
         });
     }
+
     if (constraints.requiredBLeft) {
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
@@ -166,6 +201,67 @@ export function orderModCardsForConstraints(
             return 0;
         });
     }
+
+    if (constraints.requiredBButton && constraints.requiredBButton !== "none") {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = matchBButton(cardA?.bButton, constraints.requiredBButton!);
+            const bMatches = matchBButton(cardB?.bButton, constraints.requiredBButton!);
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+
+    if (constraints.requiredChargeAddition) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = matchChargeAddition(cardA?.chargeAddition, constraints.requiredChargeAddition!);
+            const bMatches = matchChargeAddition(cardB?.chargeAddition, constraints.requiredChargeAddition!);
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+
+    if (constraints.requiredBusterAddition) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = matchBusterAddition(cardA?.busterAddition, constraints.requiredBusterAddition!);
+            const bMatches = matchBusterAddition(cardB?.busterAddition, constraints.requiredBusterAddition!);
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+
+    if (constraints.requiredBody) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = matchBody(cardA?.body, constraints.requiredBody!);
+            const bMatches = matchBody(cardB?.body, constraints.requiredBody!);
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+
+    if (constraints.requiredGauge) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aMatches = matchGauge(cardA?.gauge, constraints.requiredGauge!);
+            const bMatches = matchGauge(cardB?.gauge, constraints.requiredGauge!);
+            if (aMatches && !bMatches) return 1;
+            if (!aMatches && bMatches) return -1;
+            return 0;
+        });
+    }
+
     return sorted;
 }
 
@@ -225,6 +321,80 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         }
     }
 
+    // Lock required B-Button override if specified
+    if (constraints?.requiredBButton && constraints.requiredBButton !== "none" && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return matchBButton(c?.bButton, constraints.requiredBButton!);
+    })) {
+        const matchingCards = allCards.filter(
+            c => matchBButton(c.bButton, constraints.requiredBButton!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required Charge Addition if specified
+    if (constraints?.requiredChargeAddition && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return matchChargeAddition(c?.chargeAddition, constraints.requiredChargeAddition!);
+    })) {
+        const matchingCards = allCards.filter(
+            c => matchChargeAddition(c.chargeAddition, constraints.requiredChargeAddition!) &&
+                 (!c.bPwrAtk || c.bPwrAtk.toLowerCase() === "chargeshot") &&
+                 isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required Buster Addition if specified
+    if (constraints?.requiredBusterAddition && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return matchBusterAddition(c?.busterAddition, constraints.requiredBusterAddition!);
+    })) {
+        const matchingCards = allCards.filter(
+            c => matchBusterAddition(c.busterAddition, constraints.requiredBusterAddition!) &&
+                 !c.bButton &&
+                 isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required Body Element if specified
+    if (constraints?.requiredBody && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return matchBody(c?.body, constraints.requiredBody!);
+    })) {
+        const matchingCards = allCards.filter(
+            c => matchBody(c.body, constraints.requiredBody!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required Gauge speed if specified
+    if (constraints?.requiredGauge && !locked.some(id => {
+        const c = getModCard(id, gameId);
+        return matchGauge(c?.gauge, constraints.requiredGauge!);
+    })) {
+        const matchingCards = allCards.filter(
+            c => matchGauge(c.gauge, constraints.requiredGauge!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+        );
+        if (matchingCards.length > 0) {
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            locked.push(matchingCards[0].id);
+        }
+    }
+
     const lockedSet = new Set(locked);
 
     const candidateCards = allCards.filter(c => {
@@ -238,6 +408,25 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             }
         }
         if (constraints?.requiredBLeft && c.bLeft && c.bLeft !== constraints.requiredBLeft) return false;
+        if (constraints?.requiredBButton) {
+            if (constraints.requiredBButton === "none") {
+                if (c.bButton) return false;
+            } else {
+                if (c.bButton && !matchBButton(c.bButton, constraints.requiredBButton)) return false;
+            }
+        }
+        if (constraints?.requiredChargeAddition) {
+            if (c.disabledChargeAddition) return false;
+            if (c.bPwrAtk && c.bPwrAtk.toLowerCase() !== "chargeshot") return false;
+            if (c.chargeAddition && !matchChargeAddition(c.chargeAddition, constraints.requiredChargeAddition)) return false;
+        }
+        if (constraints?.requiredBusterAddition) {
+            if (c.disabledBusterAddition) return false;
+            if (c.bButton) return false;
+            if (c.busterAddition && !matchBusterAddition(c.busterAddition, constraints.requiredBusterAddition)) return false;
+        }
+        if (constraints?.requiredBody && c.body && !matchBody(c.body, constraints.requiredBody)) return false;
+        if (constraints?.requiredGauge && c.gauge && !matchGauge(c.gauge, constraints.requiredGauge)) return false;
         return true;
     });
 
@@ -476,6 +665,26 @@ function doesBuildSatisfyConstraints(
         if (stats.modBLeft !== constraints.requiredBLeft) {
             return false;
         }
+    }
+
+    if (constraints.requiredBButton) {
+        if (!matchBButton(stats.modBButton, constraints.requiredBButton)) return false;
+    }
+
+    if (constraints.requiredChargeAddition) {
+        if (!matchChargeAddition(stats.modChargeAddition, constraints.requiredChargeAddition)) return false;
+    }
+
+    if (constraints.requiredBusterAddition) {
+        if (!matchBusterAddition(stats.modBusterAddition, constraints.requiredBusterAddition)) return false;
+    }
+
+    if (constraints.requiredBody) {
+        if (!matchBody(stats.modBody, constraints.requiredBody)) return false;
+    }
+
+    if (constraints.requiredGauge) {
+        if (!matchGauge(stats.modGauge, constraints.requiredGauge)) return false;
     }
 
     const effectiveBugs = getEffectiveInBattleBugs(analysis);
@@ -774,6 +983,26 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         if (constraints?.requiredBLeft) {
             const deck = computeDeckStats(modCards, data.gameId);
             if (deck.bLeft !== constraints.requiredBLeft) return null;
+        }
+        if (constraints?.requiredBButton) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (!matchBButton(deck.bButton, constraints.requiredBButton)) return null;
+        }
+        if (constraints?.requiredChargeAddition) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (!matchChargeAddition(deck.chargeAddition, constraints.requiredChargeAddition)) return null;
+        }
+        if (constraints?.requiredBusterAddition) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (!matchBusterAddition(deck.busterAddition, constraints.requiredBusterAddition)) return null;
+        }
+        if (constraints?.requiredBody) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (!matchBody(deck.body, constraints.requiredBody)) return null;
+        }
+        if (constraints?.requiredGauge) {
+            const deck = computeDeckStats(modCards, data.gameId);
+            if (!matchGauge(deck.gauge, constraints.requiredGauge)) return null;
         }
 
         const deck = computeDeckStats(modCards, data.gameId);
