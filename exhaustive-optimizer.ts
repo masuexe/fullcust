@@ -4,7 +4,7 @@ import { computeDeckStats, getModCards, ModCard } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll, Requirement, solve } from "./solver";
 import {
-    doesBuildSatisfyConstraints, compareBuildStats, getCandidateFillerParts,
+    doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, getCandidateFillerParts,
     OptimizeOptions, OptimizeResult, requirementsUnderPolicy,
     occupiedBuildCells, removeRedundantAbilityParts,
     bodyConstraintsPossible,
@@ -162,7 +162,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                             addedCardIds: modCardMode === "auto" ? [...modCards] : [],
                         });
                         const cells = occupiedBuildCells(data, candidate);
-                        if (comparison > 0 || (cells < bestCells && JSON.stringify(candidate.stats) === JSON.stringify(progress.best?.stats))) {
+                        if (comparison > 0 || (cells < bestCells && progress.best && haveSameBuildEffects(candidate.stats, progress.best.stats, constraints))) {
                             bestCells = cells;
                             progress.best = candidate;
                             lastReport = Date.now();

@@ -1,8 +1,8 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BuildStats, computeBuildStats, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { findFeasibleBuild } from "./feasible-optimizer";
 import { computeDeckStats, getModCards } from "./modcards";
-import { doesBuildSatisfyConstraints, compareBuildStats, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
+import { doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll } from "./solver";
 
@@ -62,7 +62,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         const comparison = compareBuildStats(result.stats, best.stats, target);
         const cells = occupiedBuildCells(data, result);
         if (comparison < 0 || (comparison === 0 &&
-            (cells >= bestCells || JSON.stringify(result.stats) !== JSON.stringify(best.stats)))) return;
+            (cells >= bestCells || !haveSameBuildEffects(result.stats, best.stats, constraints)))) return;
         best = { ...result,
             problem: { ...result.problem, constraints, bugPolicy: policy },
             addedPartIndices: result.problem.requirements.slice(problem.requirements.length).map(req => req.partIndex),
@@ -140,7 +140,10 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             const valid = isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) &&
                 doesBuildSatisfyConstraints(stats, analysis, constraints);
             const deadline = Date.now() + 30;
+            const removedReq = base.problem.requirements[index];
+            const removingBugStop = getPartEffect(data.gameId, data.partMetas[removedReq.partIndex].id)?.abilities?.includes("bugStop");
             const seed = valid ? reduced : findFeasibleBuild({ ...options, problem: reduced.problem, modCardMode: "keep",
+                preferBugStop: false, excludeAutomaticBugStop: removingBugStop,
                 shouldStop: () => shouldStop() || Date.now() >= deadline });
             if (!seed) continue;
             accept(seed);
@@ -160,7 +163,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             // Rebuild from user-selected core parts, allowing automatic ability
             // and MAX parts to disappear when the new cards supply their effects.
             const seed = findFeasibleBuild({ ...options,
-                problem: { ...problem, modCards: cards }, modCardMode: "keep",
+                problem: { ...problem, modCards: cards }, modCardMode: "keep", preferBugStop: false,
                 shouldStop: () => shouldStop() || Date.now() >= deadline });
             if (!seed) continue;
             accept(seed);

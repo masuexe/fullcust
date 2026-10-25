@@ -1,5 +1,5 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BuildStats, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, BUG_SPEC_OPTIONS, BuildStats, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { computeDeckStats, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
@@ -14,10 +14,16 @@ interface Goal {
  * exhaustive search remains the fallback for choices this pass does not visit.
  */
 export function findFeasibleBuild(
-    options: Omit<OptimizeOptions, "timeoutMs" | "beamWidth"> & { shouldStop: () => boolean }
+    options: Omit<OptimizeOptions, "timeoutMs" | "beamWidth"> & {
+        shouldStop: () => boolean;
+        preferBugStop?: boolean;
+        excludeAutomaticBugStop?: boolean;
+    }
 ): OptimizeResult | null {
     const { data, problem, constraints = problem.constraints,
-        policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY, modCardMode = "keep", shouldStop } = options;
+        policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY, modCardMode = "keep", shouldStop: isCancelled } = options;
+    let preferredDeadline = Infinity;
+    const shouldStop = () => isCancelled() || Date.now() >= preferredDeadline;
     if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
     const grid = makeGridSettings(data, problem);
     const capacity = grid.height * grid.width - (grid.hasOob ? 4 : 0);
@@ -51,6 +57,7 @@ export function findFeasibleBuild(
         const u = part.uncompressedMask.filter(Boolean).length;
         return req.constraint.compressed === null ? Math.min(c, u) : req.constraint.compressed ? c : u;
     };
+    const isBugStop = (req: Requirement) => getPartEffect(data.gameId, data.partMetas[req.partIndex].id)?.abilities?.includes("bugStop");
     const partSizes = freeReqs.map(minimumCells);
     const visited = new Set<string>();
     const statsFor = (requirements: Requirement[], cards: string[]) => computeBuildStats(data.gameId,
@@ -101,6 +108,7 @@ export function findFeasibleBuild(
         };
         for (const req of freeReqs) {
             if (shouldStop()) return null;
+            if (options.excludeAutomaticBugStop && isBugStop(req)) continue;
             const occupied = state.occupied + partSizes[req.partIndex];
             if (occupied > capacity) continue;
             if (missing.length === 0 && !getPartEffect(data.gameId, data.partMetas[req.partIndex].id)?.abilities?.includes("bugStop")) continue;
@@ -137,6 +145,30 @@ export function findFeasibleBuild(
         return null;
     }
     const cards = data.gameId !== "bn3" && modCardMode === "keep" ? problem.modCards ?? [] : [];
-    return visit({ requirements: [...problem.requirements], cards, added: [],
-        occupied: problem.requirements.reduce((sum, req) => sum + minimumCells(req), 0), stats: statsFor(problem.requirements, cards) });
+    const initial: State = { requirements: [...problem.requirements], cards, added: [],
+        occupied: problem.requirements.reduce((sum, req) => sum + minimumCells(req), 0), stats: statsFor(problem.requirements, cards) };
+    const rules = constraints?.bugRules ?? policy.customRules;
+    const requiresBug = Object.values(rules ?? {}).includes("required");
+    const restrictsBugs = BUG_SPEC_OPTIONS.filter(opt => !opt.games || opt.games.includes(data.gameId))
+        .some(opt => rules?.[opt.id] !== "allowed" && rules?.[opt.id] !== "allowed_any");
+    if (data.gameId === "bn6" && (modCardMode === "auto" || (modCardMode === "keep" && cards.length > 0)) &&
+        options.preferBugStop !== false && !options.excludeAutomaticBugStop && !requiresBug && restrictsBugs &&
+        !problem.requirements.some(isBugStop)) {
+        // Give the common PvP starting point a small scheduling slice,
+        // keeping the original core available as the fallback.
+        preferredDeadline = Date.now() + 150;
+        const candidates = freeReqs.filter(isBugStop).sort((a, b) => partSizes[a.partIndex] - partSizes[b.partIndex]);
+        for (const candidate of candidates) {
+            if (shouldStop()) break;
+            const req: Requirement = { ...candidate, constraint: { ...candidate.constraint, onCommandLine: true, maxBugLevel: 0 } };
+            const requirements = [...initial.requirements, req];
+            const result = visit({ ...initial, requirements, added: [req.partIndex],
+                occupied: initial.occupied + partSizes[req.partIndex], stats: statsFor(requirements, cards) });
+            if (result) return result;
+        }
+        preferredDeadline = Infinity;
+        // Interrupted states were not fully explored; retry them in the fallback.
+        visited.clear();
+    }
+    return visit(initial);
 }

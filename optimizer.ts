@@ -53,6 +53,13 @@ export function occupiedBuildCells(data: Data, result: OptimizeResult): number {
     }, 0);
 }
 
+/** Preserve effects when simplifying a build, except optional automatic BugStop. */
+export function haveSameBuildEffects(a: BuildStats, b: BuildStats, constraints?: BuildConstraints): boolean {
+    const normalize = (stats: BuildStats) => constraints?.requiredAbilities?.includes("bugStop") ? stats :
+        { ...stats, abilities: stats.abilities.filter(ability => ability !== "bugStop") };
+    return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
+}
+
 /** Clean a valid completed build, without pruning intermediate search states. */
 export function removeRedundantAbilityParts(options: OptimizeOptions, result: OptimizeResult): OptimizeResult {
     const { data, problem, constraints = problem.constraints,
@@ -74,8 +81,9 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         const requirements = cleaned.problem.requirements.filter((_, i) => i !== index);
         const solution = cleaned.solution.filter((_, i) => i !== index);
         const stats = computeBuildStats(data.gameId, requirements.map(req => data.partMetas[req.partIndex].id), cards, problem.baseHp ?? 1000);
-        // Preserve all final effects, including unrequested abilities and stats.
-        if (JSON.stringify(stats) !== JSON.stringify(cleaned.stats)) continue;
+        // Optional automatic BugStop can disappear only if the remaining layout
+        // still satisfies the full policy, requirements and placement constraints.
+        if (!haveSameBuildEffects(stats, cleaned.stats, constraints)) continue;
         if (!meetsPlacementBugConstraints(data.parts, requirements, solution, grid)) continue;
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
             placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
