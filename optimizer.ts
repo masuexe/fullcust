@@ -4,14 +4,22 @@ import {
     analyzeSolutionBugs,
     computeBuildStats,
     getPartEffect,
+    isBenignBug,
     isSolutionAcceptable,
     BuildStats,
     SolutionBugAnalysis,
 } from "./effects";
+import {
+    getModCards,
+    getModCard,
+    computeDeckStats,
+    ModCard,
+} from "./modcards";
 import { BugPolicy, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { placeAll, solve, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_buster" | "balanced";
+export type ModCardMode = "none" | "auto" | "keep";
 
 export interface OptimizeOptions {
     data: Data;
@@ -20,6 +28,7 @@ export interface OptimizeOptions {
     target?: OptimizationTarget;
     timeoutMs?: number;
     beamWidth?: number;
+    modCardMode?: ModCardMode;
 }
 
 export interface OptimizeResult {
@@ -28,6 +37,162 @@ export interface OptimizeResult {
     stats: BuildStats;
     analysis: SolutionBugAnalysis;
     addedPartIndices: number[];
+    addedCardIds?: string[];
+}
+
+export interface ModCardOptimizeOptions {
+    gameId: string;
+    existingCardIds?: string[];
+    target?: OptimizationTarget;
+    policy?: BugPolicy;
+}
+
+/**
+ * Checks whether a mod card's inherent bugs comply with the user's BugPolicy.
+ */
+function isCardAcceptableUnderPolicy(card: ModCard, policy: BugPolicy): boolean {
+    if (!card.bugs || card.bugs.length === 0) return true;
+    if (policy.type === "no_bugs") return false;
+    if (policy.type === "benign_allowed") {
+        return card.bugs.every(b => isBenignBug(b.type, b.level ?? 1));
+    }
+    if (policy.type === "custom") {
+        const rules = policy.customRules || {};
+        for (const b of card.bugs) {
+            const rule = rules[b.type] ?? "forbidden";
+            if (rule === "forbidden") return false;
+            if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
+        }
+        return true;
+    }
+    return true;
+}
+
+/**
+ * Evaluates the fitness score of a mod card based on the target.
+ */
+function evaluateCardScore(card: ModCard, target: OptimizationTarget): number {
+    const hp = (card.stats.hp ?? 0) + (card.stats.hpPercent ? card.stats.hpPercent * 15 : 0);
+    const attack = (card.stats.attack ?? 0) + (card.stats.attackMult && card.stats.attackMult > 1 ? 5 : 0);
+    const charge = card.stats.charge ?? 0;
+    const rapid = card.stats.rapid ?? 0;
+    const custom = card.stats.custom ?? 0;
+    const mega = card.stats.megaFolder ?? 0;
+    const giga = card.stats.gigaFolder ?? 0;
+
+    let abilityBonus = 0;
+    if (card.abilities) {
+        if (card.abilities.includes("superArmor")) abilityBonus += 50;
+        if (card.abilities.includes("floatShoes")) abilityBonus += 30;
+        if (card.abilities.includes("airShoes")) abilityBonus += 30;
+        if (card.abilities.includes("underShirt")) abilityBonus += 20;
+        if (card.abilities.includes("statusGuard")) abilityBonus += 40;
+    }
+
+    if (target === "max_hp") {
+        return hp * 1.0 + (attack * 10) + (custom * 20) + abilityBonus;
+    }
+    if (target === "max_buster") {
+        return (attack * 120) + (charge * 60) + (rapid * 40) + (hp * 0.2) + abilityBonus;
+    }
+    return (hp * 0.6) + (custom * 100) + (mega * 80) + (giga * 120) + (attack * 50) + abilityBonus;
+}
+
+/**
+ * Optimizes the equipped Mod Cards:
+ * - BN6 & BN5: 0-1 Knapsack DP within 80 MB capacity.
+ * - BN4: Slot-based greedy optimization across slots 0A through 0E.
+ * Respects the user's BugPolicy and keeps any existingCardIds.
+ */
+export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
+    const {
+        gameId,
+        existingCardIds = [],
+        target = "max_hp",
+        policy = DEFAULT_BUG_POLICY,
+    } = options;
+
+    if (gameId === "bn3") return [];
+
+    const allCards = getModCards(gameId);
+    if (!allCards || allCards.length === 0) return [...existingCardIds];
+
+    const existingSet = new Set(existingCardIds);
+
+    const candidateCards = allCards.filter(
+        c => !existingSet.has(c.id) && isCardAcceptableUnderPolicy(c, policy)
+    );
+
+    if (gameId === "bn4") {
+        const usedSlots = new Set<string>();
+        for (const id of existingCardIds) {
+            const card = getModCard(id, gameId);
+            if (card && card.slot) usedSlots.add(card.slot);
+        }
+
+        const mainSlots = ["0A", "0B", "0C", "0D", "0E"];
+        const selected = [...existingCardIds];
+
+        for (const slot of mainSlots) {
+            if (usedSlots.has(slot)) continue;
+            const slotCandidates = candidateCards
+                .filter(c => c.slot === slot)
+                .map(c => ({ card: c, score: evaluateCardScore(c, target) }))
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score);
+
+            if (slotCandidates.length > 0) {
+                selected.push(slotCandidates[0].card.id);
+                usedSlots.add(slot);
+            }
+        }
+        return selected;
+    }
+
+    // BN5 / BN6: 80 MB 0-1 Knapsack DP
+    const maxCapacity = 80;
+    let usedMb = 0;
+    for (const id of existingCardIds) {
+        const card = getModCard(id, gameId);
+        if (card) usedMb += card.mb;
+    }
+
+    const remainingMb = maxCapacity - usedMb;
+    if (remainingMb <= 0) return [...existingCardIds];
+
+    interface DpState {
+        score: number;
+        items: string[];
+    }
+
+    const dp: DpState[] = Array.from({ length: remainingMb + 1 }, () => ({
+        score: 0,
+        items: [],
+    }));
+
+    for (const card of candidateCards) {
+        const weight = card.mb;
+        const val = evaluateCardScore(card, target);
+        if (val <= 0 || weight > remainingMb) continue;
+
+        for (let w = remainingMb; w >= weight; w--) {
+            if (dp[w - weight].score + val > dp[w].score) {
+                dp[w] = {
+                    score: dp[w - weight].score + val,
+                    items: [...dp[w - weight].items, card.id],
+                };
+            }
+        }
+    }
+
+    let best = dp[0];
+    for (let w = 0; w <= remainingMb; w++) {
+        if (dp[w].score > best.score) {
+            best = dp[w];
+        }
+    }
+
+    return [...existingCardIds, ...best.items];
 }
 
 interface RankedCandidate {
@@ -129,13 +294,35 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         target = "max_hp",
         timeoutMs = 3000,
         beamWidth = 6,
+        modCardMode = "keep",
     } = options;
 
     const startTime = Date.now();
     const gridSettings = makeGridSettings(data, problem);
     const spinnableColors = problem.spinnableColors;
     const baseHp = problem.baseHp ?? 1000;
-    const modCards = problem.modCards || [];
+
+    let modCards: string[] = [];
+    let addedCardIds: string[] = [];
+
+    if (data.gameId !== "bn3") {
+        if (modCardMode === "none") {
+            modCards = [];
+        } else if (modCardMode === "auto") {
+            modCards = optimizeModCards({
+                gameId: data.gameId,
+                existingCardIds: [],
+                target,
+                policy,
+            });
+            addedCardIds = [...modCards];
+        } else {
+            // "keep"
+            modCards = problem.modCards || [];
+        }
+    } else {
+        modCards = [];
+    }
 
     // 1. Verify that the initial core requirements can be solved under the policy
     const initialReqs = problem.requirements;
@@ -287,10 +474,12 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             ...problem,
             requirements: bestNode.requirements,
             bugPolicy: policy,
+            modCards,
         },
         solution: bestNode.solution,
         stats: bestNode.stats,
         analysis: bestNode.analysis,
         addedPartIndices: bestNode.addedPartIndices,
+        addedCardIds,
     };
 }

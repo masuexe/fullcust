@@ -27,7 +27,7 @@ import {
     BugPolicy,
     BugPolicyType,
 } from "./problem";
-import { optimizeBuild, OptimizationTarget } from "./optimizer";
+import { optimizeBuild, OptimizationTarget, ModCardMode } from "./optimizer";
 import {
     computeBuildStats,
     tAbility,
@@ -924,10 +924,20 @@ function AutoOptimizerPanel({
     lang: Lang;
     onNavigateToResults?: () => void;
 }) {
+    const hasModCards = data.gameId !== "bn3";
+    const userAlreadyHasCards = Boolean(problem.modCards && problem.modCards.length > 0);
+    const [modCardMode, setModCardMode] = React.useState<ModCardMode>(
+        userAlreadyHasCards ? "keep" : "none"
+    );
     const [policyType, setPolicyType] = React.useState<BugPolicyType>(problem.bugPolicy?.type ?? "no_bugs");
     const [target, setTarget] = React.useState<OptimizationTarget>("max_hp");
     const [isOptimizing, setIsOptimizing] = React.useState(false);
-    const [statusMessage, setStatusMessage] = React.useState<{ type: "success" | "error"; text: string; details?: string[] } | null>(null);
+    const [statusMessage, setStatusMessage] = React.useState<{
+        type: "success" | "error";
+        text: string;
+        details?: string[];
+        cardDetails?: string[];
+    } | null>(null);
 
     const handleOptimize = () => {
         setIsOptimizing(true);
@@ -946,9 +956,10 @@ function AutoOptimizerPanel({
                     policy,
                     target,
                     timeoutMs: 3500,
+                    modCardMode: hasModCards ? modCardMode : "none",
                 });
 
-                if (!result || result.addedPartIndices.length === 0) {
+                if (!result || (result.addedPartIndices.length === 0 && (!result.addedCardIds || result.addedCardIds.length === 0))) {
                     setStatusMessage({
                         type: "error",
                         text: t("optNoSolution", lang),
@@ -956,10 +967,23 @@ function AutoOptimizerPanel({
                 } else {
                     onChange(result.problem);
                     const names = result.addedPartIndices.map(idx => getPartName(data.partMetas[idx], lang));
+                    let cardNames: string[] = [];
+                    if (result.addedCardIds && result.addedCardIds.length > 0) {
+                        cardNames = result.addedCardIds.map(cid => {
+                            const card = getModCard(cid, data.gameId);
+                            return card ? getCardDisplayName(card, lang) : cid;
+                        });
+                    }
+                    const countsDesc: string[] = [];
+                    if (names.length > 0) countsDesc.push(`+${names.length} parts`);
+                    if (cardNames.length > 0) countsDesc.push(`+${cardNames.length} cards`);
+                    const countsStr = countsDesc.length > 0 ? ` (${countsDesc.join(", ")}, HP: ${result.stats.finalHp})` : ` (HP: ${result.stats.finalHp})`;
+
                     setStatusMessage({
                         type: "success",
-                        text: `${t("optSuccessNotice", lang)} (+${names.length} parts, HP: ${result.stats.finalHp})`,
+                        text: `${t("optSuccessNotice", lang)}${countsStr}`,
                         details: names,
+                        cardDetails: cardNames,
                     });
                 }
             } catch (err: any) {
@@ -984,6 +1008,65 @@ function AutoOptimizerPanel({
             </div>
             <div className="card-body py-2">
                 <p className="text-muted small mb-2">{t("autoOptimizeDesc", lang)}</p>
+
+                {/* Mod Card Format Selector (BN4 / BN5 / BN6) */}
+                {hasModCards && (
+                    <div className="mb-2">
+                        <label className="form-label small fw-semibold mb-1">{t("optModCardModeTitle", lang)}:</label>
+                        <div className="d-flex flex-column gap-1">
+                            <div className="form-check">
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="optModCardMode"
+                                    id="optModCardNone"
+                                    checked={modCardMode === "none"}
+                                    onChange={() => setModCardMode("none")}
+                                />
+                                <label className="form-check-label small" htmlFor="optModCardNone">
+                                    <span className="fw-semibold">{t("optModCardNone", lang)}</span>
+                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                        {t("optModCardNoneDesc", lang)}
+                                    </div>
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input
+                                    className="form-check-input"
+                                    type="radio"
+                                    name="optModCardMode"
+                                    id="optModCardAuto"
+                                    checked={modCardMode === "auto"}
+                                    onChange={() => setModCardMode("auto")}
+                                />
+                                <label className="form-check-label small" htmlFor="optModCardAuto">
+                                    <span className="fw-semibold">{t("optModCardAuto", lang)}</span>
+                                    <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                        {t("optModCardAutoDesc", lang)}
+                                    </div>
+                                </label>
+                            </div>
+                            {userAlreadyHasCards && (
+                                <div className="form-check">
+                                    <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="optModCardMode"
+                                        id="optModCardKeep"
+                                        checked={modCardMode === "keep"}
+                                        onChange={() => setModCardMode("keep")}
+                                    />
+                                    <label className="form-check-label small" htmlFor="optModCardKeep">
+                                        <span className="fw-semibold">{t("optModCardKeep", lang)}</span>
+                                        <div className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                            {t("optModCardKeepDesc", lang)}
+                                        </div>
+                                    </label>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Bug Policy Selector */}
                 <div className="mb-2">
@@ -1079,6 +1162,11 @@ function AutoOptimizerPanel({
                 {statusMessage ? (
                     <div className={`alert alert-${statusMessage.type === "success" ? "success" : "warning"} py-2 px-3 mt-2 mb-0 small`}>
                         <div className="fw-semibold">{statusMessage.text}</div>
+                        {statusMessage.cardDetails && statusMessage.cardDetails.length > 0 ? (
+                            <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
+                                {t("optAddedModCards", lang)}: {statusMessage.cardDetails.join(", ")}
+                            </div>
+                        ) : null}
                         {statusMessage.details && statusMessage.details.length > 0 ? (
                             <div className="text-muted mt-1" style={{ fontSize: "0.78rem" }}>
                                 {t("optAddedParts", lang)}: {statusMessage.details.join(", ")}

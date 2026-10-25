@@ -731,6 +731,46 @@ export const translations = {
         ja: "追加されたパーツ",
         zh: "自动添加的部件",
     },
+    optModCardModeTitle: {
+        en: "Battle Format & Mod Cards",
+        ja: "レギュレーション・改造カード",
+        zh: "对战环境规制与改造卡",
+    },
+    optModCardNone: {
+        en: "🚫 No Mod Cards (Standard / N1GP Format)",
+        ja: "🚫 改造カードなし（No-Mod 規制）",
+        zh: "🚫 纯净无改造卡（No-Mod 规制）",
+    },
+    optModCardNoneDesc: {
+        en: "Strictly excludes all Mod Cards. Optimizes NaviCust grid purely from program parts.",
+        ja: "改造カードを一切使用せず、ナビカスタマイザーパーツのみで限界まで最適化します。",
+        zh: "适用于无卡标准对战，严禁任何改造卡，纯靠 NaviCust 优化极限数值。",
+    },
+    optModCardAuto: {
+        en: "🎴 Auto-Pick Best Mod Cards (All-in-One Optimization)",
+        ja: "🎴 最強の改造カードを自動選定（カード＋NC統合最適化）",
+        zh: "🎴 自动挑选最强改造卡（卡片＋NC 全自动联合优化）",
+    },
+    optModCardAutoDesc: {
+        en: "Automatically selects highest-value cards (e.g. HP+25%, abilities) within the MB / slot limit, then packs the NaviCust grid around them.",
+        ja: "容量上限内で最強の改造カード（HP+25%やアビリティ）を自動選定し、ナビカスと相乗効果を発揮させます。",
+        zh: "在容量上限内自动挑选最高收益的改造卡（如 HP+25% / 强力被动），再联合优化 NC 网格形成极限构筑。",
+    },
+    optModCardKeep: {
+        en: "🎴 Keep Selected Mod Cards (Fill NC Only)",
+        ja: "🎴 現在選択中の改造カードを維持（ナビカスのみ補完）",
+        zh: "🎴 保持当前已选改造卡（仅自动补全 NC 网格）",
+    },
+    optModCardKeepDesc: {
+        en: "Preserves your current Mod Card deck and only optimizes the remaining NaviCust grid.",
+        ja: "手動で選んだ改造カードをそのまま維持し、空いているナビカス盤面のみを自動補完します。",
+        zh: "以您当前已选的改造卡为基础，仅自动补全剩余的 NaviCust 格子。",
+    },
+    optAddedModCards: {
+        en: "Auto-Equipped Mod Cards",
+        ja: "自動装備された改造カード",
+        zh: "自动配备的改造卡",
+    },
 } as const;
 
 export function t(key: keyof typeof translations, lang: Lang): string {

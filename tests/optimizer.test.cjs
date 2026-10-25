@@ -14,7 +14,9 @@ const {
 const {
     getCandidateFillerParts,
     optimizeBuild,
+    optimizeModCards,
 } = require("../optimizer.ts");
+const { computeDeckStats } = require("../modcards.ts");
 
 function getGameData(gameId) {
     const raw = require(`../data/${gameId}.json`);
@@ -175,4 +177,83 @@ test("optimizeBuild operates on BN3 and respects Style color rules", () => {
     assert.ok(result);
     assert.ok(result.addedPartIndices.length >= 1);
     assert.ok(result.stats.finalHp > 1000);
+});
+
+test("optimizeModCards knapsack correctly selects optimal zero-bug cards for BN6 and BN5", () => {
+    const cards6 = optimizeModCards({ gameId: "bn6", target: "max_hp", policy: { type: "no_bugs" } });
+    assert.ok(cards6.length >= 2, "Should select multiple cards");
+    const deck6 = computeDeckStats(cards6, "bn6");
+    assert.ok(deck6.totalMb <= 80, "Total MB must not exceed 80");
+    assert.equal(deck6.activeBugs.length, 0, "Must have zero bugs under no_bugs");
+    assert.ok(deck6.stats.hp > 0 || deck6.stats.hpPercent > 0, "Must increase HP");
+
+    const cards5 = optimizeModCards({ gameId: "bn5", target: "max_hp", policy: { type: "no_bugs" } });
+    assert.ok(cards5.length >= 2);
+    const deck5 = computeDeckStats(cards5, "bn5");
+    assert.ok(deck5.totalMb <= 80);
+    assert.equal(deck5.activeBugs.length, 0);
+    assert.ok(deck5.stats.hp > 0);
+
+    // BN3 should produce empty array (no mod cards)
+    const cards3 = optimizeModCards({ gameId: "bn3", target: "max_hp" });
+    assert.deepEqual(cards3, []);
+});
+
+test("optimizeModCards slot-based optimization correctly selects cards for BN4", () => {
+    const cards4 = optimizeModCards({ gameId: "bn4", target: "max_hp", policy: { type: "no_bugs" } });
+    assert.ok(cards4.length >= 4, "Should select cards across 0A~0E");
+    const deck4 = computeDeckStats(cards4, "bn4");
+    assert.equal(deck4.activeBugs.length, 0, "Must have zero bugs");
+    assert.ok(deck4.stats.hp >= 2000, "BN4 HP cards should provide massive HP boost (>2000)");
+});
+
+test("optimizeBuild with modCardMode auto delivers synergistic high HP and sets modCards", () => {
+    const data = getGameData("bn6");
+    const superArmorIndex = data.partMetas.findIndex(p => p.id === 1);
+
+    const problem = emptyProblem(data);
+    problem.requirements = [
+        { partIndex: superArmorIndex, constraint: { onCommandLine: true, minBugLevel: 0, maxBugLevel: 0, compressed: true } },
+    ];
+    problem.bugPolicy = { type: "no_bugs" };
+
+    const result = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "auto",
+        timeoutMs: 3000,
+    });
+
+    assert.ok(result);
+    assert.ok(result.addedCardIds && result.addedCardIds.length > 0, "Must have added mod cards");
+    assert.equal(result.problem.modCards.length, result.addedCardIds.length);
+    assert.ok(result.addedPartIndices.length > 0, "Must have added NC parts");
+    // Synergistic HP calculation (cards + parts + HP% multiplier) should reach > 2500 HP
+    assert.ok(result.stats.finalHp >= 2500, `Expected HP >= 2500, got ${result.stats.finalHp}`);
+    assert.equal(isSolutionAcceptable(result.analysis, { type: "no_bugs" }), true);
+});
+
+test("optimizeBuild with modCardMode none clears existing mod cards", () => {
+    const data = getGameData("bn6");
+    const superArmorIndex = data.partMetas.findIndex(p => p.id === 1);
+
+    const problem = emptyProblem(data);
+    problem.requirements = [
+        { partIndex: superArmorIndex, constraint: { onCommandLine: true, minBugLevel: 0, maxBugLevel: 0, compressed: true } },
+    ];
+    problem.modCards = ["137-A001", "137-A002"];
+    problem.bugPolicy = { type: "no_bugs" };
+
+    const result = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "none",
+        timeoutMs: 2000,
+    });
+
+    assert.ok(result);
+    assert.deepEqual(result.problem.modCards, [], "modCards should be cleared");
+    assert.deepEqual(result.addedCardIds, [], "addedCardIds should be empty");
 });
