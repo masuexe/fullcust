@@ -35,6 +35,7 @@ import {
     BODY_ELEMENTS,
     BodyElement,
 } from "./problem";
+import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
 import {
@@ -57,9 +58,7 @@ import {
     getSpecialCsOptions,
     getBLeftOptions,
     getBButtonOptions,
-    getCoreAbilityOptions,
     FORBIDDEN_BUG_OPTIONS,
-    BUG_SPEC_OPTIONS,
 } from "./effects";
 import {
     BN6_MOD_CARDS,
@@ -1054,17 +1053,36 @@ function AutoOptimizerPanel({
         return problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {};
     });
 
-    const numConfiguredBugs = Object.values(bugRules).filter(v => v !== "forbidden").length;
+    const cardsEnabled = hasModCards && modCardMode !== "none";
+    const abilityOptions = getOptimizerAbilityOptions(data, cardsEnabled);
+    const bugOptions = getOptimizerBugOptions(data, cardsEnabled);
+    const constraints = getOptimizerModeConstraints(data, {
+        ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
+        ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
+        ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
+        ...(minCustom > 0 ? { minCustom } : {}),
+        ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
+        ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
+        ...(reqBButton ? { requiredBButton: reqBButton } : {}),
+        ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
+        ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
+        ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
+        ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
+        ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
+    }, cardsEnabled);
+    const effectiveBugRules = constraints.bugRules ?? {};
+    const effectiveMinBusterStats = constraints.minBusterStats ?? {};
+    const numConfiguredBugs = Object.values(effectiveBugRules).filter(v => v !== "forbidden").length;
     const activeConstraintCount =
-        reqAbilities.length + Object.values(minBusterStats).filter(value => value > 1).length +
+        (constraints.requiredAbilities?.length ?? 0) + Object.values(effectiveMinBusterStats).filter(value => value > 1).length +
         (minCustom > 0 ? 1 : 0) +
-        (reqSpecialMove ? 1 : 0) +
-        (reqBLeft ? 1 : 0) +
-        (reqBButton ? 1 : 0) +
-        (reqChargeAddition ? 1 : 0) +
-        (reqBusterAddition ? 1 : 0) +
-        (allowedBodies.length !== BODY_ELEMENTS.length ? 1 : 0) +
-        (reqGauge ? 1 : 0) +
+        (constraints.requiredSpecialMove ? 1 : 0) +
+        (constraints.requiredBLeft ? 1 : 0) +
+        (constraints.requiredBButton ? 1 : 0) +
+        (constraints.requiredChargeAddition ? 1 : 0) +
+        (constraints.requiredBusterAddition ? 1 : 0) +
+        (constraints.allowedBodies ? 1 : 0) +
+        (constraints.requiredGauge ? 1 : 0) +
         numConfiguredBugs;
     const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
     const [isOptimizing, setIsOptimizing] = React.useState(false);
@@ -1097,8 +1115,8 @@ function AutoOptimizerPanel({
         setBugRules({});
     };
 
-    const numRequiredBugs = Object.values(bugRules).filter(v => v === "required").length;
-    const numAllowedBugs = Object.values(bugRules).filter(v => v === "allowed" || v === "allowed_any" || v === "allowed_lv1").length;
+    const numRequiredBugs = Object.values(effectiveBugRules).filter(v => v === "required").length;
+    const numAllowedBugs = Object.values(effectiveBugRules).filter(v => v === "allowed" || v === "allowed_any" || v === "allowed_lv1").length;
 
     const optimizerRef = React.useRef<AsyncOptimizer | null>(null);
     const bestRef = React.useRef<OptimizeResult | null>(null);
@@ -1138,23 +1156,10 @@ function AutoOptimizerPanel({
         setCheckedBuilds(0);
         setIsOptimizing(true);
         setStatusMessage(null);
-        const constraints: BuildConstraints = {
-            ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
-            ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
-            ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
-            ...(minCustom > 0 ? { minCustom } : {}),
-            ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
-            ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
-            ...(reqBButton ? { requiredBButton: reqBButton } : {}),
-            ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
-            ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
-            ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
-            ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
-            ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
-        };
+
         const policy: BugPolicy = {
-            type: Object.keys(bugRules).length > 0 ? "custom" : "no_bugs",
-            customRules: bugRules,
+            type: Object.keys(effectiveBugRules).length > 0 ? "custom" : "no_bugs",
+            customRules: effectiveBugRules,
         };
         try {
             const worker = new AsyncOptimizer({ data, problem, policy, target,
@@ -1348,7 +1353,7 @@ function AutoOptimizerPanel({
                                             {BUSTER_STATS.map(stat => (
                                                 <label key={stat} className="col-4 small">
                                                     <span className="d-block mb-1">{t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}</span>
-                                                    <select className="form-select form-select-sm" value={minBusterStats[stat] ?? 0}
+                                                    <select className="form-select form-select-sm" value={effectiveMinBusterStats[stat] ?? 0}
                                                         onChange={event => {
                                                             const value = Number(event.target.value);
                                                             setMinBusterStats(prev => {
@@ -1359,7 +1364,7 @@ function AutoOptimizerPanel({
                                                             });
                                                         }}>
                                                         <option value={0}>{t("anyOption", lang)}</option>
-                                                        {Array.from({ length: getBusterStatLimits(data.gameId)[stat] }, (_, index) => index + 1).map(value => (
+                                                        {Array.from({ length: cardsEnabled ? getBusterStatLimits(data.gameId)[stat] : 5 }, (_, index) => index + 1).map(value => (
                                                             <option key={value} value={value}>≥ {value}</option>
                                                         ))}
                                                     </select>
@@ -1375,7 +1380,7 @@ function AutoOptimizerPanel({
                                             {t("reqAbilitiesTitle", lang)}:
                                         </label>
                                         <div className="d-flex flex-wrap gap-1">
-                                            {getCoreAbilityOptions(data.gameId).map(opt => {
+                                            {abilityOptions.map(opt => {
                                                 const active = reqAbilities.includes(opt.id);
                                                 return (
                                                     <button
@@ -1390,7 +1395,7 @@ function AutoOptimizerPanel({
                                                 );
                                             })}
                                         </div>
-                                        {reqAbilities.includes("chipRecovery") ? (
+                                        {cardsEnabled && reqAbilities.includes("chipRecovery") ? (
                                             <div className="mt-2">
                                                 <label htmlFor="optimizer-chip-recovery-min" className="form-label small fw-semibold mb-1">
                                                     {t("minChipRecoveryTitle", lang)}
@@ -1408,7 +1413,7 @@ function AutoOptimizerPanel({
                                     </div>
 
                                     {/* Mod Card Specific Battle Specs & Controls */}
-                                    {hasModCards && modCardMode !== "none" && (
+                                    {cardsEnabled && (
                                         <div className="pt-2 border-top border-secondary-subtle">
                                             {/* Row 1: Special CS & B+Left */}
                                             <div className="row g-2 mb-2">
@@ -1528,7 +1533,7 @@ function AutoOptimizerPanel({
                                         </div>
                                     )}
 
-                                    {hasModCards && (
+                                    {cardsEnabled && (
                                         <div className="row g-2 mb-2">
                                             <div className="col-12">
                                                 <div className="form-label small fw-semibold mb-1">{t("allowedBodiesTitle", lang)}</div>
@@ -1573,7 +1578,7 @@ function AutoOptimizerPanel({
                                                     </span>
                                                 )}
                                             </div>
-                                            {Object.keys(bugRules).length > 0 && (
+                                            {Object.keys(effectiveBugRules).length > 0 && (
                                                 <button
                                                     type="button"
                                                     className="btn btn-sm btn-link p-0 text-decoration-none text-muted"
@@ -1589,7 +1594,7 @@ function AutoOptimizerPanel({
                                         </div>
 
                                         <div className="d-flex flex-column gap-1">
-                                            {BUG_SPEC_OPTIONS.filter(opt => !opt.games || opt.games.includes(data.gameId)).map(opt => {
+                                            {bugOptions.map(opt => {
                                                 const currentTol: BugTolerance = bugRules[opt.id] ?? "forbidden";
                                                 return (
                                                     <div
@@ -1647,7 +1652,7 @@ function AutoOptimizerPanel({
                             <button
                                 type="button"
                                 className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
-                                disabled={!isOptimizing && allowedBodies.length === 0}
+                                disabled={!isOptimizing && cardsEnabled && allowedBodies.length === 0}
                                 onClick={isOptimizing ? handleStop : handleOptimize}
                             >
                                 {isOptimizing ? (
