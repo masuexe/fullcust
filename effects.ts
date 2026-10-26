@@ -243,6 +243,36 @@ export function getBusterStatLimits(gameId: string): Record<BusterStat, number> 
     return { attack: gameId === "bn5" || gameId === "bn6" ? 10 : 5, rapid: 5, charge: 5 };
 }
 
+/** Program effects require command-line contact. Bug analysis still uses every installed part. */
+export function getActivePartIds(
+    partMetas: { id: number; isSolid: boolean }[],
+    requirements: Requirement[],
+    cells: (number | null)[],
+    grid: GridSettings
+): number[] {
+    const onLine = new Set<number>();
+    for (let x = 0; x < grid.width; x++) {
+        const index = cells[grid.commandLineRow * grid.width + x];
+        if (index != null && index >= 0) onLine.add(index);
+    }
+    return requirements.flatMap((req, index) => {
+        const meta = partMetas[req.partIndex];
+        return !meta.isSolid || onLine.has(index) ? [meta.id] : [];
+    });
+}
+
+export function computePlacedBuildStats(
+    gameId: string,
+    partMetas: { id: number; isSolid: boolean }[],
+    requirements: Requirement[],
+    cells: (number | null)[],
+    grid: GridSettings,
+    modCardIds?: string[],
+    baseHp: number = 1000
+): BuildStats {
+    return computeBuildStats(gameId, getActivePartIds(partMetas, requirements, cells, grid), modCardIds, baseHp);
+}
+
 export function computeBuildStats(
     gameId: string,
     partIds: number[],

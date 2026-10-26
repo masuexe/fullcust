@@ -1,5 +1,5 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BuildStats, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { findFeasibleBuild } from "./feasible-optimizer";
 import { computeDeckStats, getModCards } from "./modcards";
 import { doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
@@ -92,7 +92,6 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         const roundCells = bestCells;
         const improvedThisRound = () => compareBuildStats(best.stats, roundStats, target) > 0 || bestCells < roundCells;
         const base = best;
-        const partIds = base.problem.requirements.map(req => data.partMetas[req.partIndex].id);
         const cells = placeAll(data.parts, base.problem.requirements, base.solution, grid);
         const seen = new Set<string>();
         const candidates: { cards: string[]; stats: BuildStats; changesSupply: boolean }[] = [];
@@ -106,7 +105,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             options.onSearchWork?.("candidate");
             const deck = computeDeckStats(cards, data.gameId);
             if (deck.isOverCapacity || deck.hasSlotConflict) continue;
-            const stats = computeBuildStats(data.gameId, partIds, cards, problem.baseHp ?? 1000);
+            const stats = computePlacedBuildStats(data.gameId, data.partMetas, base.problem.requirements,
+                cells, grid, cards, problem.baseHp ?? 1000);
             if (!doesBuildSatisfyConstraints(stats, emptyAnalysis, cardConstraints)) continue;
             candidates.push({ cards, stats, changesSupply: supplySignature(cards) !== signature });
         }
@@ -134,7 +134,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             const requirements = base.problem.requirements.filter((_, i) => i !== index);
             const solution = base.solution.filter((_, i) => i !== index);
             const cards = base.problem.modCards ?? [];
-            const stats = computeBuildStats(data.gameId, requirements.map(req => data.partMetas[req.partIndex].id), cards, problem.baseHp ?? 1000);
+            const stats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
+                placeAll(data.parts, requirements, solution, grid), grid, cards, problem.baseHp ?? 1000);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                 placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
             const reduced: OptimizeResult = { ...base, problem: { ...base.problem, requirements }, solution, stats, analysis };

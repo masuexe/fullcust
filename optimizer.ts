@@ -2,7 +2,7 @@ import type { Data } from "./game-data";
 import { isPartCompatible } from "./compatibility";
 import {
     analyzeSolutionBugs,
-    computeBuildStats,
+    computeBuildStats, computePlacedBuildStats,
     findPartIndexByAbility,
     getEffectiveInBattleBugs,
     getPartEffect,
@@ -82,7 +82,8 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         const index = candidate.index - [...removed].filter(i => i < candidate.index).length;
         const requirements = cleaned.problem.requirements.filter((_, i) => i !== index);
         const solution = cleaned.solution.filter((_, i) => i !== index);
-        const stats = computeBuildStats(data.gameId, requirements.map(req => data.partMetas[req.partIndex].id), cards, problem.baseHp ?? 1000);
+        const stats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
+            placeAll(data.parts, requirements, solution, grid), grid, cards, problem.baseHp ?? 1000);
         // Optional automatic BugStop can disappear only if the remaining layout
         // still satisfies the full policy, requirements and placement constraints.
         if (!haveSameBuildEffects(stats, cleaned.stats, constraints)) continue;
@@ -855,12 +856,13 @@ function runNaviCustBeamSearch(
     const findPlacement = (requirements: Requirement[]) => {
         onSearchWork?.("candidate");
         const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards);
-        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined)) {
+        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined, true)) {
             if (shouldStop()) break;
             const occ = placeAll(data.parts, requirements, solution, gridSettings);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occ, gridSettings, "en", modCards);
             if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
-                return { solution, analysis };
+                return { solution, analysis, stats: computePlacedBuildStats(data.gameId, data.partMetas, requirements,
+                    occ, gridSettings, modCards, baseHp) };
             }
         }
         return null;
@@ -868,8 +870,7 @@ function runNaviCustBeamSearch(
     const root = findPlacement(initialReqs);
     if (!root) return null;
 
-    const rootPartIds = initialReqs.map(r => data.partMetas[r.partIndex].id);
-    const rootStats = computeBuildStats(data.gameId, rootPartIds, modCards, baseHp);
+    const rootStats = root.stats;
 
     const rootNode: SearchNode = {
         requirements: initialReqs,
@@ -929,8 +930,7 @@ function runNaviCustBeamSearch(
                 const foundAnalysis = found?.analysis;
 
                 if (foundSolution && foundAnalysis) {
-                    const testPartIds = testReqs.map(r => data.partMetas[r.partIndex].id);
-                    const testStats = computeBuildStats(data.gameId, testPartIds, modCards, baseHp);
+                    const testStats = found.stats;
 
                     const childNode: SearchNode = {
                         requirements: testReqs,

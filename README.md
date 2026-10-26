@@ -83,3 +83,5 @@ Write all repository documentation in English. This policy applies to documentat
 BN6 HP+50 through HP+500 parts produce **both** `battleHp` and `damageHp` when bugged. Damage HP Bug raises Battle HP Bug by one level when a damaging hit causes flinching or Drag, up to Lv7. SuperArmor can prevent the flinch trigger; it does not remove the bug. The two types have independent tolerance rules; allowing only Battle HP does not allow bugged HP parts unless the remaining bug is neutralized. Effective BugStop absorbs both NC bugs. This correction does not change the HP/Attack priority order or simulate combat HP loss. It applies to BN6 only; BN3–5 mappings remain unchanged. Source: [N1GPedia HP parts](https://wiki.n1gp.net/HP_NaviCust_part_series_%28BN6%29).
 
 搜索时显示当前阶段、耗时、候选组合检查次数及部件摆放尝试次数；计数包含重复检查，不代表独立解或搜索完成比例。首解搜索、局部改进和穷举阶段持续累计，进度定期更新，找到合法构筑后立即预览并继续优化。
+
+自动构筑优先把程序部件（光滑部件）放到横线上，同时保留离线摆放的候选及用户的明确限制。最终能力、属性、条件判定和存档缓存按实际布局计算：不接触横线的程序部件不提供效果，Plus 部件与改造卡独立计算。设置页显示配置的预期属性，各解法显示实际生效属性。规则参考 [N1GPedia](https://wiki.n1gp.net/NetBattling_101_%28BN6%29)。

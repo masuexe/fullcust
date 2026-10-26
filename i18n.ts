@@ -181,6 +181,11 @@ export const translations = {
         ja: "ダークモードに切り替え",
         zh: "切换为深色模式",
     },
+    buildStatsPlanned: {
+        en: "Potential stats (programs must touch the command line)",
+        ja: "配置前の能力（プログラムはコマンドラインへの接触が必要）",
+        zh: "配置预期属性（程序部件须接触横线才能生效）",
+    },
     buildStats: {
         en: "Equipped Stats & Abilities",
         ja: "装備ステータス・能力",

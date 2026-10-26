@@ -1,5 +1,5 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { computeDeckStats, getModCards, ModCard } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll, Requirement, solve } from "./solver";
@@ -146,21 +146,23 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             // Geometric impossibility is monotone. Minimum bug levels are not:
             // another same-color neighbor can satisfy them later, so relax minima.
             const geometric = requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)[Symbol.iterator]().next().done) return;
+            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)[Symbol.iterator]().next().done) return;
             progress.checkedBuilds++;
             if (remaining === 0 && missing.length === 0) {
                 const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbidden, constraints?.bugRules, modCards);
-                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)) {
+                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
                     if (stopped()) return;
+                    const placedStats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
+                        placeAll(data.parts, requirements, solution, grid), grid, modCards, problem.baseHp ?? 1000);
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, "en", modCards);
                     if (!isSolutionAcceptable(analysis, policy, forbidden, constraints?.bugRules) ||
-                        !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
-                    const comparison = progress.best ? compareBuildStats(stats, progress.best.stats, target) : 1;
+                        !doesBuildSatisfyConstraints(placedStats, analysis, constraints)) continue;
+                    const comparison = progress.best ? compareBuildStats(placedStats, progress.best.stats, target) : 1;
                     if (comparison >= 0) {
                         const candidate = removeRedundantAbilityParts(options, {
                             problem: { ...problem, requirements: [...requirements], modCards: [...modCards], bugPolicy: policy, constraints },
-                            solution, stats, analysis, addedPartIndices: [...added],
+                            solution, stats: placedStats, analysis, addedPartIndices: [...added],
                             addedCardIds: modCardMode === "auto" ? [...modCards] : [],
                         });
                         const cells = occupiedBuildCells(data, candidate);
@@ -171,9 +173,9 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                             onProgress?.({ ...progress });
                         }
                     }
-                    // For a fixed part multiset/deck every layout has the same
-                    // score, so one acceptable layout is sufficient.
-                    break;
+                    // Installed effects are an upper bound. If a program is off
+                    // line, another layout can activate it and improve the score.
+                    if (JSON.stringify(placedStats) === JSON.stringify(stats)) break;
                 }
             }
             if (remaining === 0) return;

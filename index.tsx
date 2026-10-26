@@ -41,6 +41,7 @@ import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
 import {
     computeBuildStats,
+    computePlacedBuildStats,
     getBusterStatLimits,
     tAbility,
     analyzeSolutionBugs,
@@ -168,14 +169,19 @@ function ConstraintDropdown({
 function BuildStatsView({
     data,
     problem,
+    solution,
 }: {
     data: Data;
     problem: Problem;
+    solution?: Solution;
 }) {
     const { lang } = useLang();
     const baseHp = problem.baseHp ?? 1000;
     const partIds = problem.requirements.map(req => data.partMetas[req.partIndex].id);
-    const stats = computeBuildStats(data.gameId, partIds, problem.modCards, baseHp);
+    const grid = makeGridSettings(data, problem);
+    const stats = solution ? computePlacedBuildStats(data.gameId, data.partMetas, problem.requirements,
+        placeAll(data.parts, problem.requirements, solution, grid), grid, problem.modCards, baseHp) :
+        computeBuildStats(data.gameId, partIds, problem.modCards, baseHp);
 
     const hasAnyStats = problem.requirements.length > 0 ||
         (problem.modCards !== undefined && problem.modCards.length > 0) ||
@@ -189,7 +195,7 @@ function BuildStatsView({
         <div className="card mb-3 p-2 bg-body-tertiary">
             <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="fw-semibold small text-muted text-uppercase">
-                    📊 {t("buildStats", lang)}
+                    📊 {t(solution ? "buildStats" : "buildStatsPlanned", lang)}
                 </span>
                 {stats.modMbUsed !== undefined && stats.modMbUsed > 0 ? (
                     <span className={`badge ${stats.modMbUsed > 80 ? "bg-danger" : "bg-dark border border-primary text-light"} py-1 px-2`}>
@@ -2716,7 +2722,6 @@ function Results({
                 </div>
             ) : null}
 
-            <BuildStatsView data={data} problem={problem} />
             <div
                 style={{
                     display: "grid",
@@ -2777,6 +2782,7 @@ function Results({
                                         cells={cells}
                                     />
                                 </div>
+                                <BuildStatsView data={data} problem={problem} solution={solution} />
                                 <SolutionBugDetails analysis={analysis} lang={lang} />
                             </div>
                         );

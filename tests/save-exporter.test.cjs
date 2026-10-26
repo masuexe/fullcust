@@ -135,7 +135,7 @@ test("BN6 caches every NC ability without retaining template flags", () => {
     for (const [id, offset, expected] of cases) {
         const problem = emptyProblem(data);
         problem.requirements = [{ partIndex: data.partMetas.findIndex(p => p.id === id),
-            constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }];
+            constraint: { compressed: true, onCommandLine: true, minBugLevel: 0, maxBugLevel: Infinity } }];
         const solution = solve(data.parts, problem.requirements, data.gridSettings, problem.spinnableColors).next().value;
         assert.ok(solution, `Part ${id} must have a real placement`);
         const templateBytes = Uint8Array.from(template);
@@ -160,7 +160,7 @@ test("BN5 caches every NC ability without retaining template flags", () => {
     for (const [id, offset, expected] of cases) {
         const problem = emptyProblem(data);
         problem.requirements = [{ partIndex: data.partMetas.findIndex(p => p.id === id),
-            constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }];
+            constraint: { compressed: true, onCommandLine: true, minBugLevel: 0, maxBugLevel: Infinity } }];
         const solution = solve(data.parts, problem.requirements, data.gridSettings, problem.spinnableColors).next().value;
         assert.ok(solution, `Part ${id} must have a real placement`);
         const templateBytes = Uint8Array.from(template);
@@ -188,7 +188,7 @@ test("BN4 caches every NC ability without retaining template flags", () => {
     for (const [id, offset, expected] of cases) {
         const problem = emptyProblem(data);
         problem.requirements = [{ partIndex: data.partMetas.findIndex(p => p.id === id),
-            constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }];
+            constraint: { compressed: true, onCommandLine: true, minBugLevel: 0, maxBugLevel: Infinity } }];
         const solution = solve(data.parts, problem.requirements, data.gridSettings, problem.spinnableColors).next().value;
         assert.ok(solution, `Part ${id} must have a real placement`);
         const templateBytes = Uint8Array.from(template);
@@ -375,7 +375,7 @@ test("BN5 buildGbaSave produces valid 64KB SRAM with clean unmasking, checksum, 
         assert.ok(effHp >= 1000, "BN5 effective_max_hp must be at least 1000");
 
         // SuperArmor at 0x52a8 + 0x23
-        assert.equal(wramSlice[0x52a8 + 0x23], 1, "SuperArmor must be cached at 0x52a8 + 0x23");
+        assert.equal(wramSlice[0x52a8 + 0x23], 0, "The dummy layout places SuperArmor off-line; its cached ability must be disabled");
         // FloatShoes at 0x52a8 + 0x1b
         assert.equal(wramSlice[0x52a8 + 0x1b], 1, "FloatShoes must be cached at 0x52a8 + 0x1b");
         // Custom window at 0x52a8 + 0x0a
@@ -438,7 +438,7 @@ test("BN4 buildGbaSave produces valid 64KB SRAM with clean unmasking and checksu
         assert.ok(effHp >= 1000, "BN4 effective_max_hp at 0x21ca must be at least 1000");
 
         // Check BN4 in-battle navi record at 0x4ea0
-        assert.equal(wramSlice[0x4ea0 + 0x01], 1, "SuperArmor must be cached at 0x4ea0 + 0x01");
+        assert.equal(wramSlice[0x4ea0 + 0x01], 0, "The dummy layout places SuperArmor off-line; its cached ability must be disabled");
         assert.equal(wramSlice[0x4ea0 + 0x02], 1, "FloatShoes must be cached at 0x4ea0 + 0x02");
         assert.ok(wramSlice[0x4ea0 + 0x12] >= 5, "Custom window must be at least 5");
         const battleHp = new DataView(wramSlice.buffer, wramSlice.byteOffset, wramSlice.byteLength).getUint16(0x4ea0 + 0x34, true);

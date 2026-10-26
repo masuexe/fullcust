@@ -1,5 +1,5 @@
 import type { Data } from "./game-data";
-import { computeBuildStats } from "./effects";
+import { computeBuildStats, getActivePartIds } from "./effects";
 import { getModCard } from "./modcards";
 import type { Problem } from "./problem";
 import { placeAll, type Solution } from "./solver";
@@ -457,21 +457,9 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
     // In GBA Battle Network games, battles read the cached in-memory/SRAM status block.
     // If this is not updated to match the installed parts, MegaMan enters battle with 1000 HP,
     // Buster level 1, and no NaviCust abilities until the player visits the NC screen and clicks RUN.
-    const partIds: number[] = [];
-    if (hasSolution) {
-        for (const req of problem.requirements) {
-            const meta = data.partMetas[req.partIndex];
-            if (meta && typeof meta.id === "number") {
-                partIds.push(meta.id);
-            }
-        }
-    }
-    const stats = computeBuildStats(
-        gameId,
-        partIds,
-        problem.modCards,
-        problem.baseHp ?? 1000
-    );
+    const partIds = hasSolution && solution ? getActivePartIds(data.partMetas, problem.requirements,
+        placeAll(data.parts, problem.requirements, solution, data.gridSettings), data.gridSettings) : [];
+    const stats = computeBuildStats(gameId, partIds, problem.modCards, problem.baseHp ?? 1000);
 
     if (gameId === "bn6") {
         // Buster stats are zero-based; card-enhanced Attack can reach level 10.

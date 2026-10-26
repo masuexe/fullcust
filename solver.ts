@@ -266,7 +266,8 @@ export function* solve(
     spinnableColors: boolean[],
     shouldStop: () => boolean = () => false,
     deduplicate: boolean = true,
-    onPlacementAttempt?: () => void
+    onPlacementAttempt?: () => void,
+    preferProgramsOnCommandLine: boolean = false
 ): Iterable<Solution> {
     if (gridSettings.commandLineRow > gridSettings.height) {
         return;
@@ -290,6 +291,16 @@ export function* solve(
                 spinnableColors[part.color] || false
             ),
         ];
+    }
+
+    if (preferProgramsOnCommandLine) {
+        for (const [reqIdx, placements] of candidates) {
+            if (!parts[requirements[reqIdx].partIndex].isSolid) continue;
+            const touchesLine = (candidate: Candidate) => candidate.cellIndices.some(index =>
+                Math.floor(index / gridSettings.width) === gridSettings.commandLineRow);
+            // Reorder only: explicit placement constraints and off-line fallbacks survive.
+            placements.sort((a, b) => Number(touchesLine(b)) - Number(touchesLine(a)));
+        }
     }
 
     // Heuristic: fit hard to fit blocks first, then easier ones.

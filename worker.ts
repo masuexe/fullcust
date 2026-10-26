@@ -25,7 +25,7 @@ self.onmessage = function (e: MessageEvent<Request>) {
         case "init": {
             const { parts, requirements, gridSettings, spinnableColors } =
                 e.data.args;
-            it = solve(parts, requirements, gridSettings, spinnableColors)[
+            it = solve(parts, requirements, gridSettings, spinnableColors, undefined, true, undefined, true)[
                 Symbol.iterator
             ]();
             break;

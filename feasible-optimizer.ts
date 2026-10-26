@@ -1,5 +1,5 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BuildStats, computeBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
@@ -83,15 +83,17 @@ export function findFeasibleBuild(
         if (missing.length === 0) {
             const reqs = requirementsUnderPolicy(data, state.requirements, policy,
                 constraints?.forbiddenBugs ?? [], constraints?.bugRules, state.cards);
-            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)) {
+            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
                 if (shouldStop()) return null;
+                const stats = computePlacedBuildStats(data.gameId, data.partMetas, state.requirements,
+                    placeAll(data.parts, state.requirements, solution, grid), grid, state.cards, problem.baseHp ?? 1000);
                 const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, state.requirements,
                     placeAll(data.parts, state.requirements, solution, grid), grid, "en", state.cards);
                 if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
-                    !doesBuildSatisfyConstraints(state.stats, analysis, constraints)) continue;
+                    !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
                 return removeRedundantAbilityParts(options, {
                     problem: { ...problem, requirements: state.requirements, modCards: state.cards, constraints, bugPolicy: policy },
-                    solution, stats: state.stats, analysis, addedPartIndices: state.added,
+                    solution, stats, analysis, addedPartIndices: state.added,
                     addedCardIds: modCardMode === "auto" ? state.cards : [],
                 });
             }
@@ -139,7 +141,7 @@ export function findFeasibleBuild(
             // Only geometric impossibility is safe for intermediate states;
             // a later neighbor may still satisfy an explicit minimum bug level.
             const relaxed = choice.state.requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)[Symbol.iterator]().next().done) continue;
+            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)[Symbol.iterator]().next().done) continue;
             const result = visit(choice.state);
             if (result) return result;
         }
