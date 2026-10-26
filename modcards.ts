@@ -76,6 +76,23 @@ export const BN4_MOD_CARDS_MAP = new Map<string, ModCard>(
 export const BN6_MAX_MOD_MB = 80;
 export const BN5_MAX_MOD_MB = 80;
 
+/** Match the actual repaired effect, rather than every name containing "damage". */
+export function repairsBugType(repair: string, type: string): boolean {
+    const name = repair.toLowerCase();
+    const bug = type.toLowerCase();
+    if (name.includes("custom damage")) return bug === "customdamage";
+    if (name.includes("custom hp") || name.includes("custom screen hp")) return bug === "customhp";
+    if (name.includes("battle hp")) return bug === "battlehp";
+    if (name === "damage hp bug") return bug === "damagehp";
+    if (name === "damage bug") return ["damagehp", "damagebattlehp", "damageconfusion", "damageblind"].includes(bug);
+    if (name.includes("movement")) return ["movement", "involuntarymove"].includes(bug);
+    if (name.includes("buster blank")) return bug === "buster";
+    if (name.includes("panel")) return ["panel", "panelset", "poisonwalk"].includes(bug);
+    if (name.includes("status")) return bug === "status";
+    if (name.includes("emotion")) return bug === "emotion";
+    return false;
+}
+
 export function getModCards(gameId: string = "bn6"): ModCard[] {
     if (gameId === "bn4") return BN4_MOD_CARDS;
     if (gameId === "bn5") return BN5_MOD_CARDS;
@@ -250,9 +267,22 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
             disabledSet.add("chipRecovery");
         }
 
+        // Repairs: cancel bugs from earlier cards and record for NaviCust bug cancellation
+        if (card.repairs) {
+            for (const rep of card.repairs) {
+                repairedBugsSet.add(rep);
+                deckBugs = deckBugs.filter(entry => !repairsBugType(rep, entry.bug.type));
+            }
+        }
+
         // Add card bugs
         if (card.bugs) {
             for (const b of card.bugs) {
+                // BN5/6 write the later card's value for the same bug category.
+                // BN4 uses a different stacking scheme and keeps its existing path.
+                if (gameId === "bn5" || gameId === "bn6") {
+                    deckBugs = deckBugs.filter(entry => entry.bug.type !== b.type);
+                }
                 deckBugs.push({
                     sourceCardId: card.id,
                     sourceCardName: {
@@ -261,31 +291,6 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
                         zh: card.nameZh,
                     },
                     bug: b,
-                });
-            }
-        }
-
-        // Repairs: cancel bugs from earlier cards and record for NaviCust bug cancellation
-        if (card.repairs) {
-            for (const rep of card.repairs) {
-                repairedBugsSet.add(rep);
-                const normRep = rep.toLowerCase();
-
-                deckBugs = deckBugs.filter(entry => {
-                    const bType = entry.bug.type.toLowerCase();
-                    const bRaw = entry.bug.raw.toLowerCase();
-
-                    if (normRep.includes("battle hp") && (bType === "battlehp" || bRaw.includes("battle hp"))) return false;
-                    if (normRep.includes("movement") && (bType === "movement" || bRaw.includes("movement"))) return false;
-                    if (normRep.includes("buster blank") && (bType === "buster" || bRaw.includes("buster blank"))) return false;
-                    if (normRep.includes("custom damage") && (bType === "customdamage" || bRaw.includes("custom damage"))) return false;
-                    if ((normRep.includes("custom hp") || normRep.includes("custom screen hp")) && (bType === "customhp" || bRaw.includes("custom hp"))) return false;
-                    if (normRep.includes("panel") && (bType === "panel" || bRaw.includes("panel"))) return false;
-                    if (normRep.includes("status") && (bType === "status" || bRaw.includes("status"))) return false;
-                    if (normRep.includes("emotion") && (bType === "emotion" || bRaw.includes("emotion"))) return false;
-                    if (normRep.includes("damage") && (bType.includes("damage") || bRaw.includes("damage"))) return false;
-
-                    return true;
                 });
             }
         }

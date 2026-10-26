@@ -69,7 +69,22 @@
     },
     "abilities": [],
     "disabledAbilities": [],
-    "bugs": [],
+    "bugs": [
+      {
+        "raw": "Move: Ice Panel (1/4)",
+        "type": "panel",
+        "name": {
+          "en": "Move Ice Panel Bug",
+          "ja": "いどうでこおり (1/4)",
+          "zh": "移动变冰面板 BUG（1/4）"
+        },
+        "description": {
+          "en": "Moving off a panel changes it to ice with probability 1/4.",
+          "ja": "移動したマスが1/4の確率でこおりパネルになります。",
+          "zh": "离开面板时有 1/4 的概率将其变为冰面板。"
+        }
+      }
+    ],
     "repairs": [],
     "body": "Aqua",
     "bPwrAtk": "IceCube",
@@ -446,7 +461,22 @@
     },
     "abilities": [],
     "disabledAbilities": [],
-    "bugs": [],
+    "bugs": [
+      {
+        "raw": "Move: Grass Panel (1/4)",
+        "type": "panel",
+        "name": {
+          "en": "Move Grass Panel Bug",
+          "ja": "いどうでクサムラ (1/4)",
+          "zh": "移动变草面板 BUG（1/4）"
+        },
+        "description": {
+          "en": "Moving off a panel changes it to grass with probability 1/4.",
+          "ja": "移動したマスが1/4の確率でクサムラパネルになります。",
+          "zh": "离开面板时有 1/4 的概率将其变为草面板。"
+        }
+      }
+    ],
     "repairs": [],
     "body": "Wood",
     "movePanel": "Grass Panel"
@@ -2142,7 +2172,22 @@
       "statusGuard"
     ],
     "disabledAbilities": [],
-    "bugs": [],
+    "bugs": [
+      {
+        "raw": "Move: Grass Panel (1/4)",
+        "type": "panel",
+        "name": {
+          "en": "Move Grass Panel Bug",
+          "ja": "いどうでクサムラ (1/4)",
+          "zh": "移动变草面板 BUG（1/4）"
+        },
+        "description": {
+          "en": "Moving off a panel changes it to grass with probability 1/4.",
+          "ja": "移動したマスが1/4の確率でクサムラパネルになります。",
+          "zh": "离开面板时有 1/4 的概率将其变为草面板。"
+        }
+      }
+    ],
     "repairs": [],
     "body": "Wood",
     "bPwrAtk": "Lance",
@@ -2874,9 +2919,9 @@
           "zh": "改装HP BUG LV1"
         },
         "description": {
-          "en": "Drains 1 HP every 30 frames while in the Custom Screen.",
-          "ja": "カスタム画面で30フレーム毎にHPが1減少します。",
-          "zh": "在改装视窗中每 30 帧扣减 1 HP。"
+          "en": "HP drains while the Custom Screen is open (Lv1).",
+          "ja": "カスタム画面内でHPが継続減少します（Lv1）。",
+          "zh": "停留在选卡画面时持续掉血（Lv1）。"
         }
       }
     ],
@@ -3051,6 +3096,20 @@
           "ja": "被ダメージ硬直時に10秒間、バトルHPバグLV1が発生します。",
           "zh": "受到硬直伤害时陷入 10 秒的战斗HP BUG LV1。"
         }
+      },
+      {
+        "raw": "Accidental ChargeShot (12.5%)",
+        "type": "buster",
+        "name": {
+          "en": "Accidental ChargeShot (12.5%; no blanks)",
+          "ja": "BボタンでCS暴発 (1/8・空撃ちなし)",
+          "zh": "普通射击误发集气 BUG（1/8，无空包弹）"
+        },
+        "description": {
+          "en": "Normal B shots have a 1/8 chance to fire a charge shot unexpectedly. Buster blank shots are repaired.",
+          "ja": "Bボタンで1/8の確率でチャージショットが暴発します。空撃ちは修正されます。",
+          "zh": "普通 B 射击有 1/8 的概率误发集气攻击；空包弹效果被修复。"
+        }
       }
     ],
     "repairs": [
@@ -3117,7 +3176,22 @@
     },
     "abilities": [],
     "disabledAbilities": [],
-    "bugs": [],
+    "bugs": [
+      {
+        "raw": "Move: Ice Panel (1/8)",
+        "type": "panel",
+        "name": {
+          "en": "Move Ice Panel Bug",
+          "ja": "いどうでこおり (1/8)",
+          "zh": "移动变冰面板 BUG（1/8）"
+        },
+        "description": {
+          "en": "Moving off a panel changes it to ice with probability 1/8.",
+          "ja": "移動したマスが1/8の確率でこおりパネルになります。",
+          "zh": "离开面板时有 1/8 的概率将其变为冰面板。"
+        }
+      }
+    ],
     "repairs": [],
     "body": "Aqua",
     "chargeAddition": "Freeze",

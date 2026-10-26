@@ -172,9 +172,15 @@ export function fromHashString(s: string, data: Data): Problem | null {
         throw new Error("Unknown Style.");
     }
     const hasModCards = data.gameId === "bn4" || data.gameId === "bn5" || data.gameId === "bn6";
+    // BN5's old "custom" key represented entry damage, not chip-slot loss.
+    const restoreBugRules = (rules: Record<string, string>): Record<string, BugTolerance> => {
+        if (data.gameId !== "bn5" || rules.custom === undefined) return rules as Record<string, BugTolerance>;
+        const { custom, ...rest } = rules;
+        return { ...rest, customDamage: rest.customDamage ?? custom } as Record<string, BugTolerance>;
+    };
     const bugPolicy: BugPolicy = "bp" in saved && saved.bp ? {
         type: saved.bp.t,
-        ...(saved.bp.r ? { customRules: saved.bp.r as Record<string, BugTolerance> } : {}),
+        ...(saved.bp.r ? { customRules: restoreBugRules(saved.bp.r) } : {}),
     } : DEFAULT_BUG_POLICY;
 
     const constraints: BuildConstraints | undefined = "bc" in saved && saved.bc ? {
@@ -191,8 +197,8 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.bd ? { requiredBody: saved.bc.bd } : {}),
         ...(saved.bc.ab !== undefined ? { allowedBodies: saved.bc.ab } : {}),
         ...(saved.bc.g ? { requiredGauge: saved.bc.g } : {}),
-        ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb } : {}),
-        ...(saved.bc.br ? { bugRules: saved.bc.br as Record<string, BugTolerance> } : {}),
+        ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb.map(type => data.gameId === "bn5" && type === "custom" ? "customDamage" : type) } : {}),
+        ...(saved.bc.br ? { bugRules: restoreBugRules(saved.bc.br) } : {}),
     } : undefined;
 
     return {

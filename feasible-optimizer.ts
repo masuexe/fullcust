@@ -1,5 +1,5 @@
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BUG_SPEC_OPTIONS, BuildStats, computeBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
@@ -149,8 +149,10 @@ export function findFeasibleBuild(
         occupied: problem.requirements.reduce((sum, req) => sum + minimumCells(req), 0), stats: statsFor(problem.requirements, cards) };
     const rules = constraints?.bugRules ?? policy.customRules;
     const requiresBug = Object.values(rules ?? {}).includes("required");
-    const restrictsBugs = BUG_SPEC_OPTIONS.filter(opt => !opt.games || opt.games.includes(data.gameId))
-        .some(opt => rules?.[opt.id] !== "allowed" && rules?.[opt.id] !== "allowed_any");
+    const restrictsBugs = data.partMetas.some(part => getPartBugTypes(data.gameId, part.id).some(type => {
+        const tolerance = rules?.[normalizeBugType(type)] ?? rules?.[type];
+        return tolerance !== "allowed" && tolerance !== "allowed_any";
+    }));
     if (data.gameId === "bn6" && (modCardMode === "auto" || (modCardMode === "keep" && cards.length > 0)) &&
         options.preferBugStop !== false && !options.excludeAutomaticBugStop && !requiresBug && restrictsBugs &&
         !problem.requirements.some(isBugStop)) {

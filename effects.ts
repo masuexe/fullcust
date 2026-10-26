@@ -1,5 +1,5 @@
 import { getPartName, Lang } from "./i18n";
-import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug } from "./modcards";
+import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug, repairsBugType } from "./modcards";
 import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
@@ -771,11 +771,12 @@ export interface BugSpecOption {
 export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     {
         id: "movement",
-        name: { en: "Movement Warp", ja: "移動バグ", zh: "边界瞬移 BUG" },
-        desc: { en: "Warps to screen edge on move", ja: "移動時に最端マスへワープ", zh: "移动时直接瞬移至边缘格子" },
+        name: { en: "Movement Bug", ja: "移動バグ", zh: "移动异常 BUG" },
+        desc: { en: "Warping or forced movement, depending on game and source", ja: "作品・原因により強制移動や端へのワープ", zh: "依作品和来源产生强制移动或边界瞬移" },
     },
     {
         id: "custom",
+        games: ["bn3", "bn6"],
         name: { en: "Custom Screen -1", ja: "カスタム減少", zh: "改装视窗减少 BUG" },
         desc: { en: "Reduces initial chip selection by 1", ja: "カスタム画面の選択枠-1", zh: "选芯片视窗每回合少选 1 枚" },
     },
@@ -796,8 +797,8 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "buster",
-        name: { en: "Buster Blank", ja: "空打ちバグ", zh: "普通射击空包弹 BUG" },
-        desc: { en: "Buster shots may misfire or blank", ja: "射撃が不発またはチャージ暴発", zh: "普通射击有几率卡壳打出空包弹" },
+        name: { en: "Buster Blank / Accidental ChargeShot", ja: "空撃ち・チャージ暴発", zh: "普通射击空包弹／集气误发 BUG" },
+        desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能空发或误发集气攻击；具体效果因作品和来源而异" },
     },
     {
         id: "customHp",
@@ -806,8 +807,8 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "panel",
-        name: { en: "Panel Break / Poison", ja: "パネル変化バグ", zh: "面板变化 / 破裂 BUG" },
-        desc: { en: "Cracks or poisons stepped/initial panels", ja: "歩行時や開始時にパネルがヒビ・毒沼化", zh: "走过地板开裂或开局场地变为毒沼" },
+        name: { en: "Panel Change / Break", ja: "パネル変化バグ", zh: "地面变化／破裂 BUG" },
+        desc: { en: "Changes panels after movement or at battle start, including grass, ice, holes, poison, or Holy panels", ja: "移動時や開始時に草・氷・穴・毒・ホーリー等へパネルが変化", zh: "移动后或开局时改变地面，包括草、冰、地穴、毒沼或神圣面板" },
     },
     {
         id: "status",
@@ -819,6 +820,72 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         name: { en: "Emotion / Humor Bug", ja: "感情・ユーモアバグ", zh: "情绪 / 幽默感 BUG" },
         desc: { en: "Uncontrolled emotional shifts or jokes", ja: "感情が不安/怒り暴走、または被弾時ギャグ", zh: "情绪极度动摇/愤怒，或受击时讲冷笑话" },
     },
+    {
+        id: "customDamage",
+        games: ["bn5", "bn6"],
+        name: { en: "Custom Screen Entry Damage", ja: "カスタムオープンダメージ", zh: "打开选卡画面受伤 BUG" },
+        desc: { en: "Takes a fixed amount of damage each time the Custom Screen opens; separate from continuous menu HP drain", ja: "カスタム画面を開くたびに定量ダメージ。画面内の継続HP減少とは別", zh: "每次打开选卡画面时扣除固定 HP，与停留菜单持续掉血不同" },
+    },
+    {
+        id: "damageBattleHp",
+        games: ["bn6"],
+        name: { en: "Damage-triggered Battle HP Drain", ja: "ダメージ時バトルHPバグ", zh: "受击后暂时掉血 BUG" },
+        desc: { en: "Flinching damage temporarily inflicts Battle HP drain; separate from NC Damage HP escalation", ja: "被ダメージ時に一時的なバトルHP減少。NCのHPバグ段階上昇とは別", zh: "受到硬直伤害后暂时持续掉血，与 NC 的受击加重 HP BUG 不同" },
+    },
+    {
+        id: "damageConfusion",
+        games: ["bn5", "bn6"],
+        name: { en: "Damage-triggered Confusion", ja: "ダメージこんらん", zh: "受击混乱 BUG" },
+        desc: { en: "Taking damage triggers confusion; separate from battle-start status bugs", ja: "被ダメージで混乱。戦闘開始時の状態バグとは別", zh: "受到伤害触发混乱，与开局状态异常不同" },
+    },
+    {
+        id: "damageBlind",
+        games: ["bn5"],
+        name: { en: "Damage-triggered Blindness", ja: "ダメージもうもく", zh: "受击失明 BUG" },
+        desc: { en: "Taking damage triggers blindness", ja: "被ダメージで盲目が発生", zh: "受到伤害触发失明" },
+    },
+    {
+        id: "charge",
+        games: ["bn3"],
+        name: { en: "Modified Charged Shot", ja: "ため撃ち変化バグ", zh: "集气攻击变化 BUG" },
+        desc: { en: "Changes the charged attack into an unintended object or attack", ja: "ため撃ちが別の物体・攻撃に変化", zh: "集气攻击变成其他物体或攻击" },
+    },
+    {
+        id: "encounter",
+        games: ["bn3", "bn4", "bn5", "bn6"],
+        name: { en: "Encounter Bug", ja: "エンカウントバグ", zh: "遇敌率 BUG" },
+        desc: { en: "Changes virus encounters outside battle", ja: "ウイルスエンカウント率が変化", zh: "改变网络地图的病毒遭遇情况" },
+    },
+    {
+        id: "support",
+        games: ["bn3", "bn4", "bn5", "bn6"],
+        name: { en: "Support Failure", ja: "サポート不発バグ", zh: "支援失效 BUG" },
+        desc: { en: "Support programs may fail to activate", ja: "サポートプログラムが発動しない", zh: "支援程序无法正常发动" },
+    },
+    {
+        id: "resultZenny",
+        games: ["bn3"],
+        name: { en: "Zenny-only Battle Rewards", ja: "リザルトバグ", zh: "战斗奖励仅金钱 BUG" },
+        desc: { en: "Battle rewards become Zenny instead of chips", ja: "戦闘報酬がチップではなくゼニーになる", zh: "战斗奖励变成金钱而非芯片" },
+    },
+    {
+        id: "gaugeSlow",
+        games: ["bn3"],
+        name: { en: "Slow Custom Gauge Bug", ja: "カスタムゲージ低下バグ", zh: "选卡槽变慢 BUG" },
+        desc: { en: "Applies the SlowGauge effect", ja: "ヘビーゲージ効果が発生", zh: "产生选卡槽蓄满速度变慢的效果" },
+    },
+    {
+        id: "chipAutoFire",
+        games: ["bn3"],
+        name: { en: "Automatic Chip Use", ja: "チップ自動使用バグ", zh: "芯片自动使用 BUG" },
+        desc: { en: "Selected chips are used automatically", ja: "選択したチップが自動で使われる", zh: "选中的芯片会自动使用" },
+    },
+    {
+        id: "hpCut",
+        games: ["bn3", "bn4"],
+        name: { en: "Max HP Halved", ja: "最大HP半減", zh: "最大 HP 减半" },
+        desc: { en: "HubBatch-related maximum HP penalty", ja: "サイトバッチによる最大HP低下", zh: "彩斗修正档带来的最大 HP 惩罚" },
+    },
 ];
 
 export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
@@ -826,10 +893,14 @@ export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
 export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
     if (t === "involuntarymove" || t === "player" || t === "movement") return "movement";
-    if (t === "damagebattlehp" || t === "battlehp") return "battleHp";
+    if (t === "battlehp") return "battleHp";
+    if (t === "damagebattlehp") return "damageBattleHp";
     if (t === "damagehp") return "damageHp";
-    if (t === "customdamage" || t === "customhp") return "customHp";
-    if (t === "damageconfusion" || t === "status" || t === "colorstatus") return "status";
+    if (t === "customhp") return "customHp";
+    if (t === "customdamage") return "customDamage";
+    if (t === "damageconfusion") return "damageConfusion";
+    if (t === "damageblind") return "damageBlind";
+    if (t === "status" || t === "colorstatus") return "status";
     if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
     if (t === "customscreenminus" || t === "custom") return "custom";
     if (t === "buster") return "buster";
@@ -859,6 +930,10 @@ export type BugType =
     | "charge"
     | "battleHp"
     | "damageHp"
+    | "damageBattleHp"
+    | "customDamage"
+    | "damageConfusion"
+    | "damageBlind"
     | "custom"
     | "customHp"
     | "panel"
@@ -934,7 +1009,7 @@ export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
 };
 
 export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
-    1: "player",   // SprArmr (TREZ Player Bug: Lv1 Confuse 10s, Lv2 Always moves front, Lv3 Always moves back)
+    1: "player",   // SprArmr (Player Bug: Lv1 Confuse 10s, Lv2 Always moves front, Lv3 Always moves back)
     2: "customHp", // Custom1 (HP drops while in Custom Screen)
     3: "customHp", // Custom2
     4: "customHp", // MegFldr1
@@ -978,11 +1053,11 @@ export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
 
 export const BN5_PART_BUG_TYPES: Record<number, BugType> = {
     1: "movement",  // SprArmr (Movement warp introduced here in BN5!)
-    2: "custom",    // Custom1
-    3: "custom",    // Custom2
-    4: "custom",    // MegFldr1
-    5: "custom",    // MegFldr2
-    6: "custom",    // GigFldr1
+    2: "customDamage",    // Custom1
+    3: "customDamage",    // Custom2
+    4: "customDamage",    // MegFldr1
+    5: "customDamage",    // MegFldr2
+    6: "customDamage",    // GigFldr1
     7: "movement",  // FstBarr
     8: "movement",  // Shield
     9: "movement",  // Reflect
@@ -1348,7 +1423,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
-        custom: {
+        customDamage: {
             title: {
                 en: "Custom Damage Bug",
                 ja: "カスタムダメージバグ",
@@ -2288,26 +2363,8 @@ export function analyzeSolutionBugs(
 
         // If card has Repair, remove corresponding NaviCust active bugs
         if (deck.repairedBugs.length > 0) {
-            finalActiveBugs = finalActiveBugs.filter(ab => {
-                for (const rep of deck.repairedBugs) {
-                    const normRep = rep.toLowerCase();
-                    const bType = ab.bugType.toLowerCase();
-                    if (bType === "damagehp") {
-                        if (normRep === "damage bug" || normRep === "damage hp bug") return false;
-                        continue;
-                    }
-                    if (normRep.includes("battle hp") && bType === "battlehp") return false;
-                    if (normRep.includes("movement") && bType === "movement") return false;
-                    if (normRep.includes("buster blank") && bType === "buster") return false;
-                    if (normRep.includes("custom damage") && bType === "customdamage") return false;
-                    if ((normRep.includes("custom hp") || normRep.includes("custom screen hp")) && bType === "customhp") return false;
-                    if (normRep.includes("panel") && bType === "panel") return false;
-                    if (normRep.includes("status") && bType === "status") return false;
-                    if (normRep.includes("emotion") && bType === "emotion") return false;
-                    if (normRep.includes("damage") && bType.includes("damage")) return false;
-                }
-                return true;
-            });
+            finalActiveBugs = finalActiveBugs.filter(ab =>
+                !deck.repairedBugs.some(repair => repairsBugType(repair, ab.bugType)));
         }
 
         // Mod card bugs are NOT neutralized by BugStop!

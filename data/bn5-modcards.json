@@ -466,7 +466,22 @@
     "busterAddition": "Poison Panel",
     "movePanel": "Holy Panel",
     "repairs": [],
-    "bugs": []
+    "bugs": [
+      {
+        "raw": "Move: Holy Panel",
+        "type": "panel",
+        "name": {
+          "en": "Move Holy Panel Bug",
+          "ja": "いどうでホーリー",
+          "zh": "移动变神圣面板 BUG"
+        },
+        "description": {
+          "en": "Moving off panels may turn them Holy. Although beneficial, this counts as a panel-change bug and can be repaired or overwritten.",
+          "ja": "移動したマスがホーリーパネルになります。有利な効果でもパネル変化バグとして修正・上書きの対象になります。",
+          "zh": "移动后地面可能变为神圣面板。虽然效果有利，但仍视为地面变化 BUG，可被修复或覆盖。"
+        }
+      }
+    ]
   },
   {
     "id": "136-A018",
@@ -495,7 +510,7 @@
     "bugs": [
       {
         "raw": "カスタムダメージバグ",
-        "type": "custom",
+        "type": "customDamage",
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
@@ -660,7 +675,7 @@
     "bugs": [
       {
         "raw": "ダメージ時に盲目発生バグ",
-        "type": "damage",
+        "type": "damageBlind",
         "name": {
           "en": "Damage Blind Bug",
           "ja": "被ダメージ時盲目バグ",
@@ -1437,7 +1452,7 @@
     "bugs": [
       {
         "raw": "カスタムダメージバグ",
-        "type": "custom",
+        "type": "customDamage",
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
@@ -1463,7 +1478,7 @@
       "チャージショットでパネルにあな"
     ],
     "negRaw": [
-      "ココロウインドウバ���"
+      "ココロウインドウバグ"
     ],
     "stats": {
       "hp": 50
@@ -1472,7 +1487,22 @@
     "disabledAbilities": [],
     "chargeAddition": "Panel Hole",
     "repairs": [],
-    "bugs": []
+    "bugs": [
+      {
+        "raw": "ココロウインドウバグ",
+        "type": "emotion",
+        "name": {
+          "en": "Emotion Window Bug",
+          "ja": "ココロウインドウバグ",
+          "zh": "心灵之窗 BUG"
+        },
+        "description": {
+          "en": "Emotion window fluctuates in battle.",
+          "ja": "戦闘中にココロウインドウが変化します。",
+          "zh": "战斗中心灵之窗发生异常变化。"
+        }
+      }
+    ]
   },
   {
     "id": "136-B003",
@@ -2243,7 +2273,7 @@
     "bugs": [
       {
         "raw": "ダメージ時に混乱発生バグ",
-        "type": "damage",
+        "type": "damageConfusion",
         "name": {
           "en": "Damage Confusion Bug",
           "ja": "被ダメージ時混乱バグ",
@@ -2897,7 +2927,7 @@
     "bugs": [
       {
         "raw": "カスタムダメージバグ",
-        "type": "custom",
+        "type": "customDamage",
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
