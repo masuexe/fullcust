@@ -35,6 +35,8 @@ export interface OptimizeOptions {
     beamWidth?: number;
     modCardMode?: ModCardMode;
     constraints?: BuildConstraints;
+    /** Counts search work, including repeated candidates; does not affect selection. */
+    onSearchWork?: (kind: "candidate" | "placement") => void;
 }
 
 export interface OptimizeResult {
@@ -846,12 +848,14 @@ function runNaviCustBeamSearch(
     bugRules: Partial<Record<string, BugTolerance>> | undefined,
     startTime: number,
     timeoutMs: number,
-    beamWidth: number
+    beamWidth: number,
+    onSearchWork?: OptimizeOptions["onSearchWork"]
 ): SearchNode | null {
     const shouldStop = () => Date.now() - startTime >= timeoutMs;
     const findPlacement = (requirements: Requirement[]) => {
+        onSearchWork?.("candidate");
         const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards);
-        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop)) {
+        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined)) {
             if (shouldStop()) break;
             const occ = placeAll(data.parts, requirements, solution, gridSettings);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occ, gridSettings, "en", modCards);
@@ -1119,7 +1123,8 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             constraints?.bugRules,
             startTime,
             branchDeadline,
-            beamWidth
+            beamWidth,
+            options.onSearchWork
         );
 
         if (!node) continue;

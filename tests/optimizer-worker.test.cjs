@@ -53,6 +53,18 @@ test("the real optimizer worker streams improved builds and completes after exha
     assert.equal(events.at(-1).type, "done");
     assert.equal(events.at(-1).best.stats.finalHp, 2000);
     assert.equal(events.at(-1).completed, true);
+    const updates = events.filter(event => event.activity);
+    assert.equal(updates[0].best, null, "Must report activity before the first solution");
+    assert.equal(updates[0].activity.stage, "feasible");
+    assert.ok(updates.some(event => event.activity.stage === "exhaustive"));
+    assert.ok(updates.at(-1).activity.candidateChecks > 0);
+    assert.ok(updates.at(-1).activity.placementAttempts > 0);
+    for (let i = 1; i < updates.length; i++) {
+        for (const key of ["candidateChecks", "placementAttempts", "elapsedMs"]) {
+            assert.ok(updates[i].activity[key] >= updates[i - 1].activity[key], key + " must never reset between stages");
+        }
+    }
+
 });
 
 test("the real optimizer worker reports exhaustion without conflating it with cancellation", async () => {

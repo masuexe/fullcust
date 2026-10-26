@@ -103,6 +103,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             const key = JSON.stringify(cards);
             if (seen.has(key)) continue;
             seen.add(key);
+            options.onSearchWork?.("candidate");
             const deck = computeDeckStats(cards, data.gameId);
             if (deck.isOverCapacity || deck.hasSlotConflict) continue;
             const stats = computeBuildStats(data.gameId, partIds, cards, problem.baseHp ?? 1000);

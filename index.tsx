@@ -38,6 +38,7 @@ import {
 import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
+import type { SearchActivity } from "./search-activity";
 import {
     computeBuildStats,
     getBusterStatLimits,
@@ -1122,7 +1123,14 @@ function AutoOptimizerPanel({
     const bestRef = React.useRef<OptimizeResult | null>(null);
     const previewDataRef = React.useRef(data);
     const [preview, setPreview] = React.useState<OptimizeResult | null>(null);
-    const [checkedBuilds, setCheckedBuilds] = React.useState(0);
+    const [searchActivity, setSearchActivity] = React.useState<SearchActivity | null>(null);
+    const searchStartedRef = React.useRef(0);
+    const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
+    React.useEffect(() => {
+        if (!isOptimizing) return;
+        const timer = window.setInterval(() => setElapsedSeconds(Math.floor((Date.now() - searchStartedRef.current) / 1000)), 1000);
+        return () => window.clearInterval(timer);
+    }, [isOptimizing]);
 
     React.useEffect(() => () => optimizerRef.current?.stop(), []);
 
@@ -1153,7 +1161,9 @@ function AutoOptimizerPanel({
         bestRef.current = null;
         previewDataRef.current = data;
         setPreview(null);
-        setCheckedBuilds(0);
+        setSearchActivity(null);
+        searchStartedRef.current = Date.now();
+        setElapsedSeconds(0);
         setIsOptimizing(true);
         setStatusMessage(null);
 
@@ -1172,7 +1182,7 @@ function AutoOptimizerPanel({
                     if (bestRef.current) onChange(bestRef.current.problem, bestRef.current.solution);
                     return;
                 }
-                setCheckedBuilds(message.checkedBuilds);
+                setSearchActivity(message.activity);
                 if (message.best) {
                     bestRef.current = message.best;
                     setPreview(message.best);
@@ -1669,7 +1679,8 @@ function AutoOptimizerPanel({
                         {isOptimizing ? (
                             <div className="small text-muted mt-2" role="status" aria-live="polite">
                                 {t(preview ? "optSearchingBetter" : "optSearchingFeasible", lang)}
-                                {" "}{t("optCheckedBuilds", lang)}: {checkedBuilds.toLocaleString()}
+                                <div>{t(({ feasible: "optStageFeasible", improve: "optStageImprove", local: "optStageLocal", exhaustive: "optStageExhaustive" } as const)[searchActivity?.stage ?? "feasible"], lang)}</div>
+                                <div>{t("optElapsed", lang)}: {elapsedSeconds}s · {t("optCandidateChecks", lang)}: {(searchActivity?.candidateChecks ?? 0).toLocaleString()} · {t("optPlacementAttempts", lang)}: {(searchActivity?.placementAttempts ?? 0).toLocaleString()}</div>
                             </div>
                         ) : null}
                         {preview && previewDataRef.current === data ? (

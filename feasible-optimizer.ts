@@ -78,11 +78,12 @@ export function findFeasibleBuild(
         const key = JSON.stringify([[...state.added].sort((a, b) => a - b), state.cards]);
         if (visited.has(key)) return null;
         visited.add(key);
+        options.onSearchWork?.("candidate");
         const missing = goals.filter(goal => !goal.satisfied(state.stats));
         if (missing.length === 0) {
             const reqs = requirementsUnderPolicy(data, state.requirements, policy,
                 constraints?.forbiddenBugs ?? [], constraints?.bugRules, state.cards);
-            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false)) {
+            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)) {
                 if (shouldStop()) return null;
                 const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, state.requirements,
                     placeAll(data.parts, state.requirements, solution, grid), grid, "en", state.cards);
@@ -138,7 +139,7 @@ export function findFeasibleBuild(
             // Only geometric impossibility is safe for intermediate states;
             // a later neighbor may still satisfy an explicit minimum bug level.
             const relaxed = choice.state.requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false)[Symbol.iterator]().next().done) continue;
+            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)[Symbol.iterator]().next().done) continue;
             const result = visit(choice.state);
             if (result) return result;
         }

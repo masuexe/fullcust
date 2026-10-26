@@ -737,6 +737,27 @@ export const translations = {
     optSearchingBetter: {
         en: "Valid build found. Searching for improvements…", ja: "有効な構成が見つかりました。さらに探索中…", zh: "已找到合法构筑，正在继续搜索更优结果……",
     },
+    optStageFeasible: {
+        en: "Selecting candidates to meet your requirements", ja: "条件を満たす候補を選択中", zh: "正在选择满足要求的候选组合",
+    },
+    optStageImprove: {
+        en: "Searching candidate builds and layouts", ja: "候補構成と配置を探索中", zh: "正在搜索候选构筑及布局",
+    },
+    optStageLocal: {
+        en: "Trying part and card changes to improve the result", ja: "パーツやカードの変更で改善を試行中", zh: "正在尝试增减、替换部件及卡片以改进结果",
+    },
+    optStageExhaustive: {
+        en: "Systematically searching combinations and layouts", ja: "組み合わせと配置を網羅的に探索中", zh: "正在系统搜索组合及布局",
+    },
+    optElapsed: {
+        en: "Elapsed", ja: "経過時間", zh: "已用时间",
+    },
+    optCandidateChecks: {
+        en: "Candidate checks (includes repeats)", ja: "候補確認回数（再確認を含む）", zh: "候选组合检查次数（含重复）",
+    },
+    optPlacementAttempts: {
+        en: "Part placement attempts", ja: "パーツ配置の試行回数", zh: "部件摆放尝试次数",
+    },
     optCheckedBuilds: {
         en: "Part combinations checked", ja: "確認済みパーツ構成", zh: "已检查部件组合",
     },

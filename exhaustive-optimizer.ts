@@ -116,6 +116,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
 
     function searchDeck(modCards: string[], additions: number): void {
         if (stopped()) return;
+        options.onSearchWork?.("candidate");
         const deck = computeDeckStats(modCards, data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict || (data.gameId === "bn4" && modCards.length > 5)) return;
         // NC cannot change card-only properties. Ability and bug constraints are
@@ -134,6 +135,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             if (remaining * smallestPart + occupied > capacity) return;
             if (colorCompatibility(data, { ...problem, requirements }).error) return;
             if (data.gameId !== "bn3" && new Set(requirements.map(r => data.parts[r.partIndex].color)).size > 4) return;
+            options.onSearchWork?.("candidate");
             const ids = requirements.map(r => data.partMetas[r.partIndex].id);
             const stats = computeBuildStats(data.gameId, ids, modCards, problem.baseHp ?? 1000);
             const missing = (constraints?.requiredAbilities ?? []).filter(ab => !stats.abilities.includes(ab));
@@ -144,11 +146,11 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             // Geometric impossibility is monotone. Minimum bug levels are not:
             // another same-color neighbor can satisfy them later, so relax minima.
             const geometric = requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false)[Symbol.iterator]().next().done) return;
+            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)[Symbol.iterator]().next().done) return;
             progress.checkedBuilds++;
             if (remaining === 0 && missing.length === 0) {
                 const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbidden, constraints?.bugRules, modCards);
-                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false)) {
+                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined)) {
                     if (stopped()) return;
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, "en", modCards);

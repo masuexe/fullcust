@@ -265,7 +265,8 @@ export function* solve(
     gridSettings: GridSettings,
     spinnableColors: boolean[],
     shouldStop: () => boolean = () => false,
-    deduplicate: boolean = true
+    deduplicate: boolean = true,
+    onPlacementAttempt?: () => void
 ): Iterable<Solution> {
     if (gridSettings.commandLineRow > gridSettings.height) {
         return;
@@ -397,6 +398,7 @@ export function* solve(
         for (const candidate of cands) {
             // Let bounded callers stop even when no complete layout is yielded.
             if (shouldStop()) return;
+            onPlacementAttempt?.();
             if (!candidateFits(candidate, reqIdx)) {
                 continue;
             }
