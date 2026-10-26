@@ -89,3 +89,14 @@ test("BN3 never gains card-only UI requirements even if an enabled flag is suppl
     assert.deepEqual(getOptimizerAbilityOptions(data, true), getOptimizerAbilityOptions(data, false));
     assert.deepEqual(getOptimizerModeConstraints(data, draft(), true), getOptimizerModeConstraints(data, draft(), false));
 });
+
+for (const game of ["bn5", "bn6"]) {
+    test(`${game}: Chip Recovery is selectable with cards and omitted in pure NC mode`, () => {
+        const data = dataFor(game);
+        assert.ok(ids(getOptimizerAbilityOptions(data, true)).includes("chipRecovery"));
+        assert.ok(!ids(getOptimizerAbilityOptions(data, false)).includes("chipRecovery"));
+        const constraints = { requiredAbilities: ["chipRecovery"], minChipRecovery: 20 };
+        assert.deepEqual(getOptimizerModeConstraints(data, constraints, true), constraints);
+        assert.deepEqual(getOptimizerModeConstraints(data, constraints, false), {});
+    });
+}

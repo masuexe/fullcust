@@ -726,6 +726,7 @@ export const BN5_CORE_ABILITY_OPTIONS: ConstraintOption[] = [
     { id: "firstBarrier", name: { en: "FirstBarrier", ja: "ファーストバリア", zh: "初始防护罩" } },
     { id: "firstBarrier100", name: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" } },
     { id: "firstBarrier200", name: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" } },
+    { id: "chipRecovery", name: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" } },
     { id: "autoHeal", name: { en: "AutoHeal", ja: "セルフリカバリー", zh: "自我回复" } },
     { id: "bugStop", name: { en: "BugStop", ja: "バグストッパー", zh: "BUG停止器" } },
     { id: "rush", name: { en: "Rush Support", ja: "ラッシュサポート", zh: "莱西支援" } },
