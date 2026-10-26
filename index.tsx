@@ -1836,7 +1836,7 @@ function PartSelector({
                 </div>
             </div>
 
-            <div className="overflow-auto flex-grow-1 mb-2">
+            <div className="flex-grow-1 mb-2">
                 <ol className="list-group">
                     {problem.requirements.map((requirement, i) => {
                         const partMeta = data!.partMetas[requirement.partIndex];
@@ -2826,6 +2826,21 @@ function MobileNav({
     );
 }
 
+const DEFAULT_SIDEBAR_WIDTH = 40;
+const MIN_SIDEBAR_WIDTH_PX = 300;
+const MIN_MAIN_WIDTH_PX = 420;
+
+function getInitialSidebarWidth(): number {
+    try {
+        const saved = localStorage.getItem("fullcust_sidebar_width");
+        if (saved) {
+            const val = parseFloat(saved);
+            if (!isNaN(val) && val >= 15 && val <= 85) return val;
+        }
+    } catch (e) {}
+    return DEFAULT_SIDEBAR_WIDTH;
+}
+
 function App() {
     const [theme, setTheme] = React.useState<Theme>(getInitialTheme);
     const toggleTheme = React.useCallback(() => {
@@ -2835,6 +2850,91 @@ function App() {
             return next;
         });
     }, []);
+
+    const [sidebarWidth, setSidebarWidth] = React.useState<number>(getInitialSidebarWidth);
+    const [isDraggingSplitter, setIsDraggingSplitter] = React.useState(false);
+
+    React.useEffect(() => {
+        document.documentElement.style.setProperty("--sidebar-width", `${sidebarWidth}%`);
+    }, [sidebarWidth]);
+
+    const resetSidebarWidth = React.useCallback(() => {
+        setSidebarWidth(DEFAULT_SIDEBAR_WIDTH);
+        try {
+            localStorage.setItem("fullcust_sidebar_width", DEFAULT_SIDEBAR_WIDTH.toString());
+            document.documentElement.style.setProperty("--sidebar-width", `${DEFAULT_SIDEBAR_WIDTH}%`);
+        } catch (e) {}
+    }, []);
+
+    const handleDrag = React.useCallback((clientX: number) => {
+        const windowWidth = window.innerWidth;
+        if (windowWidth < 992) return;
+
+        const minPct = Math.max(15, (MIN_SIDEBAR_WIDTH_PX / windowWidth) * 100);
+        const maxPct = Math.min(85, ((windowWidth - MIN_MAIN_WIDTH_PX) / windowWidth) * 100);
+
+        const rawPct = (clientX / windowWidth) * 100;
+        const clampedPct = Math.max(minPct, Math.min(maxPct, rawPct));
+
+        setSidebarWidth(clampedPct);
+        document.documentElement.style.setProperty("--sidebar-width", `${clampedPct}%`);
+    }, []);
+
+    const startResizing = React.useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDraggingSplitter(true);
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            handleDrag(moveEvent.clientX);
+        };
+
+        const onMouseUp = () => {
+            setIsDraggingSplitter(false);
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+            window.removeEventListener("mousemove", onMouseMove);
+            window.removeEventListener("mouseup", onMouseUp);
+
+            setSidebarWidth(current => {
+                try {
+                    localStorage.setItem("fullcust_sidebar_width", current.toFixed(2));
+                } catch (err) {}
+                return current;
+            });
+        };
+
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+    }, [handleDrag]);
+
+    const startTouchResizing = React.useCallback((e: React.TouchEvent) => {
+        if (e.touches.length !== 1) return;
+        setIsDraggingSplitter(true);
+
+        const onTouchMove = (moveEvent: TouchEvent) => {
+            if (moveEvent.touches.length === 1) {
+                handleDrag(moveEvent.touches[0].clientX);
+            }
+        };
+
+        const onTouchEnd = () => {
+            setIsDraggingSplitter(false);
+            window.removeEventListener("touchmove", onTouchMove);
+            window.removeEventListener("touchend", onTouchEnd);
+
+            setSidebarWidth(current => {
+                try {
+                    localStorage.setItem("fullcust_sidebar_width", current.toFixed(2));
+                } catch (err) {}
+                return current;
+            });
+        };
+
+        window.addEventListener("touchmove", onTouchMove);
+        window.addEventListener("touchend", onTouchEnd);
+    }, [handleDrag]);
 
     const [lang, setLangState] = React.useState<Lang>(getInitialLang);
     const [mobileTab, setMobileTab] = React.useState<"setup" | "results">("setup");
@@ -2920,13 +3020,13 @@ function App() {
 
     return (
         <LangContext.Provider value={{ lang, setLang }}>
-            <div>
+            <div style={{ "--sidebar-width": `${sidebarWidth}%` } as React.CSSProperties}>
                 <div
                     className={`sidebar-panel d-flex flex-column p-2 ${
                         mobileTab === "setup" ? "" : "d-none d-lg-flex"
                     }`}
                 >
-                    <div className="d-flex justify-content-between align-items-center mb-2">
+                    <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                         <h1 className="h4 mb-0">
                             fullcust{" "}
                             <small className="text-muted">
@@ -3022,6 +3122,24 @@ function App() {
                             onNavigateToResults={() => setMobileTab("results")}
                         />
                     ) : null}
+                </div>
+                <div
+                    className={`split-resizer ${isDraggingSplitter ? "is-dragging" : ""}`}
+                    onMouseDown={startResizing}
+                    onTouchStart={startTouchResizing}
+                    onDoubleClick={resetSidebarWidth}
+                    title={
+                        lang === "zh"
+                            ? "拖动调整左右视窗宽度（双击恢复默认40%）"
+                            : lang === "ja"
+                            ? "左右パネル幅をドラッグで調整（ダブルクリックで40%に戻す）"
+                            : "Drag to resize panels (Double-click to reset to 40%)"
+                    }
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Panel resize handle"
+                >
+                    <div className="split-resizer-handle" />
                 </div>
                 <div
                     className={`main-panel container-fluid my-2 ${
