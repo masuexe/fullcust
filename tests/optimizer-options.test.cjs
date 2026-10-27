@@ -50,7 +50,7 @@ const draft = () => ({
     minChipRecovery: 30, minCustom: 7, minBusterStats: { attack: 10, rapid: 3, charge: 5 },
     requiredSpecialMove: "DrillArm", requiredBLeft: "Shield", requiredBButton: "Sword",
     requiredChargeAddition: "Freeze", requiredBusterAddition: "Grass Panel", requiredGauge: "fast",
-    allowedBodies: [], requiredBody: "Fire",
+    allowedBodies: [], requiredBody: "Fire", allowedGauges: ["fast", "normal"],
     bugRules: { battleHp: "allowed_any", damageHp: "allowed_any", customDamage: "required", customHp: "allowed_any" },
     forbiddenBugs: ["damageConfusion", "buster"],
 });

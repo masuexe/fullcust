@@ -20,6 +20,8 @@ export const DEFAULT_BUG_POLICY: BugPolicy = {
     type: "no_bugs",
 };
 
+export const GAUGE_VALUES = ["fast", "normal", "slow"] as const;
+export type GaugeValue = typeof GAUGE_VALUES[number];
 export type GaugeOption = "fast" | "slow" | "normal" | "not_slow";
 
 export interface BuildConstraints {
@@ -36,6 +38,7 @@ export interface BuildConstraints {
     requiredBody?: string;
     allowedBodies?: BodyElement[];
     requiredGauge?: GaugeOption;
+    allowedGauges?: GaugeValue[];
     forbiddenBugs?: string[];
     bugRules?: Record<string, BugTolerance>;
 }
@@ -111,6 +114,7 @@ const SavedProblem = z.object({
         bd: z.string().optional(),
         ab: z.array(z.enum(BODY_ELEMENTS)).max(5).optional(),
         g: z.enum(["fast", "slow", "normal", "not_slow"]).optional(),
+        ag: z.array(z.enum(GAUGE_VALUES)).max(3).optional(),
         fb: z.array(z.string()).optional(),
         br: z.record(z.string()).optional(),
     }).optional(),
@@ -199,6 +203,7 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.bd ? { requiredBody: saved.bc.bd } : {}),
         ...(saved.bc.ab !== undefined ? { allowedBodies: saved.bc.ab } : {}),
         ...(saved.bc.g ? { requiredGauge: saved.bc.g } : {}),
+        ...(saved.bc.ag !== undefined ? { allowedGauges: saved.bc.ag } : {}),
         ...(saved.bc.fb ? { forbiddenBugs: saved.bc.fb.map(type => data.gameId === "bn5" && type === "custom" ? "customDamage" : type) } : {}),
         ...(saved.bc.br ? { bugRules: restoreBugRules(saved.bc.br) } : {}),
     } : undefined;
@@ -257,6 +262,7 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.requiredBody ||
             problem.constraints.allowedBodies !== undefined ||
             problem.constraints.requiredGauge ||
+            problem.constraints.allowedGauges !== undefined ||
             problem.constraints.forbiddenBugs?.length ||
             (problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0)
         ) ? {
@@ -274,6 +280,7 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.requiredBody ? { bd: problem.constraints.requiredBody } : {}),
                 ...(problem.constraints.allowedBodies !== undefined ? { ab: problem.constraints.allowedBodies } : {}),
                 ...(problem.constraints.requiredGauge ? { g: problem.constraints.requiredGauge } : {}),
+                ...(problem.constraints.allowedGauges !== undefined && problem.constraints.allowedGauges.length !== GAUGE_VALUES.length ? { ag: problem.constraints.allowedGauges } : {}),
                 ...(problem.constraints.forbiddenBugs?.length ? { fb: problem.constraints.forbiddenBugs } : {}),
                 ...(problem.constraints.bugRules && Object.keys(problem.constraints.bugRules).length > 0 ? { br: problem.constraints.bugRules } : {}),
             },

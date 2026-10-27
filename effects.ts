@@ -793,7 +793,6 @@ export const BODY_OPTIONS: ConstraintOption[] = [
 ];
 
 export const GAUGE_OPTIONS: ConstraintOption[] = [
-    { id: "not_slow", name: { en: "Not Slow (Fast/Normal)", ja: "非ヘビー（通常/クイック）", zh: "非慢速量表 (快速或普通)" } },
     { id: "fast", name: { en: "FastGauge", ja: "クイックゲージ", zh: "快速量表 (FastGauge)" } },
     { id: "normal", name: { en: "NormalGauge", ja: "ノーマルゲージ", zh: "普通量表 (NormalGauge)" } },
     { id: "slow", name: { en: "SlowGauge", ja: "ヘビーゲージ", zh: "缓慢量表 (SlowGauge)" } },

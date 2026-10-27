@@ -21,7 +21,7 @@ import {
     computeDeckStats,
     ModCard,
 } from "./modcards";
-import { BODY_ELEMENTS, BUSTER_STATS, getBusterMinimums, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { BODY_ELEMENTS, GAUGE_VALUES, BUSTER_STATS, getBusterMinimums, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { meetsPlacementBugConstraints, placeAll, solve, GridSettings, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_attack";
@@ -252,6 +252,25 @@ export function matchGauge(cardGauge: string | undefined, req: string): boolean 
     return effectiveGauge === target;
 }
 
+export function isGaugeAllowed(gauge: string | undefined, constraints?: BuildConstraints): boolean {
+    const current = (gauge ?? "normal").toLowerCase();
+    if (constraints?.allowedGauges !== undefined) {
+        if (!constraints.allowedGauges.some(g => g.toLowerCase() === current)) {
+            return false;
+        }
+    }
+    if (constraints?.requiredGauge) {
+        if (!matchGauge(current, constraints.requiredGauge)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function gaugeConstraintsPossible(constraints?: BuildConstraints): boolean {
+    return GAUGE_VALUES.some(gauge => isGaugeAllowed(gauge, constraints));
+}
+
 /**
  * Orders mod cards sequentially so that required moves, additions, and attributes are placed last
  * among cards that modify those attributes, preventing accidental overwriting.
@@ -346,15 +365,13 @@ export function orderModCardsForConstraints(
         });
     }
 
-    if (constraints.requiredGauge) {
+    if (constraints.allowedGauges !== undefined || constraints.requiredGauge) {
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = cardA?.gauge !== undefined && matchGauge(cardA.gauge, constraints.requiredGauge!);
-            const bMatches = cardB?.gauge !== undefined && matchGauge(cardB.gauge, constraints.requiredGauge!);
-            if (aMatches && !bMatches) return 1;
-            if (!aMatches && bMatches) return -1;
-            return 0;
+            const aMatches = cardA?.gauge !== undefined && isGaugeAllowed(cardA.gauge, constraints);
+            const bMatches = cardB?.gauge !== undefined && isGaugeAllowed(cardB.gauge, constraints);
+            return Number(aMatches) - Number(bMatches);
         });
     }
 
@@ -378,6 +395,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     } = options;
 
     if (gameId === "bn3") return [];
+    if (!bodyConstraintsPossible(constraints) || !gaugeConstraintsPossible(constraints)) return [];
 
     const allCards = getModCards(gameId);
     if (!allCards || allCards.length === 0) return [...existingCardIds];
@@ -482,12 +500,11 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     }
 
     // Lock required Gauge speed if specified (only if baseline 'normal' does not already satisfy it)
-    if (constraints?.requiredGauge && constraints.requiredGauge !== "not_slow" && constraints.requiredGauge !== "normal" && !locked.some(id => {
-        const c = getModCard(id, gameId);
-        return matchGauge(c?.gauge, constraints.requiredGauge!);
-    })) {
+    const gaugeRestricted = constraints?.allowedGauges !== undefined || constraints?.requiredGauge;
+    const baselineGaugeSatisfied = isGaugeAllowed(undefined, constraints);
+    if (gaugeRestricted && !baselineGaugeSatisfied && !locked.some(id => isGaugeAllowed(getModCard(id, gameId)?.gauge, constraints))) {
         const matchingCards = allCards.filter(
-            c => matchGauge(c.gauge, constraints.requiredGauge!) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            c => c.gauge && isGaugeAllowed(c.gauge, constraints) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
             matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
@@ -526,7 +543,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             if (c.busterAddition && !matchBusterAddition(c.busterAddition, constraints.requiredBusterAddition)) return false;
         }
         if (c.body !== undefined && !isBodyAllowed(c.body, constraints)) return false;
-        if (constraints?.requiredGauge && c.gauge && !matchGauge(c.gauge, constraints.requiredGauge)) return false;
+        if (c.gauge && !isGaugeAllowed(c.gauge, constraints)) return false;
         return true;
     });
 
@@ -801,9 +818,7 @@ export function doesBuildSatisfyConstraints(
 
     if (!isBodyAllowed(stats.modBody, constraints)) return false;
 
-    if (constraints.requiredGauge) {
-        if (!matchGauge(stats.modGauge, constraints.requiredGauge)) return false;
-    }
+    if (!isGaugeAllowed(stats.modGauge, constraints)) return false;
 
     const effectiveBugs = getEffectiveInBattleBugs(analysis);
 
@@ -978,7 +993,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         constraints = problem.constraints,
     } = options;
 
-    if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
+    if (!bodyConstraintsPossible(constraints) || !gaugeConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
     const startTime = Date.now();
     const gridSettings = makeGridSettings(data, problem);
     const spinnableColors = problem.spinnableColors;
@@ -1086,10 +1101,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             if (!matchBusterAddition(deck.busterAddition, constraints.requiredBusterAddition)) return null;
         }
         if (!isBodyAllowed(computeDeckStats(modCards, data.gameId).body, constraints)) return null;
-        if (constraints?.requiredGauge) {
-            const deck = computeDeckStats(modCards, data.gameId);
-            if (!matchGauge(deck.gauge, constraints.requiredGauge)) return null;
-        }
+        if (!isGaugeAllowed(computeDeckStats(modCards, data.gameId).gauge, constraints)) return null;
 
         const deck = computeDeckStats(modCards, data.gameId);
         const covered = new Set(deck.activeAbilities || []);

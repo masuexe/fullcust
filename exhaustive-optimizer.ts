@@ -8,6 +8,7 @@ import {
     OptimizeOptions, OptimizeResult, requirementsUnderPolicy,
     occupiedBuildCells, removeRedundantAbilityParts,
     bodyConstraintsPossible,
+    gaugeConstraintsPossible,
     busterMinimumsPossible,
 } from "./optimizer";
 
@@ -103,7 +104,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         return priority(a) - priority(b) || a - b;
     });
     const coreCells = problem.requirements.reduce((sum, r) => sum + minimumCells(r), 0);
-    if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
+    if (!bodyConstraintsPossible(constraints) || !gaugeConstraintsPossible(constraints) || !busterMinimumsPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
         (data.gameId !== "bn3" && new Set(problem.requirements.map(r => data.parts[r.partIndex].color)).size > (data.gameId === "bn6" ? 6 : 4))) {
         return { ...progress, completed: !shouldStop() };
     }

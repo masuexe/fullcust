@@ -4,7 +4,7 @@ import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildS
 import { computeDeckStats, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
-import { bodyConstraintsPossible, busterMinimumsPossible, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
+import { bodyConstraintsPossible, gaugeConstraintsPossible, busterMinimumsPossible, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
 
 interface Goal {
     satisfied: (stats: BuildStats) => boolean;
@@ -25,7 +25,7 @@ export function findFeasibleBuild(
         policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY, modCardMode = "keep", shouldStop: isCancelled } = options;
     let preferredDeadline = Infinity;
     const shouldStop = () => isCancelled() || Date.now() >= preferredDeadline;
-    if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
+    if (!bodyConstraintsPossible(constraints) || !gaugeConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
     const grid = makeGridSettings(data, problem);
     const capacity = grid.height * grid.width - (grid.hasOob ? 4 : 0);
     const availableCards = data.gameId !== "bn3" && modCardMode === "auto" ? getModCards(data.gameId) : [];

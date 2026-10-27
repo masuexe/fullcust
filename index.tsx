@@ -35,6 +35,8 @@ import {
     getBusterMinimums,
     BODY_ELEMENTS,
     BodyElement,
+    GAUGE_VALUES,
+    GaugeValue,
     GaugeOption,
 } from "./problem";
 import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } from "./optimizer-options";
@@ -59,7 +61,6 @@ import {
     CHARGE_ADDITION_OPTIONS,
     BUSTER_ADDITION_OPTIONS,
     BODY_OPTIONS,
-    GAUGE_OPTIONS,
     getSpecialCsOptions,
     getBLeftOptions,
     getBButtonOptions,
@@ -1058,9 +1059,17 @@ function AutoOptimizerPanel({
         (problem.constraints?.allowedBodies === undefined || problem.constraints.allowedBodies.includes(body)) &&
         (!problem.constraints?.requiredBody || problem.constraints.requiredBody.toLowerCase() === body.toLowerCase())
     ));
-    const [reqGauge, setReqGauge] = React.useState<string>(
-        problem.constraints?.requiredGauge ?? ""
-    );
+    const [allowedGauges, setAllowedGauges] = React.useState<GaugeValue[]>(() => {
+        if (problem.constraints?.allowedGauges !== undefined) {
+            return problem.constraints.allowedGauges;
+        }
+        if (problem.constraints?.requiredGauge) {
+            const req = problem.constraints.requiredGauge;
+            if (req === "not_slow") return ["fast", "normal"];
+            if (GAUGE_VALUES.includes(req as GaugeValue)) return [req as GaugeValue];
+        }
+        return [...GAUGE_VALUES];
+    });
     const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
         const initial = problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>);
         if (initial && Object.keys(initial).length > 0) {
@@ -1084,7 +1093,7 @@ function AutoOptimizerPanel({
         ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
         ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
-        ...(reqGauge ? { requiredGauge: reqGauge as GaugeOption } : {}),
+        ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
     }, cardsEnabled);
     const effectiveBugRules = constraints.bugRules ?? {};
@@ -1103,6 +1112,7 @@ function AutoOptimizerPanel({
         (constraints.requiredChargeAddition ? 1 : 0) +
         (constraints.requiredBusterAddition ? 1 : 0) +
         (constraints.allowedBodies ? 1 : 0) +
+        (constraints.allowedGauges ? 1 : 0) +
         (constraints.requiredGauge ? 1 : 0) +
         numConfiguredBugs;
     const [isConstraintsOpen, setIsConstraintsOpen] = React.useState(activeConstraintCount > 0);
@@ -1505,18 +1515,37 @@ function AutoOptimizerPanel({
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqGaugeTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqGauge}
-                                                        onChange={e => setReqGauge(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {GAUGE_OPTIONS.map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <div className="btn-group btn-group-sm w-100" role="group" aria-label={t("reqGaugeTitle", lang)}>
+                                                        {GAUGE_VALUES.map(gauge => {
+                                                            const active = allowedGauges.includes(gauge);
+                                                            const badgeClass = active
+                                                                ? gauge === "fast" ? "btn-success text-light"
+                                                                : gauge === "slow" ? "btn-danger text-light"
+                                                                : "btn-primary text-light"
+                                                                : "btn-outline-secondary";
+                                                            return (
+                                                                <button
+                                                                    key={gauge}
+                                                                    type="button"
+                                                                    className={`btn py-1 px-2 ${badgeClass}`}
+                                                                    title={t(gauge === "fast" ? "gaugeFastTitle" : gauge === "slow" ? "gaugeSlowTitle" : "gaugeNormalTitle", lang)}
+                                                                    onClick={() => {
+                                                                        setAllowedGauges(prev =>
+                                                                            prev.includes(gauge)
+                                                                                ? prev.filter(g => g !== gauge)
+                                                                                : [...prev, gauge]
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {gauge === "fast" ? "⚡ " : gauge === "slow" ? "⏳ " : "⏱️ "}
+                                                                    {t(gauge === "fast" ? "gaugeFast" : gauge === "slow" ? "gaugeSlow" : "gaugeNormal", lang)}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {allowedGauges.length === 0 ? (
+                                                        <div className="small text-danger mt-1" role="alert">{t("allowedGaugesEmpty", lang)}</div>
+                                                    ) : null}
                                                 </div>
                                             </div>
 
@@ -1692,7 +1721,7 @@ function AutoOptimizerPanel({
                             <button
                                 type="button"
                                 className="btn btn-primary w-100 py-2 fw-semibold d-flex justify-content-center align-items-center gap-2 shadow-sm"
-                                disabled={!isOptimizing && cardsEnabled && allowedBodies.length === 0}
+                                disabled={!isOptimizing && cardsEnabled && (allowedBodies.length === 0 || allowedGauges.length === 0)}
                                 onClick={isOptimizing ? handleStop : handleOptimize}
                             >
                                 {isOptimizing ? (

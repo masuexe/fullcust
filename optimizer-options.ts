@@ -34,7 +34,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     if (usesCards(data, cardsEnabled)) return constraints;
     const {
         requiredSpecialMove, requiredBLeft, requiredBButton, requiredChargeAddition, requiredBusterAddition,
-        allowedBodies, requiredBody, requiredGauge, minChipRecovery,
+        allowedBodies, requiredBody, requiredGauge, allowedGauges, minChipRecovery,
         requiredAbilities, minBusterStats, bugRules, forbiddenBugs,
         ...rest
     } = constraints;

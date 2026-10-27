@@ -938,6 +938,35 @@ export const translations = {
         ja: "ゲージ速度",
         zh: "战斗量表速度",
     },
+    allowedGaugesTitle: {
+        en: "Allowed gauge speeds", ja: "許可するゲージ速度", zh: "允许的量表速度",
+    },
+    allowedGaugesDesc: {
+        en: "Select any acceptable gauge speeds; unchecked speeds are forbidden. An unchanged gauge counts as Normal.",
+        ja: "許容するゲージ速度を複数選択できます。未選択の速度は禁止です。ゲージ速度の変更がない場合は通常ゲージとして判定します。",
+        zh: "可多选；未勾选的量表速度禁止。量表未被改变时，按普通量表判断。",
+    },
+    allowedGaugesEmpty: {
+        en: "Select at least one allowed gauge speed.", ja: "許可するゲージ速度を1つ以上選択してください。", zh: "请至少勾选一种允许的量表速度。",
+    },
+    gaugeFast: {
+        en: "Fast", ja: "クイック", zh: "快速",
+    },
+    gaugeNormal: {
+        en: "Normal", ja: "通常", zh: "普通",
+    },
+    gaugeSlow: {
+        en: "Slow", ja: "ヘビー", zh: "慢速",
+    },
+    gaugeFastTitle: {
+        en: "Allow FastGauge", ja: "クイックゲージを許可", zh: "允许快速量表",
+    },
+    gaugeNormalTitle: {
+        en: "Allow NormalGauge", ja: "通常ゲージを許可", zh: "允许普通量表",
+    },
+    gaugeSlowTitle: {
+        en: "Allow SlowGauge", ja: "ヘビーゲージを許可", zh: "允许缓慢量表",
+    },
     abilityStrippedNotice: {
         en: "Stripped by Mod Card",
         ja: "改造カードにより無効化",
