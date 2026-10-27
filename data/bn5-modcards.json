@@ -358,7 +358,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -514,7 +514,7 @@
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
-          "zh": "改装伤害 BUG"
+          "zh": "改装受伤 BUG"
         },
         "description": {
           "en": "Opening the Custom Screen costs HP each time.",
@@ -575,7 +575,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -639,7 +639,7 @@
         "name": {
           "en": "Custom Screen HP Bug",
           "ja": "カスタム中HP減少バグ",
-          "zh": "改装界面HP流失 BUG"
+          "zh": "改装 HP BUG"
         },
         "description": {
           "en": "HP steadily drops while in Custom Screen selecting chips.",
@@ -679,7 +679,7 @@
         "name": {
           "en": "Damage Blind Bug",
           "ja": "被ダメージ時盲目バグ",
-          "zh": "受创失明 BUG"
+          "zh": "受伤盲目 BUG"
         },
         "description": {
           "en": "Taking damage triggers blindness status.",
@@ -1287,7 +1287,7 @@
         "name": {
           "en": "Custom Screen HP Bug",
           "ja": "カスタム中HP減少バグ",
-          "zh": "改装界面HP流失 BUG"
+          "zh": "改装 HP BUG"
         },
         "description": {
           "en": "HP steadily drops while in Custom Screen selecting chips.",
@@ -1456,7 +1456,7 @@
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
-          "zh": "改装伤害 BUG"
+          "zh": "改装受伤 BUG"
         },
         "description": {
           "en": "Opening the Custom Screen costs HP each time.",
@@ -1499,7 +1499,7 @@
         "description": {
           "en": "Emotion window fluctuates in battle.",
           "ja": "戦闘中にココロウインドウが変化します。",
-          "zh": "战斗中心灵之窗发生异常变化。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       }
     ]
@@ -2048,7 +2048,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -2277,7 +2277,7 @@
         "name": {
           "en": "Damage Confusion Bug",
           "ja": "被ダメージ時混乱バグ",
-          "zh": "受创混乱 BUG"
+          "zh": "受伤混乱 BUG"
         },
         "description": {
           "en": "Taking damage triggers confusion status.",
@@ -2346,7 +2346,7 @@
         "description": {
           "en": "Emotion window rapidly fluctuates between emotional states.",
           "ja": "ココロウィンドウの状態が激しく変動します。",
-          "zh": "心灵状态随机剧烈波动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       },
       {
@@ -2854,7 +2854,7 @@
         "description": {
           "en": "Emotion window rapidly fluctuates between emotional states.",
           "ja": "ココロウィンドウの状態が激しく変動します。",
-          "zh": "心灵状态随机剧烈波动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       }
     ]
@@ -2931,7 +2931,7 @@
         "name": {
           "en": "Custom Damage Bug",
           "ja": "カスタムダメージバグ",
-          "zh": "改装伤害 BUG"
+          "zh": "改装受伤 BUG"
         },
         "description": {
           "en": "Opening the Custom Screen costs HP each time.",
@@ -2989,7 +2989,7 @@
         "description": {
           "en": "Emotion window rapidly fluctuates between emotional states.",
           "ja": "ココロウィンドウの状態が激しく変動します。",
-          "zh": "心灵状态随机剧烈波动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       },
       {
@@ -2998,7 +2998,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -3012,7 +3012,7 @@
         "name": {
           "en": "Custom Screen HP Bug",
           "ja": "カスタム中HP減少バグ",
-          "zh": "改装界面HP流失 BUG"
+          "zh": "改装 HP BUG"
         },
         "description": {
           "en": "HP steadily drops while in Custom Screen selecting chips.",
@@ -3165,7 +3165,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -3204,7 +3204,7 @@
         "name": {
           "en": "Battle HP Bug",
           "ja": "HP減少バグ",
-          "zh": "战斗HP BUG"
+          "zh": "战斗 HP BUG"
         },
         "description": {
           "en": "HP steadily drains during battle.",
@@ -3218,7 +3218,7 @@
         "name": {
           "en": "Custom Screen HP Bug",
           "ja": "カスタム中HP減少バグ",
-          "zh": "改装界面HP流失 BUG"
+          "zh": "改装 HP BUG"
         },
         "description": {
           "en": "HP steadily drops while in Custom Screen selecting chips.",

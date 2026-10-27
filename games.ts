@@ -53,7 +53,7 @@ export const games: GameDefinition[] = [
                 { id: "shield", label: "Shield・シールド・盾型态", extraColor: "blue" },
                 { id: "ground", label: "Ground・グランド・地面型态", extraColor: "green" },
                 { id: "shadow", label: "Shadow・シャドー・阴影型态", extraColor: "red" },
-                { id: "bug", label: "Bug・バグ・BUG型态", extraColor: "gray" },
+                { id: "bug", label: "Bug・バグ・BUG 型态", extraColor: "gray" },
             ],
             defaultStyle: "normal",
             maxModToolsParts: 1,

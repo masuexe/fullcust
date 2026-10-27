@@ -74,12 +74,12 @@ export const translations = {
     minBugs: {
         en: "min bugs",
         ja: "最小バグ数",
-        zh: "最小BUG数",
+        zh: "最小 BUG 数",
     },
     maxBugs: {
         en: "max bugs",
         ja: "最大バグ数",
-        zh: "最大BUG数",
+        zh: "最大 BUG 数",
     },
     compress: {
         en: "compress",
@@ -409,7 +409,7 @@ export const translations = {
     negEffects: {
         en: "Drawbacks & Bugs",
         ja: "マイナス効果・バグ",
-        zh: "负面效果与BUG",
+        zh: "负面效果与 BUG",
     },
     equippedCardsCount: {
         en: "Cards Equipped",
@@ -459,12 +459,12 @@ export const translations = {
     quickFilterFloatShoes: {
         en: "FloatShoes",
         ja: "フロート",
-        zh: "浮空鞋",
+        zh: "漂浮鞋",
     },
     quickFilterUnderShirt: {
         en: "UnderShirt",
         ja: "Uシャツ",
-        zh: "危机守护",
+        zh: "紧身衣",
     },
     ncNoBugs: {
         en: "NC Bug-Free",
@@ -479,7 +479,7 @@ export const translations = {
     ncBugDetailsHeader: {
         en: "NaviCust Placement",
         ja: "ナビカス配置",
-        zh: "领航员客制化拼放",
+        zh: "领航员个人化装置配置",
     },
     ncNoBugsNotice: {
         en: "This layout produces no NaviCust placement bugs.",
@@ -704,7 +704,7 @@ export const translations = {
     policyNoBugs: {
         en: "🛡️ Pure / Zero Bugs (Recommended)",
         ja: "🛡️ バグなし（実質デメリット0・推奨）",
-        zh: "🛡️ 纯净无 BUG（实战0负面效果・推荐）",
+        zh: "🛡️ 纯净无 BUG（实战 0 负面效果・推荐）",
     },
     policyNoBugsDesc: {
         en: "Zero negative bugs in combat. If BugStop is equipped, placement rules are fully unlocked; otherwise strictly compliant.",
@@ -985,7 +985,7 @@ export const translations = {
     bugRulesDesc: {
         en: "Configure combat tolerance for each bug: Forbidden, Allowed (tolerated for high stats), or Required (mandatory for bug gimmicks). In EXE6, common competitive bugs are allowed by default (Movement, Custom -1, Ice/Crack Panel, and Support Failure remain forbidden).",
         ja: "各バグの実戦仕様を設定：禁止、容認（ステータス重視で許容）、または必須（固有戦術用）。EXE6では対戦で一般的なバグがデフォルトで容認されます（移動バグ・カスタム減少・移動氷/ヒビ・サポート不発は禁止を維持）。",
-        zh: "为各项 BUG 独立设定对战规则：禁止、容许（为高收益属性可承受）、或必须（用于特定战术构筑）。EXE6 默认容许常用对战 BUG（移动异常、改装视窗减少、移动破裂/冰地、支援失效保持禁止）。",
+        zh: "为各项 BUG 独立设定对战规则：禁止、容许（为高收益属性可承受）、或必须（用于特定战术构筑）。EXE6 默认容许常用对战 BUG（边界移动 BUG、改装视窗减少 BUG、移动碎裂/冰块、支援 BUG 保持禁止）。",
     },
     bugRuleForbidden: {
         en: "✕ Forbidden",

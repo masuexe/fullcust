@@ -465,11 +465,11 @@ export const ABILITY_NAMES: Record<string, { en: string; ja: string; zh: string 
     chipRecovery: { en: "ChipRecovery", ja: "チップリカバリー", zh: "芯片回复" },
     allGuard: { en: "All Guard", ja: "オールガード", zh: "全御防御" },
     fullSynchro: { en: "FullSynchro", ja: "フルシンクロ", zh: "完全同步" },
-    statusGuard: { en: "StatusGuard", ja: "ステータスガード", zh: "状态守护" },
+    statusGuard: { en: "StatusGuard", ja: "ステータスガード", zh: "状态异常防护" },
     firstBarrier200: { en: "FirstBarrier 200", ja: "ファーストバリア200", zh: "初始防护罩200" },
     firstBarrier100: { en: "FirstBarrier 100", ja: "ファーストバリア100", zh: "初始防护罩100" },
     batteryMode: { en: "Battery", ja: "バッテリーモード", zh: "电池模式" },
-    soulClean: { en: "SoulCleaner", ja: "ソウルクリーナー", zh: "灵魂净化" },
+    soulClean: { en: "SoulCleaner", ja: "ソウルクリーナー", zh: "灵魂吸尘器" },
     superArmor: { en: "SuperArmor", ja: "スーパーアーマー", zh: "超级装甲" },
     floatShoes: { en: "FloatShoes", ja: "フロートシューズ", zh: "漂浮鞋" },
     airShoes: { en: "AirShoes", ja: "エアシューズ", zh: "飞行鞋" },
@@ -808,7 +808,7 @@ export interface BugSpecOption {
 export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     {
         id: "movement",
-        name: { en: "Movement Bug", ja: "移動バグ", zh: "移动异常 BUG" },
+        name: { en: "Movement Bug", ja: "移動バグ", zh: "边界移动 BUG" },
         desc: { en: "Warping or forced movement, depending on game and source", ja: "作品・原因により強制移動や端へのワープ", zh: "依作品和来源产生强制移动或边界瞬移" },
     },
     {
@@ -819,13 +819,13 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "battleHp",
-        name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP 流失 BUG" },
+        name: { en: "Battle HP Leak", ja: "HP減少バグ", zh: "战斗 HP BUG" },
         desc: { en: "Steadily loses HP during combat", ja: "戦闘中にHPが継続減少", zh: "战斗中自身 HP 持续流失" },
     },
     {
         id: "damageHp",
         games: ["bn6"],
-        name: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受击加重 HP 流失 BUG" },
+        name: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受伤 HP BUG" },
         desc: {
             en: "Flinching or damaging Drag hits raise Battle HP Bug by 1 level, up to Lv7",
             ja: "のけぞり・ダメージを伴う引き寄せでバトルHPバグが1段階上昇（最大Lv7）",
@@ -834,82 +834,76 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "buster",
-        name: { en: "Buster Blank / Accidental ChargeShot", ja: "空撃ち・チャージ暴発", zh: "普通射击空包弹／集气误发 BUG" },
-        desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能空发或误发集气攻击；具体效果因作品和来源而异" },
+        name: { en: "Buster Blank / Accidental ChargeShot", ja: "空撃ち・チャージ暴発", zh: "空包弹 BUG" },
+        desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能发射空包弹或误暴特集气射击；具体效果因作品和来源而异" },
     },
     {
         id: "customHp",
-        name: { en: "Custom Menu HP Drain", ja: "カスタム画面HP減少", zh: "选卡菜单 HP 流失 BUG" },
+        name: { en: "Custom Menu HP Drain", ja: "カスタム画面HP減少", zh: "改装 HP BUG" },
         desc: { en: "Loses HP while selecting chips", ja: "カスタム画面を開いている間HP減少", zh: "在芯片选择菜单中停留时持续扣血" },
     },
     {
         id: "panel",
-        name: { en: "Panel Change / Break", ja: "パネル変化バグ", zh: "地面变化／破裂 BUG" },
-        desc: { en: "Changes panels after movement or at battle start, including grass, ice, holes, poison, or Holy panels", ja: "移動時や開始時に草・氷・穴・毒・ホーリー等へパネルが変化", zh: "移动后或开局时改变地面，包括草、冰、地穴、毒沼或神圣面板" },
+        name: { en: "Panel Change / Break", ja: "パネル変化バグ", zh: "地面 BUG" },
+        desc: { en: "Changes panels after movement or at battle start, including grass, ice, holes, poison, or Holy panels", ja: "移動時や開始時に草・氷・穴・毒・ホーリー等へパネルが変化", zh: "移动后或开局时改变地面，包括草地、冰块、地穴、毒沼或神圣面板" },
     },
     {
         id: "status",
-        name: { en: "Status Abnormality", ja: "状態異常バグ", zh: "战斗状态异常 BUG" },
-        desc: { en: "Starts combat confused, blind, or flashing", ja: "戦闘開始時に混乱・盲目等の異常", zh: "开局处于混乱、失明或闪烁等异常" },
+        name: { en: "Status Abnormality", ja: "状態異常バグ", zh: "状态异常 BUG" },
+        desc: { en: "Starts combat confused, blind, or flashing", ja: "戦闘開始時に混乱・盲目等の異常", zh: "开局处于混乱、盲目或闪烁等异常" },
     },
     {
         id: "emotion",
-        name: { en: "Emotion / Humor Bug", ja: "感情・ユーモアバグ", zh: "情绪 / 幽默感 BUG" },
-        desc: { en: "Uncontrolled emotional shifts or jokes", ja: "感情が不安/怒り暴走、または被弾時ギャグ", zh: "情绪极度动摇/愤怒，或受击时讲冷笑话" },
+        name: { en: "Emotion Window Bug", ja: "ココロバグ", zh: "心灵之窗 BUG" },
+        desc: { en: "Emotion window rapidly fluctuates between states in battle", ja: "戦闘中にココロウィンドウの状態が激しく変動", zh: "战斗中心灵之窗的状态持续随机变动" },
     },
     {
         id: "customDamage",
         games: ["bn5", "bn6"],
-        name: { en: "Custom Screen Entry Damage", ja: "カスタムオープンダメージ", zh: "打开选卡画面受伤 BUG" },
-        desc: { en: "Takes a fixed amount of damage each time the Custom Screen opens; separate from continuous menu HP drain", ja: "カスタム画面を開くたびに定量ダメージ。画面内の継続HP減少とは別", zh: "每次打开选卡画面时扣除固定 HP，与停留菜单持续掉血不同" },
-    },
-    {
-        id: "damageBattleHp",
-        games: ["bn6"],
-        name: { en: "Damage-triggered Battle HP Drain", ja: "ダメージ時バトルHPバグ", zh: "受击后暂时掉血 BUG" },
-        desc: { en: "Flinching damage temporarily inflicts Battle HP drain; separate from NC Damage HP escalation", ja: "被ダメージ時に一時的なバトルHP減少。NCのHPバグ段階上昇とは別", zh: "受到硬直伤害后暂时持续掉血，与 NC 的受击加重 HP BUG 不同" },
+        name: { en: "Custom Screen Entry Damage", ja: "カスタムオープンダメージ", zh: "改装受伤 BUG" },
+        desc: { en: "Takes a fixed amount of damage each time the Custom Screen opens; separate from continuous menu HP drain", ja: "カスタム画面を開くたびに定量ダメージ。画面内の継続HP減少とは別", zh: "每次打开选卡画面时受到伤害，与停留菜单持续掉血不同" },
     },
     {
         id: "damageConfusion",
         games: ["bn5", "bn6"],
-        name: { en: "Damage-triggered Confusion", ja: "ダメージこんらん", zh: "受击混乱 BUG" },
+        name: { en: "Damage-triggered Confusion", ja: "ダメージこんらん", zh: "受伤混乱 BUG" },
         desc: { en: "Taking damage triggers confusion; separate from battle-start status bugs", ja: "被ダメージで混乱。戦闘開始時の状態バグとは別", zh: "受到伤害触发混乱，与开局状态异常不同" },
     },
     {
         id: "damageBlind",
         games: ["bn5"],
-        name: { en: "Damage-triggered Blindness", ja: "ダメージもうもく", zh: "受击失明 BUG" },
-        desc: { en: "Taking damage triggers blindness", ja: "被ダメージで盲目が発生", zh: "受到伤害触发失明" },
+        name: { en: "Damage-triggered Blindness", ja: "ダメージもうもく", zh: "受伤盲目 BUG" },
+        desc: { en: "Taking damage triggers blindness", ja: "被ダメージで盲目が発生", zh: "受到伤害触发盲目" },
     },
     {
         id: "charge",
         games: ["bn3"],
-        name: { en: "Modified Charged Shot", ja: "ため撃ち変化バグ", zh: "集气攻击变化 BUG" },
-        desc: { en: "Changes the charged attack into an unintended object or attack", ja: "ため撃ちが別の物体・攻撃に変化", zh: "集气攻击变成其他物体或攻击" },
+        name: { en: "Modified Charged Shot", ja: "ため撃ち変化バグ", zh: "集气射击异常 BUG" },
+        desc: { en: "Changes the charged attack into an unintended object or attack", ja: "ため撃ちが別の物体・攻撃に変化", zh: "集气射击变成其他物体或攻击" },
     },
     {
         id: "encounter",
         games: ["bn3", "bn4", "bn5", "bn6"],
-        name: { en: "Encounter Bug", ja: "エンカウントバグ", zh: "遇敌率 BUG" },
+        name: { en: "Encounter Bug", ja: "エンカウントバグ", zh: "遭遇 BUG" },
         desc: { en: "Changes virus encounters outside battle", ja: "ウイルスエンカウント率が変化", zh: "改变网络地图的病毒遭遇情况" },
     },
     {
         id: "support",
         games: ["bn3", "bn4", "bn5", "bn6"],
-        name: { en: "Support Failure", ja: "サポート不発バグ", zh: "支援失效 BUG" },
+        name: { en: "Support Failure", ja: "サポート不発バグ", zh: "支援 BUG" },
         desc: { en: "Support programs may fail to activate", ja: "サポートプログラムが発動しない", zh: "支援程序无法正常发动" },
     },
     {
         id: "resultZenny",
         games: ["bn3"],
-        name: { en: "Zenny-only Battle Rewards", ja: "リザルトバグ", zh: "战斗奖励仅金钱 BUG" },
+        name: { en: "Zenny-only Battle Rewards", ja: "リザルトバグ", zh: "战斗结算金币 BUG" },
         desc: { en: "Battle rewards become Zenny instead of chips", ja: "戦闘報酬がチップではなくゼニーになる", zh: "战斗奖励变成金钱而非芯片" },
     },
     {
         id: "gaugeSlow",
         games: ["bn3"],
-        name: { en: "Slow Custom Gauge Bug", ja: "カスタムゲージ低下バグ", zh: "选卡槽变慢 BUG" },
-        desc: { en: "Applies the SlowGauge effect", ja: "ヘビーゲージ効果が発生", zh: "产生选卡槽蓄满速度变慢的效果" },
+        name: { en: "Slow Custom Gauge Bug", ja: "カスタムゲージ低下バグ", zh: "缓慢量表 BUG" },
+        desc: { en: "Applies the SlowGauge effect", ja: "ヘビーゲージ効果が発生", zh: "产生缓慢量表效果" },
     },
     {
         id: "chipAutoFire",
@@ -921,17 +915,17 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         id: "hpCut",
         games: ["bn3", "bn4"],
         name: { en: "Max HP Halved", ja: "最大HP半減", zh: "最大 HP 减半" },
-        desc: { en: "HubBatch-related maximum HP penalty", ja: "サイトバッチによる最大HP低下", zh: "彩斗修正档带来的最大 HP 惩罚" },
+        desc: { en: "HubBatch-related maximum HP penalty", ja: "サイトバッチによる最大HP低下", zh: "彩斗修正档带来的最大 HP 减半惩罚" },
     },
 ];
 
 BUG_SPEC_OPTIONS.push(
     { id: "panelGrass", games: ["bn6"], name: { en: "Move: Grass", ja: "移動：クサムラ", zh: "移动草地" },
         desc: { en: "Moving off a panel can turn it into grass", ja: "移動後のパネルがクサムラに変化", zh: "移动后，离开的面板有概率变成草地" } },
-    { id: "panelIce", games: ["bn6"], name: { en: "Move: Ice", ja: "移動：アイス", zh: "移动冰地" },
-        desc: { en: "Moving off a panel can turn it into ice", ja: "移動後のパネルがアイスに変化", zh: "移动后，离开的面板有概率变成冰地" } },
-    { id: "panelCrack", games: ["bn6"], name: { en: "Move: Crack", ja: "移動：ヒビ", zh: "移动破裂" },
-        desc: { en: "Moving off a panel can crack or break it", ja: "移動後にパネルがひび割れ・消失", zh: "移动后，离开的面板有概率破裂或形成地穴；与瞬移 BUG 独立" } },
+    { id: "panelIce", games: ["bn6"], name: { en: "Move: Ice", ja: "移動：アイス", zh: "移动冰块" },
+        desc: { en: "Moving off a panel can turn it into ice", ja: "移動後のパネルがアイスに変化", zh: "移动后，离开的面板有概率变成冰块" } },
+    { id: "panelCrack", games: ["bn6"], name: { en: "Move: Crack", ja: "移動：ヒビ", zh: "移动碎裂" },
+        desc: { en: "Moving off a panel can crack or break it", ja: "移動後にパネルがひび割れ・消失", zh: "移动后，离开的面板有概率碎裂或形成地穴；与瞬移 BUG 独立" } },
 );
 
 export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
@@ -940,8 +934,7 @@ export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
     if (t === "involuntarymove" || t === "player" || t === "movement") return "movement";
     if (t === "battlehp") return "battleHp";
-    if (t === "damagebattlehp") return "damageBattleHp";
-    if (t === "damagehp") return "damageHp";
+    if (t === "damagebattlehp" || t === "damagehp") return "damageHp";
     if (t === "customhp") return "customHp";
     if (t === "customdamage") return "customDamage";
     if (t === "damageconfusion") return "damageConfusion";
@@ -979,7 +972,6 @@ export type BugType =
     | "charge"
     | "battleHp"
     | "damageHp"
-    | "damageBattleHp"
     | "customDamage"
     | "damageConfusion"
     | "damageBlind"
@@ -1269,7 +1261,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Battle HP Bug (HP Leak)",
                 ja: "HP減少バグ",
-                zh: "战斗HP BUG",
+                zh: "战斗 HP BUG",
             },
             mechanics: {
                 en: "MegaMan's HP steadily drains during battle (accelerates when flinching).",
@@ -1361,22 +1353,22 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             mechanics: {
                 en: "In base form with Beast Counter > 0, the Emotion Window constantly cycles between Normal, Tired, Angry, and Full Synchro every 60 frames.",
                 ja: "ノーマル状態でビーストカウンターが0より大きい時、ココロウインドウが60フレーム毎に通常・疲労・怒り・フルシンクロをランダムに推移します。",
-                zh: "Base 状态且兽化计数器大于 0 时，心灵之窗每 60 帧在普通/疲惫/愤怒/Full Synchro 之间随机循环切换。",
+                zh: "通常状态且心灵倒数大于0时，心灵之窗每60帧在普通、疲劳、愤怒与完全同步之间随机循环切换。",
             },
         },
         damageHp: {
-            title: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受击加重 HP 流失 BUG" },
+            title: { en: "Damage HP Bug", ja: "ダメージHPバグ", zh: "受伤 HP BUG" },
             mechanics: {
-                en: "A damaging hit that causes flinching or Drag raises Battle HP Bug by 1 level, up to Lv7. SuperArmor prevents the flinch trigger, but does not remove this bug. This is separate from the temporary Damage Battle HP Bug supplied by cards.",
-                ja: "ダメージを伴うのけぞり・引き寄せでバトルHPバグが1段階上昇（最大Lv7）。スーパーアーマーはのけぞりによる発動を防ぎますが、バグ自体は残ります。改造カードの一時的なダメージ時バトルHPバグとは別です。",
-                zh: "受到造成硬直或拖拽的伤害时，Battle HP Bug 升 1 级，最高 Lv7。超级装甲可阻止硬直触发，但不会消除此 BUG。它与改造卡的临时受伤战斗 HP BUG（Damage Battle HP Bug）不同。",
+                en: "A damaging hit that causes flinching or Drag raises Battle HP Bug by 1 level, up to Lv7. SuperArmor prevents the flinch trigger, but does not remove this bug.",
+                ja: "ダメージを伴うのけぞり・引き寄せでバトルHPバグが1段階上昇（最大Lv7）。スーパーアーマーはのけぞりによる発動を防ぎますが、バグ自体は残ります。",
+                zh: "受到造成硬直或拖拽的伤害时，战斗 HP BUG 升 1 级，最高 Lv7。超级装甲可阻止硬直触发，但不会消除此 BUG。",
             },
         },
         encounter: {
             title: {
                 en: "Encounter Bug",
                 ja: "エンカウントバグ",
-                zh: "遇敌率 BUG",
+                zh: "遭遇 BUG",
             },
             mechanics: {
                 en: "Virus encounter rates in network areas increase drastically, inverting the normal reduction effect.",
@@ -1388,7 +1380,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Support Failure Bug",
                 ja: "サポート不発バグ",
-                zh: "支援失效 BUG",
+                zh: "支援 BUG",
             },
             mechanics: {
                 en: "Support program fails to trigger during NetBattles.",
@@ -1450,7 +1442,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Battle HP Bug",
                 ja: "HP減少バグ",
-                zh: "战斗HP BUG",
+                zh: "战斗 HP BUG",
             },
             mechanics: {
                 en: "HP steadily drains during battle.",
@@ -1479,7 +1471,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Custom Damage Bug",
                 ja: "カスタムダメージバグ",
-                zh: "改装伤害 BUG",
+                zh: "改装受伤 BUG",
             },
             mechanics: {
                 en: "Opening the Custom Screen costs HP each time.",
@@ -1542,14 +1534,14 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             mechanics: {
                 en: "Emotion window rapidly fluctuates between emotional states.",
                 ja: "ココロウィンドウの状態が激しく変動します。",
-                zh: "心灵状态随机剧烈波动。",
+                zh: "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。",
             },
         },
         encounter: {
             title: {
                 en: "Encounter Bug",
                 ja: "エンカウントバグ",
-                zh: "遇敌率 BUG",
+                zh: "遭遇 BUG",
             },
             mechanics: {
                 en: "Virus encounter rates in network areas increase.",
@@ -1561,7 +1553,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Support Failure Bug",
                 ja: "サポート不発バグ",
-                zh: "支援失效 BUG",
+                zh: "支援 BUG",
             },
             mechanics: {
                 en: "Support programs fail to activate in battle.",
@@ -1645,12 +1637,12 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Custom Screen HP Drain Bug",
                 ja: "カスタム中HP減少バグ",
-                zh: "改装界面HP流失 BUG",
+                zh: "改装 HP BUG",
             },
             mechanics: {
                 en: "MegaMan's HP steadily drops while on the Custom Screen selecting chips (does not reduce chip quantity).",
                 ja: "カスタム画面でチップ選択中、HPが継続して減少し続けます（チップ枚数は減少しません）。",
-                zh: "打开自定义视窗选芯片时，HP持续快速流失扣减（不会减少可选芯片数量）。",
+                zh: "打开自定义视窗选芯片时，HP 持续快速流失扣减（不会减少可选芯片数量）。",
             },
             levels: {
                 1: {
@@ -1660,7 +1652,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
                 2: {
                     en: "HP drops 1 every 4 frames while on the Custom Screen.",
-                    ja: "カスタム画面でチップ選択中、4フレーム毎にHPが1減少します。",
+                    ja: "カスタム画面でチップ選択中、4フレーム毎にHPが1减少します。",
                     zh: "打开自定义视窗选芯片时，每 4 帧流失 1 HP。",
                 },
                 3: {
@@ -1732,7 +1724,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Battle HP Bug (HP Leak)",
                 ja: "HP減少バグ",
-                zh: "战斗HP BUG",
+                zh: "战斗 HP BUG",
             },
             mechanics: {
                 en: "MegaMan's HP steadily drains throughout the battle.",
@@ -1761,7 +1753,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Encounter Bug",
                 ja: "エンカウントバグ",
-                zh: "遇敌率 BUG",
+                zh: "遭遇 BUG",
             },
             mechanics: {
                 en: "Encounter programs fail and wild virus encounter rates increase.",
@@ -1785,7 +1777,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Support Failure Bug",
                 ja: "サポート不発バグ",
-                zh: "支援失效 BUG",
+                zh: "支援 BUG",
             },
             mechanics: {
                 en: "Support program fails to trigger in battle.",
@@ -1795,21 +1787,21 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
         emotion: {
             title: {
-                en: "Humor Bug",
-                ja: "ユーモアバグ",
-                zh: "幽默感 BUG",
+                en: "Emotion Window Bug",
+                ja: "ココロバグ",
+                zh: "心灵之窗 BUG",
             },
             mechanics: {
-                en: "MegaMan speaks random jokes upon taking damage.",
-                ja: "被ダメージ時に勝手にギャグを発言します。",
-                zh: "受到伤害时会不受控制地随机说出冷笑话。",
+                en: "Emotion window rapidly fluctuates between states in battle.",
+                ja: "ココロウィンドウの状態が激しく変動します。",
+                zh: "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。",
             },
         },
         hpCut: {
             title: {
                 en: "Max HP Halved",
                 ja: "HP半減",
-                zh: "最大HP减半",
+                zh: "最大 HP 减半",
             },
             mechanics: {
                 en: "HubBatch built-in handicap: Permanently halves MegaMan's maximum HP.",
@@ -1826,7 +1818,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             mechanics: {
                 en: "Using 5 colors causes Level 1 Player & Custom HP Bugs (Confused for 10s & HP drain in custom screen); 6 colors causes Level 2 (Always moves front & faster HP drain).",
                 ja: "5色使用でLv1プレイヤーバグ（10秒混乱）およびカスタム中HP減少が発生し、6色使用でLv2（勝手に前進・HP減少加速）が発生します。",
-                zh: "使用 5 色触发 Lv1 玩家行动与改装界面 HP 流失（混乱 10 秒）；使用 6 色触发 Lv2（持续向前走与加速流失）。",
+                zh: "使用 5 色触发 Lv1 玩家行动与改装 HP BUG（混乱 10 秒）；使用 6 色触发 Lv2（持续向前走与加速流失）。",
             },
         },
     },
@@ -1864,12 +1856,12 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Custom Screen HP Drain Bug",
                 ja: "カスタム中HP減少バグ",
-                zh: "改装界面HP流失 BUG",
+                zh: "改装 HP BUG",
             },
             mechanics: {
                 en: "MegaMan's HP steadily drops in the custom screen.",
                 ja: "カスタム画面を開いている間、HPが減少し続けます。",
-                zh: "受到改装零件违规影响：打开自定义视窗选芯片时，HP持续快速流失扣减。",
+                zh: "受到改装零件违规影响：打开自定义视窗选芯片时，HP 持续快速流失扣减。",
             },
             levels: {
                 1: {
@@ -1975,12 +1967,12 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Battle HP Drain Bug",
                 ja: "HP減少バグ",
-                zh: "战斗HP BUG",
+                zh: "战斗 HP BUG",
             },
             mechanics: {
                 en: "MegaMan's HP steadily drops during battle.",
                 ja: "戦闘中にHPが減少し続けます。",
-                zh: "受到HP零件违规影响：战斗中 HP 持续流失。",
+                zh: "受到 HP 零件违规影响：战斗中 HP 持续流失。",
             },
             levels: {
                 1: {
@@ -2004,7 +1996,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Encounter Bug",
                 ja: "エンカウントバグ",
-                zh: "遇敌率 BUG",
+                zh: "遭遇 BUG",
             },
             mechanics: {
                 en: "Viruses appear more frequently.",
@@ -2016,7 +2008,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Support Failure Bug",
                 ja: "サポート不発バグ",
-                zh: "支援失效 BUG",
+                zh: "支援 BUG",
             },
             mechanics: {
                 en: "Support programs fail to trigger in NetBattles.",
@@ -2040,7 +2032,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Custom Gauge Bug",
                 ja: "ヘビーゲージバグ",
-                zh: "改装量表变慢 BUG",
+                zh: "缓慢量表 BUG",
             },
             mechanics: {
                 en: "Custom gauge automatically has the SlowGauge effect.",
@@ -2052,7 +2044,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Chip Auto-Fire Bug",
                 ja: "チップ自動使用バグ",
-                zh: "芯片自动打出 BUG",
+                zh: "芯片自动使用 BUG",
             },
             mechanics: {
                 en: "BusterMAX built-in bug: Selected chips are automatically and involuntarily fired upon entering battle.",
@@ -2076,7 +2068,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Max HP Halved",
                 ja: "HP半減",
-                zh: "最大HP减半",
+                zh: "最大 HP 减半",
             },
             mechanics: {
                 en: "HubBatch built-in handicap: Permanently halves MegaMan's maximum HP.",
@@ -2098,14 +2090,14 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
         emotion: {
             title: {
-                en: "Humor Bug",
-                ja: "ユーモアバグ",
-                zh: "幽默感 BUG",
+                en: "Emotion Window Bug",
+                ja: "ココロバグ",
+                zh: "心灵之窗 BUG",
             },
             mechanics: {
-                en: "MegaMan speaks random jokes upon taking damage.",
-                ja: "被ダメージ時に勝手にギャグを発言します。",
-                zh: "受到伤害时会不受控制地随机说出冷笑话。",
+                en: "Emotion window rapidly fluctuates between states in battle.",
+                ja: "ココロウィンドウの状態が激しく変動します。",
+                zh: "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。",
             },
         },
     },

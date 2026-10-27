@@ -9,8 +9,7 @@ The October 2026 audit checks the existing BN3–6 NC mappings and BN4–6 card 
 | `customDamage` | Fixed damage when opening the Custom Screen | BN5 NC and cards; BN6 cards |
 | `customHp` | Continuous HP drain while the Custom Screen is open | NC/card sources according to game |
 | `custom` | Chip-choice slot reduction | BN3/BN6 NC mappings |
-| `damageBattleHp` | Damage triggers temporary battle HP drain | BN6 cards |
-| `damageHp` | Damage increases the existing Battle HP Bug level | BN6 HP NC parts |
+| `damageHp` | Damage increases Battle HP Bug level up to Lv7 | BN6 HP NC parts and cards |
 | `battleHp` | Continuous battle HP drain | NC/cards |
 | `damageConfusion` | Damage triggers confusion | BN5/6 cards |
 | `damageBlind` | Damage triggers blindness | BN5 cards |

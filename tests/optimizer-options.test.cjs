@@ -29,10 +29,10 @@ test("BN6 pure NC hides card-only abilities and bugs without hiding actual NC ef
     assert.ok(!abilities.includes("chipRecovery"));
     for (const id of ["superArmor", "airShoes", "underShirt", "chipShuffle"]) assert.ok(abilities.includes(id));
     const pure = ids(getOptimizerBugOptions(data, false));
-    for (const id of ["customDamage", "customHp", "damageBattleHp", "damageConfusion"]) assert.ok(!pure.includes(id));
+    for (const id of ["customDamage", "customHp", "damageConfusion"]) assert.ok(!pure.includes(id));
     for (const id of ["battleHp", "damageHp", "buster", "custom", "status"]) assert.ok(pure.includes(id));
     const cards = ids(getOptimizerBugOptions(data, true));
-    for (const id of ["customDamage", "customHp", "damageBattleHp", "damageConfusion"]) assert.ok(cards.includes(id));
+    for (const id of ["customDamage", "customHp", "damageConfusion"]) assert.ok(cards.includes(id));
 });
 
 test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain remain available", () => {

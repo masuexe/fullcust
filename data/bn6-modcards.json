@@ -364,7 +364,7 @@
         "description": {
           "en": "Emotion Window rapidly fluctuates continuously in combat.",
           "ja": "戦闘中にココロウィンドウが激しく変動します。",
-          "zh": "战斗中心灵之窗在各种情绪间快速持续跳动变动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       }
     ],
@@ -403,7 +403,7 @@
         "name": {
           "en": "Custom HP Bug LV3",
           "ja": "カスタムHPバグ LV3",
-          "zh": "改装HP BUG LV3"
+          "zh": "改装 HP BUG LV3"
         },
         "description": {
           "en": "Drains 1 HP every 10 frames while in the Custom Screen.",
@@ -614,7 +614,7 @@
         "name": {
           "en": "Battle HP Bug LV1",
           "ja": "バトルHPバグ LV1",
-          "zh": "战斗HP BUG LV1"
+          "zh": "战斗 HP BUG LV1"
         },
         "description": {
           "en": "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
@@ -781,18 +781,18 @@
     "disabledAbilities": [],
     "bugs": [
       {
-        "raw": "Damage Battle HP Bug LV1",
-        "type": "damageBattleHp",
+        "raw": "Damage HP Bug LV1",
+        "type": "damageHp",
         "level": 1,
         "name": {
-          "en": "Damage Battle HP Bug LV1",
-          "ja": "ダメージ時バトルHPバグ LV1",
-          "zh": "受伤HP BUG LV1"
+          "en": "Damage HP Bug LV1",
+          "ja": "ダメージHPバグ LV1",
+          "zh": "受伤 HP BUG LV1"
         },
         "description": {
-          "en": "Taking flinching damage inflicts Battle HP Bug LV1 for 10 seconds.",
-          "ja": "被ダメージ硬直時に10秒間、バトルHPバグLV1が発生します。",
-          "zh": "受到硬直伤害时陷入 10 秒的战斗HP BUG LV1。"
+          "en": "Taking flinching or dragging damage raises Battle HP Bug by 1 level (up to Lv7).",
+          "ja": "のけぞり・引きずりダメージを受けるとバトルHPバグが1段階悪化（最大Lv7）。",
+          "zh": "受到硬直或带伤害的拖拽攻击时，战斗 HP BUG 升 1 级，最高 Lv7。"
         }
       }
     ],
@@ -990,7 +990,7 @@
         "name": {
           "en": "Battle HP Bug LV1",
           "ja": "バトルHPバグ LV1",
-          "zh": "战斗HP BUG LV1"
+          "zh": "战斗 HP BUG LV1"
         },
         "description": {
           "en": "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
@@ -1298,7 +1298,7 @@
         "name": {
           "en": "Custom HP Bug LV3",
           "ja": "カスタムHPバグ LV3",
-          "zh": "改装HP BUG LV3"
+          "zh": "改装 HP BUG LV3"
         },
         "description": {
           "en": "Drains 1 HP every 10 frames while in the Custom Screen.",
@@ -1384,7 +1384,7 @@
         "description": {
           "en": "Emotion Window rapidly fluctuates continuously in combat.",
           "ja": "戦闘中にココロウィンドウが激しく変動します。",
-          "zh": "战斗中心灵之窗在各种情绪间快速持续跳动变动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       }
     ],
@@ -1556,7 +1556,7 @@
         "name": {
           "en": "Battle HP Bug LV1",
           "ja": "バトルHPバグ LV1",
-          "zh": "战斗HP BUG LV1"
+          "zh": "战斗 HP BUG LV1"
         },
         "description": {
           "en": "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
@@ -2221,7 +2221,7 @@
         "name": {
           "en": "Custom HP Bug LV3",
           "ja": "カスタムHPバグ LV3",
-          "zh": "改装HP BUG LV3"
+          "zh": "改装 HP BUG LV3"
         },
         "description": {
           "en": "Drains 1 HP every 10 frames while in the Custom Screen.",
@@ -2431,7 +2431,7 @@
         "description": {
           "en": "Emotion Window rapidly fluctuates continuously in combat.",
           "ja": "戦闘中にココロウィンドウが激しく変動します。",
-          "zh": "战斗中心灵之窗在各种情绪间快速持续跳动变动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       }
     ],
@@ -2565,7 +2565,7 @@
         "description": {
           "en": "Emotion Window rapidly fluctuates continuously in combat.",
           "ja": "戦闘中にココロウィンドウが激しく変動します。",
-          "zh": "战斗中心灵之窗在各种情绪间快速持续跳动变动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       },
       {
@@ -2639,7 +2639,7 @@
         "name": {
           "en": "Battle HP Bug LV2",
           "ja": "バトルHPバグ LV2",
-          "zh": "战斗HP BUG LV2"
+          "zh": "战斗 HP BUG LV2"
         },
         "description": {
           "en": "Drops 1 HP every 35 frames in battle.",
@@ -2872,7 +2872,7 @@
         "name": {
           "en": "Battle HP Bug LV1",
           "ja": "バトルHPバグ LV1",
-          "zh": "战斗HP BUG LV1"
+          "zh": "战斗 HP BUG LV1"
         },
         "description": {
           "en": "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
@@ -2916,7 +2916,7 @@
         "name": {
           "en": "Custom HP Bug LV1",
           "ja": "カスタムHPバグ LV1",
-          "zh": "改装HP BUG LV1"
+          "zh": "改装 HP BUG LV1"
         },
         "description": {
           "en": "HP drains while the Custom Screen is open (Lv1).",
@@ -3083,18 +3083,18 @@
     "disabledAbilities": [],
     "bugs": [
       {
-        "raw": "Damage Battle HP Bug LV1",
-        "type": "damageBattleHp",
+        "raw": "Damage HP Bug LV1",
+        "type": "damageHp",
         "level": 1,
         "name": {
-          "en": "Damage Battle HP Bug LV1",
-          "ja": "ダメージ時バトルHPバグ LV1",
-          "zh": "受伤HP BUG LV1"
+          "en": "Damage HP Bug LV1",
+          "ja": "ダメージHPバグ LV1",
+          "zh": "受伤 HP BUG LV1"
         },
         "description": {
-          "en": "Taking flinching damage inflicts Battle HP Bug LV1 for 10 seconds.",
-          "ja": "被ダメージ硬直時に10秒間、バトルHPバグLV1が発生します。",
-          "zh": "受到硬直伤害时陷入 10 秒的战斗HP BUG LV1。"
+          "en": "Taking flinching or dragging damage raises Battle HP Bug by 1 level (up to Lv7).",
+          "ja": "のけぞり・引きずりダメージを受けるとバトルHPバグが1段階悪化（最大Lv7）。",
+          "zh": "受到硬直或带伤害的拖拽攻击时，战斗 HP BUG 升 1 级，最高 Lv7。"
         }
       },
       {
@@ -3475,7 +3475,7 @@
         "description": {
           "en": "Emotion Window rapidly fluctuates continuously in combat.",
           "ja": "戦闘中にココロウィンドウが激しく変動します。",
-          "zh": "战斗中心灵之窗在各种情绪间快速持续跳动变动。"
+          "zh": "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。"
         }
       },
       {
@@ -3485,7 +3485,7 @@
         "name": {
           "en": "Battle HP Bug LV4",
           "ja": "バトルHPバグ LV4",
-          "zh": "战斗HP BUG LV4"
+          "zh": "战斗 HP BUG LV4"
         },
         "description": {
           "en": "Drops 1 HP every 25 frames in battle.",
@@ -3698,7 +3698,7 @@
         "name": {
           "en": "Custom HP Bug LV3",
           "ja": "カスタムHPバグ LV3",
-          "zh": "改装HP BUG LV3"
+          "zh": "改装 HP BUG LV3"
         },
         "description": {
           "en": "Drains 1 HP every 10 frames while in the Custom Screen.",
@@ -3740,7 +3740,7 @@
         "name": {
           "en": "Battle HP Bug LV1",
           "ja": "バトルHPバグ LV1",
-          "zh": "战斗HP BUG LV1"
+          "zh": "战斗 HP BUG LV1"
         },
         "description": {
           "en": "Drops 1 HP every 40 frames in battle (accelerates when flinching).",

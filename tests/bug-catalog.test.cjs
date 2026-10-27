@@ -26,7 +26,7 @@ for (const game of ["bn3", "bn4", "bn5", "bn6"]) {
 }
 
 test("approved BN5/6 source tables match every audited card's bug and repair categories", () => {
-    const category = type => type.startsWith("panel") ? "panel" : ["damageHp", "damageBattleHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type;
+    const category = type => type.startsWith("panel") ? "panel" : ["damageHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type;
     for (const [game, audit] of Object.entries(manifest.games)) {
         for (const record of audit.cards) {
             const card = getModCard(record.id, game);
@@ -77,14 +77,14 @@ test("each catalog card bug can independently be required or forbidden in final 
 
 test("targeted repairs never erase unrelated HP or on-hit bugs", () => {
     assert.equal(repairsBugType("Custom Damage Bug", "customDamage"), true);
-    for (const type of ["customHp", "damageBattleHp", "damageHp", "damageConfusion", "damageBlind"])
+    for (const type of ["customHp", "damageHp", "damageConfusion", "damageBlind"])
         assert.equal(repairsBugType("Custom Damage Bug", type), false);
-    assert.equal(repairsBugType("Battle HP Bug", "damageBattleHp"), false);
+    assert.equal(repairsBugType("Battle HP Bug", "damageHp"), false);
     assert.equal(repairsBugType("Status Bug", "damageConfusion"), false);
     const customRepair = computeDeckStats(["137-A027", "137-B025", "137-B005", "137-A019"], "bn6");
-    assert.deepEqual(customRepair.activeBugs.map(entry => entry.bug.type).sort(), ["damageBattleHp", "damageConfusion"]);
+    assert.deepEqual(customRepair.activeBugs.map(entry => entry.bug.type).sort(), ["damageConfusion", "damageHp"]);
     const battleRepair = computeDeckStats(["137-A027", "137-A021", "137-A029"], "bn6");
-    assert.deepEqual(battleRepair.activeBugs.map(entry => entry.bug.type).sort(), ["customDamage", "damageBattleHp"]);
+    assert.deepEqual(battleRepair.activeBugs.map(entry => entry.bug.type).sort(), ["customDamage", "damageHp"]);
     const laterEntry = computeDeckStats(["137-A019", "137-B005"], "bn6");
     assert.ok(laterEntry.activeBugs.some(entry => entry.bug.type === "customDamage"));
 });
@@ -143,7 +143,7 @@ test("BugStop never hides the newly separated card bugs", () => {
     const analysis = analyzeSolutionBugs("bn6", metas, [{ partIndex: 0 }], cells, grid, "en", cards);
     assert.ok(analysis.bugStopActive);
     const effective = getEffectiveInBattleBugs(analysis);
-    assert.deepEqual(effective.map(b => b.bugType).sort(), ["customDamage", "damageBattleHp", "damageConfusion"]);
+    assert.deepEqual(effective.map(b => b.bugType).sort(), ["customDamage", "damageConfusion", "damageHp"]);
     assert.ok(effective.every(b => b.isModCardBug && b.sourceCardName && b.mechanics));
     assert.equal(isSolutionAcceptable(analysis, { type: "no_bugs" }), false);
 });

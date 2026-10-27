@@ -50,7 +50,6 @@ export function getDefaultBugRules(gameId: string): Record<string, BugTolerance>
             status: "allowed",
             emotion: "allowed",
             customDamage: "allowed",
-            damageBattleHp: "allowed",
             damageConfusion: "allowed",
             encounter: "allowed",
         };

@@ -871,8 +871,8 @@ function ModCardManager({
                                 {[
                                     { label: t("quickFilterSuperArmor", lang), q: lang === "zh" ? "超级装甲" : lang === "ja" ? "スーパーアーマー" : "SuperArmor" },
                                     { label: t("quickFilterAirShoes", lang), q: lang === "zh" ? "飞行鞋" : lang === "ja" ? "エアシューズ" : "AirShoes" },
-                                    { label: t("quickFilterFloatShoes", lang), q: lang === "zh" ? "浮空鞋" : lang === "ja" ? "フロートシューズ" : "FloatShoes" },
-                                    { label: t("quickFilterUnderShirt", lang), q: lang === "zh" ? "危机守护" : lang === "ja" ? "アンダーシャツ" : "UnderShirt" },
+                                    { label: t("quickFilterFloatShoes", lang), q: lang === "zh" ? "漂浮鞋" : lang === "ja" ? "フロートシューズ" : "FloatShoes" },
+                                    { label: t("quickFilterUnderShirt", lang), q: lang === "zh" ? "紧身衣" : lang === "ja" ? "アンダーシャツ" : "UnderShirt" },
                                 ].map(chip => (
                                     <button
                                         key={chip.q}

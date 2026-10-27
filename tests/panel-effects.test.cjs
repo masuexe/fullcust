@@ -86,7 +86,7 @@ test("BN6 defaults only movement, custom, panelCrack, panelIce, and support to f
     const expectedAllowed = [
         "battleHp", "damageHp", "buster", "customHp",
         "panelGrass", "status", "emotion", "customDamage",
-        "damageBattleHp", "damageConfusion", "encounter",
+        "damageConfusion", "encounter",
     ];
     for (const bug of expectedAllowed) {
         assert.equal(rules[bug], "allowed", `expected ${bug} to be allowed`);

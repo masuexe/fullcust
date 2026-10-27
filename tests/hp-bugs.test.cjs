@@ -60,7 +60,7 @@ test("Battle HP and Custom Damage repairs do not silently repair the separate Da
     assert.ok(battleRepair.activeBugs.some(b => b.bugType === "damageHp"));
     const customRepair = analyze([46], [[3, 2]], ["137-A019"]);
     assert.ok(customRepair.activeBugs.some(b => b.bugType === "damageHp"));
-    assert.notEqual(normalizeBugType("damageHp"), normalizeBugType("damageBattleHp"));
+    assert.equal(normalizeBugType("damageBattleHp"), "damageHp");
 });
 
 test("BN3–5 mappings and HP/Attack ordering remain independent of the BN6 correction", () => {
