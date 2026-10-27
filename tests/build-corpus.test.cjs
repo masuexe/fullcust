@@ -2,7 +2,9 @@ require("./register.cjs");
 const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
+const { execFileSync } = require("node:child_process");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem, makeGridSettings } = require("../problem.ts");
@@ -57,9 +59,34 @@ test("import validates geometry and discards cached or modified combat stats", (
     assert.throws(() => readBn6Save(new Uint8Array(200), data), /Unsupported/);
 });
 
+test("importer appends to an existing corpus and adds no duplicates on reimport", () => {
+    const data = dataFor(), edition = SAVE_EDITIONS.find(e => e.id === "bn6_gregar_jp");
+    const { problem, solution } = buildDataToProblem(fixture, data);
+    const bytes = buildGbaSave({ edition, data, problem, solution,
+        templateBytes: fs.readFileSync(path.join(__dirname, "../public", edition.rawPath)) });
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "fullcust-corpus-import-"));
+    try {
+        fs.mkdirSync(path.join(directory, "bn6"));
+        fs.writeFileSync(path.join(directory, "bn6", "sample.sav"), bytes);
+        const output = path.join(directory, "seeds.json");
+        const run = (...args) => JSON.parse(execFileSync(process.execPath,
+            ["scripts/import-build-corpus.cjs", ...args],
+            { cwd: path.join(__dirname, ".."), encoding: "utf8" }));
+        const first = run(path.join(directory, "bn6"), output);
+        assert.deepEqual([first.files, first.decoded, first.empty, first.existing, first.added, first.unique],
+            [1, 1, 0, 0, 1, 1]);
+        const second = run(path.join(directory, "bn6"), output, output);
+        assert.deepEqual([second.files, second.decoded, second.existing, second.added, second.unique],
+            [1, 1, 1, 0, 1]);
+        assert.equal(JSON.parse(fs.readFileSync(output, "utf8")).length, 1);
+    } finally {
+        fs.rmSync(directory, { recursive: true, force: true });
+    }
+});
+
 test("every corpus seed has known parts, valid geometry and a legal ordered card deck", () => {
     const data = dataFor();
-    assert.equal(BN6_BUILD_SEEDS.length, 70);
+    assert.equal(BN6_BUILD_SEEDS.length, 78);
     for (const seed of BN6_BUILD_SEEDS) {
         const requirements = seed.parts.map(([id, color]) => ({
             partIndex: data.partMetas.findIndex(m => m.id === id && data.colors[m.color] === color),
