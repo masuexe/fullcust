@@ -1572,6 +1572,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "5色以上使用した場合、状態異常やココロバグが発生します。",
                 zh: "超过 4 色时引发状态异常与心灵波动。",
             },
+            levels: {
+                1: {
+                    en: "Starts battles with random brief status for 5 seconds.",
+                    ja: "戦闘開始時に5秒間ランダムな状態異常が付与されます。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 5 秒。",
+                },
+                2: {
+                    en: "Starts battles with random brief status for 10 seconds.",
+                    ja: "戦闘開始時に10秒間ランダムな状態異常が付与されます。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 10 秒。",
+                },
+            },
         },
     },
     bn4: {
@@ -1819,6 +1831,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "Using 5 colors causes Level 1 Player & Custom HP Bugs (Confused for 10s & HP drain in custom screen); 6 colors causes Level 2 (Always moves front & faster HP drain).",
                 ja: "5色使用でLv1プレイヤーバグ（10秒混乱）およびカスタム中HP減少が発生し、6色使用でLv2（勝手に前進・HP減少加速）が発生します。",
                 zh: "使用 5 色触发 Lv1 玩家行动与改装 HP BUG（混乱 10 秒）；使用 6 色触发 Lv2（持续向前走与加速流失）。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battles Confused for 10 seconds and drains HP during Custom screen.",
+                    ja: "戦闘開始時に10秒間混乱し、カスタム画面でHPが減少します。",
+                    zh: "战斗开始瞬间陷入混乱 10 秒，且在改装界面持续流失 HP。",
+                },
+                2: {
+                    en: "MegaMan continuously moves forward in battle and HP drains faster during Custom screen.",
+                    ja: "戦闘中勝手に前進し、カスタム画面でのHP減少速度が加速します。",
+                    zh: "战斗中不受控向前走，且在改装界面以更快速度流失 HP。",
+                },
             },
         },
     },
@@ -2395,7 +2419,7 @@ export function analyzeSolutionBugs(
     const colorBugTitle = colorDef?.title[lang];
     const colorBugMechanics = colorDef?.mechanics[lang];
 
-    if (gameId === "bn6" && tooManyColors && colorDef) {
+    if (tooManyColors && colorDef) {
         const level = Math.min(2, distinctColors.size - 4);
         activeBugs.push({ bugType: "colorStatus", level, title: `${colorDef.title[lang]} (Lv${level})`,
             mechanics: colorDef.levels?.[level]?.[lang] ?? colorDef.mechanics[lang], parts: [] });
@@ -2490,7 +2514,7 @@ export function isSolutionAcceptable(
     forbiddenBugs?: string[],
     bugRules?: Partial<Record<string, BugTolerance>>
 ): boolean {
-    // BN6 color overflow is a configurable NC status bug, not geometric impossibility.
+    // Color overflow in BN4-6 is a configurable NC status bug, not geometric impossibility.
     if (analysis.tooManyColors && !analysis.activeBugs.some(b => b.bugType === "colorStatus")) {
         return false;
     }

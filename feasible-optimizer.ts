@@ -78,7 +78,7 @@ export function findFeasibleBuild(
         const deck = computeDeckStats(state.cards, data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict) return null;
         if (colorCompatibility(data, { ...problem, requirements: state.requirements }).error) return null;
-        if (data.gameId !== "bn3" && new Set(state.requirements.map(r => data.parts[r.partIndex].color)).size > (data.gameId === "bn6" ? 6 : 4)) return null;
+        if (data.gameId !== "bn3" && new Set(state.requirements.map(r => data.parts[r.partIndex].color)).size > 6) return null;
         const key = JSON.stringify([[...state.added].sort((a, b) => a - b), state.cards]);
         if (visited.has(key)) return null;
         visited.add(key);

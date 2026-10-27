@@ -921,9 +921,9 @@ function runNaviCustBeamSearch(
 
                 const candPart = data.parts[candIdx];
 
-                // BN6 allows six colors; its overflow bug is checked by the final policy.
+                // BN4-6 allow six colors; their overflow bug is checked by the final policy.
                 if (data.gameId !== "bn3") {
-                    if (!existingColors.has(candPart.color) && existingColors.size >= (data.gameId === "bn6" ? 6 : 4)) {
+                    if (!existingColors.has(candPart.color) && existingColors.size >= 6) {
                         continue;
                     }
                 } else if (data.styleColorRules) {
