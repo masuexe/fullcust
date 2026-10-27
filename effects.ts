@@ -895,9 +895,9 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "resultZenny",
-        games: ["bn3"],
-        name: { en: "Zenny-only Battle Rewards", ja: "リザルトバグ", zh: "战斗结算金币 BUG" },
-        desc: { en: "Battle rewards become Zenny instead of chips", ja: "戦闘報酬がチップではなくゼニーになる", zh: "战斗奖励变成金钱而非芯片" },
+        games: ["bn3", "bn4", "bn5", "bn6"],
+        name: { en: "Result Bug (Zenny Only)", ja: "リザルトバグ", zh: "收藏家 BUG" },
+        desc: { en: "Battle rewards become Zenny instead of chips", ja: "戦闘報酬がチップではなくゼニーになる", zh: "战斗胜利后结算奖励只掉落金币，无法获得芯片" },
     },
     {
         id: "gaugeSlow",
@@ -1071,7 +1071,7 @@ export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
     16: "encounter", // Fish
     17: "encounter", // Battery
     18: "encounter", // Jungle
-    19: "support", // Collect
+    19: "resultZenny", // Collect
     20: "emotion", // Humor
     21: "buster",  // BustPack
     22: "player",  // BodyPack
@@ -1114,8 +1114,8 @@ export const BN5_PART_BUG_TYPES: Record<number, BugType> = {
     16: "encounter", // Fish
     17: "encounter", // Battery
     18: "encounter", // Jungle
-    19: "encounter", // Collect
-    20: "encounter", // Millions
+    19: "resultZenny", // Collect
+    20: "resultZenny", // Millions
     21: "emotion",  // Humor
     22: "emotion",  // Chivalry
     23: "movement", // AutoRun
@@ -1187,8 +1187,9 @@ export const BN6_PART_BUG_TYPES: Record<number, BugType | readonly BugType[]> = 
     18: "encounter", // Fish
     19: "encounter", // Battery
     20: "encounter", // Jungle
-    21: "encounter", // Collect
-    22: "encounter", // Millions
+    // Result Bug (Collect)
+    21: "resultZenny", // Collect
+    22: "resultZenny", // Millions
     // Emotion Bug
     23: "emotion",   // Humor
     24: "emotion",   // Poem
@@ -1412,6 +1413,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
+        resultZenny: {
+            title: {
+                en: "Result Bug",
+                ja: "報酬ゼニー固定バグ",
+                zh: "收藏家 BUG",
+            },
+            mechanics: {
+                en: "Collect / Millions violation: Battle rewards exclusively drop Zenny instead of chips.",
+                ja: "コレクターズアイ・ミリオネア違反：戦闘リザルト報酬がゼニーのみになりチップが出なくなります。",
+                zh: "收藏家之眼／百万富翁违规：战斗胜利后结算奖励只掉落金币，无法获得芯片。",
+            },
+        },
     },
     bn5: {
         movement: {
@@ -1583,6 +1596,18 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                     ja: "戦闘開始時に10秒間ランダムな状態異常が付与されます。",
                     zh: "战斗开始瞬间随机陷入短暂异常状态持续 10 秒。",
                 },
+            },
+        },
+        resultZenny: {
+            title: {
+                en: "Result Bug",
+                ja: "報酬ゼニー固定バグ",
+                zh: "收藏家 BUG",
+            },
+            mechanics: {
+                en: "Collect / Millions violation: Battle rewards exclusively drop Zenny instead of chips.",
+                ja: "コレクターズアイ・ミリオネア違反：戦闘リザルト報酬がゼニーのみになりチップが出なくなります。",
+                zh: "收藏家之眼／百万富翁违规：战斗胜利后结算奖励只掉落金币，无法获得芯片。",
             },
         },
     },
@@ -1777,7 +1802,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Battle Result Bug",
                 ja: "報酬ゼニー固定バグ",
-                zh: "战斗结算金币 BUG",
+                zh: "收藏家 BUG",
             },
             mechanics: {
                 en: "You only receive Zennys as Battle Rewards.",
@@ -2044,7 +2069,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
             title: {
                 en: "Zenny Only Bug",
                 ja: "報酬ゼニー固定バグ",
-                zh: "战斗结算金币 BUG",
+                zh: "收藏家 BUG",
             },
             mechanics: {
                 en: "Collect program violation: Battle rewards exclusively drop Zenny instead of chips.",
@@ -2490,6 +2515,7 @@ export function isBenignBug(bugType: string, level: number): boolean {
     if (norm === "customhp" && level <= 1) return true;
     if (norm === "buster" && level <= 1) return true;
     if (norm === "emotion" && level <= 1) return true;
+    if (norm === "resultzenny") return true;
     return false;
 }
 

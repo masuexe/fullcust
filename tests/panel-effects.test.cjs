@@ -86,7 +86,7 @@ test("BN6 defaults only movement, custom, panelCrack, panelIce, and support to f
     const expectedAllowed = [
         "battleHp", "damageHp", "buster", "customHp",
         "panelGrass", "status", "emotion", "customDamage",
-        "damageConfusion", "encounter",
+        "damageConfusion", "encounter", "resultZenny",
     ];
     for (const bug of expectedAllowed) {
         assert.equal(rules[bug], "allowed", `expected ${bug} to be allowed`);
@@ -96,7 +96,8 @@ test("BN6 defaults only movement, custom, panelCrack, panelIce, and support to f
     for (const optId of bugOptions) {
         assert.ok(rules[optId] !== undefined, `expected rule for option ${optId}`);
     }
-    for (const game of ["bn3", "bn4", "bn5"]) {
+    for (const game of ["bn3", "bn4"]) {
         assert.deepEqual(getDefaultBugRules(game), {});
     }
+    assert.deepEqual(getDefaultBugRules("bn5"), { resultZenny: "allowed" });
 });

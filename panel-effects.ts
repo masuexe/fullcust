@@ -52,6 +52,12 @@ export function getDefaultBugRules(gameId: string): Record<string, BugTolerance>
             customDamage: "allowed",
             damageConfusion: "allowed",
             encounter: "allowed",
+            resultZenny: "allowed",
+        };
+    }
+    if (gameId === "bn5") {
+        return {
+            resultZenny: "allowed",
         };
     }
     return {};

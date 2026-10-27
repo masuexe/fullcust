@@ -73,3 +73,7 @@ Raw source card entries keep the audited `panel` category. Final analysis classi
 Legacy broad `panel` rules remain readable. Explicit subtype rules override the broad default. Broad allowed/forbidden defaults expand into individual UI controls; a legacy broad required rule retains its original “any terrain bug” meaning, rather than requiring all subtypes simultaneously.
 
 In BN4–6, five and six colors produce configurable NC `colorStatus` levels 1 and 2 (normalized to `status` for existing settings), instead of being rejected before search. On-line BugStop suppresses NC color overflow along with other NC bugs, while card bugs retain their separate policies. Sources: [BN6 Bugs](https://wiki.n1gp.net/Bugs_%28BN6%29), [BN6 BugStop](https://wiki.n1gp.net/Bug_Stop_%28BN6%29).
+
+## Result Bug (Collect / Millions)
+
+In BN4–6, improper placement of Collect and Millions programs produces the Result Bug (`resultZenny`), where battle rewards drop only Zenny instead of chips. Because this bug carries no in-combat debuff during NetBattles, it is treated as a benign non-combat bug and defaults to allowed in the BN5 and BN6 optimizer configurations.
