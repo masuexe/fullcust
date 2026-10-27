@@ -1,3 +1,4 @@
+import { getBugRule } from "./panel-effects";
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCards } from "./modcards";
@@ -35,6 +36,9 @@ export function findFeasibleBuild(
         goals.push({ satisfied, advances: advances ?? ((_before, after) => satisfied(after)) });
     };
     for (const ability of constraints?.requiredAbilities ?? []) addGoal(stats => stats.abilities.includes(ability));
+    for (const type of ["panelGrass", "panelIce"]) {
+        if ((constraints?.bugRules ?? policy.customRules)?.[type] === "required") addGoal(stats => stats.modPanelEffect === type);
+    }
     const minimums = getBusterMinimums(constraints);
     for (const stat of BUSTER_STATS.filter(stat => minimums[stat] !== undefined)) {
         addGoal(stats => stats[stat] >= minimums[stat]!, (before, after) => after[stat] > before[stat]);
@@ -74,7 +78,7 @@ export function findFeasibleBuild(
         const deck = computeDeckStats(state.cards, data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict) return null;
         if (colorCompatibility(data, { ...problem, requirements: state.requirements }).error) return null;
-        if (data.gameId !== "bn3" && new Set(state.requirements.map(r => data.parts[r.partIndex].color)).size > 4) return null;
+        if (data.gameId !== "bn3" && new Set(state.requirements.map(r => data.parts[r.partIndex].color)).size > (data.gameId === "bn6" ? 6 : 4)) return null;
         const key = JSON.stringify([[...state.added].sort((a, b) => a - b), state.cards]);
         if (visited.has(key)) return null;
         visited.add(key);
@@ -153,7 +157,7 @@ export function findFeasibleBuild(
     const rules = constraints?.bugRules ?? policy.customRules;
     const requiresBug = Object.values(rules ?? {}).includes("required");
     const restrictsBugs = data.partMetas.some(part => getPartBugTypes(data.gameId, part.id).some(type => {
-        const tolerance = rules?.[normalizeBugType(type)] ?? rules?.[type];
+        const tolerance = getBugRule(rules, data.gameId === "bn6" && type === "panel" ? "panelCrack" : normalizeBugType(type));
         return tolerance !== "allowed" && tolerance !== "allowed_any";
     }));
     if (data.gameId === "bn6" && (modCardMode === "auto" || (modCardMode === "keep" && cards.length > 0)) &&

@@ -1,3 +1,4 @@
+import { findKnownBuild } from "./build-corpus";
 import { compareBuildStats, optimizeBuild, OptimizeOptions, OptimizeResult } from "./optimizer";
 import { searchBuilds, SearchProgress } from "./exhaustive-optimizer";
 import { findFeasibleBuild } from "./feasible-optimizer";
@@ -25,12 +26,18 @@ self.onmessage = (event: MessageEvent<OptimizerRequest>) => {
         };
         const options = { ...event.data, onSearchWork: activity.onSearchWork };
         const until = (deadline: number) => () => { activity.tick(); return Date.now() >= deadline; };
-        activity.setStage("feasible");
+        activity.setStage("library");
+        const libraryDeadline = Date.now() + 100;
+        best = findKnownBuild({ ...options, shouldStop: until(libraryDeadline),
+            onImprove: next => publish("progress", { checkedBuilds: 0, best: next }) });
         // First satisfy the requested specs, without spending space/MB on HP.
         // This scheduling budget never ends the overall search or proves failure.
         const deadline = Date.now() + 1000;
-        best = findFeasibleBuild({ ...options, shouldStop: until(deadline) });
-        if (best) publish("progress", { checkedBuilds: 0, best });
+        if (!best) {
+            activity.setStage("feasible");
+            best = findFeasibleBuild({ ...options, shouldStop: until(deadline) });
+            if (best) publish("progress", { checkedBuilds: 0, best });
+        }
 
         // Improve the first feasible build locally before starting the complete
         // search. Keep its cards and requirements so all mandatory specs survive.

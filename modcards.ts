@@ -87,7 +87,7 @@ export function repairsBugType(repair: string, type: string): boolean {
     if (name === "damage bug") return ["damagehp", "damagebattlehp", "damageconfusion", "damageblind"].includes(bug);
     if (name.includes("movement")) return ["movement", "involuntarymove"].includes(bug);
     if (name.includes("buster blank")) return bug === "buster";
-    if (name.includes("panel")) return ["panel", "panelset", "poisonwalk"].includes(bug);
+    if (name.includes("panel")) return ["panel", "panelset", "poisonwalk", "panelgrass", "panelice", "panelcrack"].includes(bug);
     if (name.includes("status")) return bug === "status";
     if (name.includes("emotion")) return bug === "emotion";
     return false;
@@ -340,7 +340,10 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         chargeAddition,
         invalidatedBusterAddition,
         invalidatedChargeAddition,
-        movePanel,
+        movePanel: gameId === "bn6" ? (() => {
+            const final = deckBugs.find(entry => entry.bug.type === "panel");
+            return final ? getModCard(final.sourceCardId, gameId)?.movePanel : undefined;
+        })() : movePanel,
         chipRecovery,
         firstBarrier,
         tripleBuster,

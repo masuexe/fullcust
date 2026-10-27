@@ -742,6 +742,9 @@ export const translations = {
     optSearchingBetter: {
         en: "Valid build found. Searching for improvements…", ja: "有効な構成が見つかりました。さらに探索中…", zh: "已找到合法构筑，正在继续搜索更优结果……",
     },
+    optStageLibrary: {
+        en: "Checking known builds against your requirements", ja: "既知の構成が条件を満たすか確認中", zh: "正在检查已知构筑是否满足当前要求",
+    },
     optStageFeasible: {
         en: "Selecting candidates to meet your requirements", ja: "条件を満たす候補を選択中", zh: "正在选择满足要求的候选组合",
     },

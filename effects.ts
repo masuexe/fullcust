@@ -1,3 +1,4 @@
+import { bugMatchesRule, getBugRule, getCardBugType } from "./panel-effects";
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug, repairsBugType } from "./modcards";
 import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
@@ -37,6 +38,7 @@ export interface BuildStats {
     modMbUsed?: number;
     modCardCount?: number;
     modBody?: string;
+    modPanelEffect?: string;
     modGauge?: "fast" | "slow" | "normal";
     modBButton?: string;
     modBPwrAtk?: string;
@@ -321,6 +323,7 @@ export function computeBuildStats(
     const ncHp = hp;
     let runningHp = baseHp + ncHp;
     let hpPercent = 0;
+    let modPanelEffect: string | undefined;
     let modMbUsed: number | undefined;
     let modCardCount: number | undefined;
     let modBody: string | undefined;
@@ -349,6 +352,8 @@ export function computeBuildStats(
 
     if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
         const deck = computeDeckStats(modCardIds, gameId);
+        const panel = deck.activeBugs.find(entry => entry.bug.type === "panel");
+        if (gameId === "bn6" && panel) modPanelEffect = getCardBugType(panel.sourceCardId, "panel", deck.movePanel);
         if (gameId === "bn6" || (gameId === "bn5" && deck.stats.attackMult > 1)) attackLimit = 10;
         modMbUsed = deck.totalMb;
         modCardCount = modCardIds.length;
@@ -433,6 +438,7 @@ export function computeBuildStats(
         megaFolder,
         gigaFolder,
         abilities: Array.from(abilitySet).sort(),
+        modPanelEffect,
         modMbUsed,
         modCardCount,
         modBody,
@@ -919,6 +925,15 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
 ];
 
+BUG_SPEC_OPTIONS.push(
+    { id: "panelGrass", games: ["bn6"], name: { en: "Move: Grass", ja: "移動：クサムラ", zh: "移动草地" },
+        desc: { en: "Moving off a panel can turn it into grass", ja: "移動後のパネルがクサムラに変化", zh: "移动后，离开的面板有概率变成草地" } },
+    { id: "panelIce", games: ["bn6"], name: { en: "Move: Ice", ja: "移動：アイス", zh: "移动冰地" },
+        desc: { en: "Moving off a panel can turn it into ice", ja: "移動後のパネルがアイスに変化", zh: "移动后，离开的面板有概率变成冰地" } },
+    { id: "panelCrack", games: ["bn6"], name: { en: "Move: Crack", ja: "移動：ヒビ", zh: "移动破裂" },
+        desc: { en: "Moving off a panel can crack or break it", ja: "移動後にパネルがひび割れ・消失", zh: "移动后，离开的面板有概率破裂或形成地穴；与瞬移 BUG 独立" } },
+);
+
 export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
 
 export function normalizeBugType(type: string): string {
@@ -932,6 +947,9 @@ export function normalizeBugType(type: string): string {
     if (t === "damageconfusion") return "damageConfusion";
     if (t === "damageblind") return "damageBlind";
     if (t === "status" || t === "colorstatus") return "status";
+    if (t === "panelgrass") return "panelGrass";
+    if (t === "panelice") return "panelIce";
+    if (t === "panelcrack") return "panelCrack";
     if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
     if (t === "customscreenminus" || t === "custom") return "custom";
     if (t === "buster") return "buster";
@@ -968,6 +986,9 @@ export type BugType =
     | "custom"
     | "customHp"
     | "panel"
+    | "panelGrass"
+    | "panelIce"
+    | "panelCrack"
     | "panelSet"
     | "poisonWalk"
     | "chipAutoFire"
@@ -2264,10 +2285,8 @@ export function analyzeSolutionBugs(
             (gameId === "bn6" && id === 31);
     });
     if (bugStopDetail) {
-        const isBugStopBugged =
-            !bugStopDetail.onCommandLine ||
-            bugStopDetail.outOfBounds ||
-            bugStopDetail.adjacentSameColoredPlacements.size > 0;
+        const isBugStopBugged = !bugStopDetail.onCommandLine || (gameId !== "bn6" &&
+            (bugStopDetail.outOfBounds || bugStopDetail.adjacentSameColoredPlacements.size > 0));
         if (!isBugStopBugged) {
             bugStopActive = true;
         }
@@ -2354,7 +2373,7 @@ export function analyzeSolutionBugs(
         const titleWithLevel = bugDef?.levels ? `${baseTitle} (Lv${effectiveLevel})` : baseTitle;
 
         activeBugs.push({
-            bugType: bugType as BugType,
+            bugType: (gameId === "bn6" && bugType === "panel" ? "panelCrack" : bugType) as BugType,
             level: effectiveLevel,
             title: titleWithLevel,
             mechanics: levelMechanics,
@@ -2384,6 +2403,11 @@ export function analyzeSolutionBugs(
     const colorBugTitle = colorDef?.title[lang];
     const colorBugMechanics = colorDef?.mechanics[lang];
 
+    if (gameId === "bn6" && tooManyColors && colorDef) {
+        const level = Math.min(2, distinctColors.size - 4);
+        activeBugs.push({ bugType: "colorStatus", level, title: `${colorDef.title[lang]} (Lv${level})`,
+            mechanics: colorDef.levels?.[level]?.[lang] ?? colorDef.mechanics[lang], parts: [] });
+    }
     let finalActiveBugs = activeBugs;
     let modCardBugsList: { cardId: string; cardName: string; bug: ModCardBug }[] | undefined;
     let repairedBugsNotice: string[] | undefined;
@@ -2411,7 +2435,7 @@ export function analyzeSolutionBugs(
                 });
 
                 finalActiveBugs.push({
-                    bugType: entry.bug.type as BugType,
+                    bugType: getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel) as BugType,
                     level: entry.bug.level ?? 1,
                     title: `[${cardDisplayName}] ${entry.bug.name[lang]}`,
                     mechanics: entry.bug.description[lang],
@@ -2474,8 +2498,8 @@ export function isSolutionAcceptable(
     forbiddenBugs?: string[],
     bugRules?: Partial<Record<string, BugTolerance>>
 ): boolean {
-    // 1. Color limit check: >4 colors is always an illegal build on GBA
-    if (analysis.tooManyColors) {
+    // BN6 color overflow is a configurable NC status bug, not geometric impossibility.
+    if (analysis.tooManyColors && !analysis.activeBugs.some(b => b.bugType === "colorStatus")) {
         return false;
     }
 
@@ -2491,7 +2515,7 @@ export function isSolutionAcceptable(
         // Every bug in effectiveBugs must not be forbidden
         for (const bug of effectiveBugs) {
             const norm = normalizeBugType(bug.bugType);
-            const rule = rules[norm] ?? rules[bug.bugType] ?? "forbidden";
+            const rule = getBugRule(rules, norm, bug.bugType);
             if (rule === "forbidden") return false;
             if (rule === "allowed_lv1" && bug.level > 1) return false;
         }
@@ -2501,7 +2525,7 @@ export function isSolutionAcceptable(
             if (tolerance === "required") {
                 const norm = normalizeBugType(bugType).toLowerCase();
                 const found = effectiveBugs.some(
-                    b => normalizeBugType(b.bugType).toLowerCase() === norm && b.level >= 1
+                    b => bugMatchesRule(normalizeBugType(b.bugType), norm) && b.level >= 1
                 );
                 if (!found) return false;
             }
@@ -2513,7 +2537,7 @@ export function isSolutionAcceptable(
     if (forbiddenBugs && forbiddenBugs.length > 0) {
         const hasForbidden = effectiveBugs.some(b => {
             const norm = normalizeBugType(b.bugType).toLowerCase();
-            return forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm);
+            return forbiddenBugs.some(fb => bugMatchesRule(norm, normalizeBugType(fb)));
         });
         if (hasForbidden) return false;
 

@@ -1,4 +1,4 @@
-export type SearchStage = "feasible" | "improve" | "local" | "exhaustive";
+export type SearchStage = "library" | "feasible" | "improve" | "local" | "exhaustive";
 
 export interface SearchActivity {
     stage: SearchStage;

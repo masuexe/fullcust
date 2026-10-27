@@ -64,3 +64,13 @@ Sources:
 - [BWiki BN6 patch cards](https://wiki.biligame.com/wavebattlenetwork/%E6%B4%9B%E5%85%8B%E4%BA%BAEXE6/%E6%94%B9%E9%80%A0%E5%8D%A1)
 - [N1GPedia BN5 patch cards](https://wiki.n1gp.net/Patch_Cards_(BN5))
 - [BWiki BN5 patch cards](https://wiki.biligame.com/wavebattlenetwork/%E6%B4%9B%E5%85%8B%E4%BA%BAEXE5/%E6%94%B9%E9%80%A0%E5%8D%A1)
+
+## BN6 terrain rules and color overflow
+
+BN6 terrain effects now have separate final-policy keys: `panelGrass`, `panelIce`, and `panelCrack`. `movement` remains boundary warp. Each terrain key has its own forbidden/allowed/required control; a required grass effect does not allow ice, cracking, or warp. With no cards, only cracking is available. These controls describe the chance to change terrain after movement, not a guarantee that every step changes it.
+
+Raw source card entries keep the audited `panel` category. Final analysis classifies the surviving panel write by its source. Later panel cards overwrite earlier panel effects, and Panel Bug repairs clear earlier terrain effects. The displayed `movePanel` value is derived from the surviving effect, so a repaired or overwritten grass effect cannot satisfy a requirement. This follows the approved [BWiki BN6 card table](https://wiki.biligame.com/wavebattlenetwork/%E6%B4%9B%E5%85%8B%E4%BA%BAEXE6/%E6%94%B9%E9%80%A0%E5%8D%A1).
+
+Legacy broad `panel` rules remain readable. Explicit subtype rules override the broad default. Broad allowed/forbidden defaults expand into individual UI controls; a legacy broad required rule retains its original “any terrain bug” meaning, rather than requiring all subtypes simultaneously.
+
+The known-build audit also exposed an unsafe BN6 four-color cutoff. Five and six colors now produce configurable NC `colorStatus` levels 1 and 2 (normalized to `status` for existing settings), instead of being rejected before search. BN6 BugStop activates through command-line contact even when out of bounds or touching its own color; it suppresses NC color overflow along with other NC bugs, while card bugs retain their separate policies. Other games retain their existing color handling. Sources: [BN6 Bugs](https://wiki.n1gp.net/Bugs_%28BN6%29), [BN6 BugStop](https://wiki.n1gp.net/Bug_Stop_%28BN6%29).

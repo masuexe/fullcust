@@ -26,7 +26,7 @@ for (const game of ["bn3", "bn4", "bn5", "bn6"]) {
 }
 
 test("approved BN5/6 source tables match every audited card's bug and repair categories", () => {
-    const category = type => ["damageHp", "damageBattleHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type;
+    const category = type => type.startsWith("panel") ? "panel" : ["damageHp", "damageBattleHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type;
     for (const [game, audit] of Object.entries(manifest.games)) {
         for (const record of audit.cards) {
             const card = getModCard(record.id, game);

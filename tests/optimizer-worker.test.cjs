@@ -55,7 +55,7 @@ test("the real optimizer worker streams improved builds and completes after exha
     assert.equal(events.at(-1).completed, true);
     const updates = events.filter(event => event.activity);
     assert.equal(updates[0].best, null, "Must report activity before the first solution");
-    assert.equal(updates[0].activity.stage, "feasible");
+    assert.equal(updates[0].activity.stage, "library");
     assert.ok(updates.some(event => event.activity.stage === "exhaustive"));
     assert.ok(updates.at(-1).activity.candidateChecks > 0);
     assert.ok(updates.at(-1).activity.placementAttempts > 0);

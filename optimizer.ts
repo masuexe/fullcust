@@ -1,3 +1,4 @@
+import { bugMatchesRule, getBugRule, getCardBugType } from "./panel-effects";
 import type { Data } from "./game-data";
 import { isPartCompatible } from "./compatibility";
 import {
@@ -137,8 +138,8 @@ function isCardAcceptableUnderPolicy(
     if (activeRules && Object.keys(activeRules).length > 0) {
         if (!card.bugs || card.bugs.length === 0) return true;
         for (const b of card.bugs) {
-            const norm = normalizeBugType(b.type);
-            const rule = activeRules[norm] ?? activeRules[b.type] ?? "forbidden";
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel));
+            const rule = getBugRule(activeRules, norm, b.type);
             if (rule === "forbidden") return false;
             if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
         }
@@ -148,13 +149,13 @@ function isCardAcceptableUnderPolicy(
     if (!card.bugs || card.bugs.length === 0) return true;
     if (forbiddenBugs && forbiddenBugs.length > 0) {
         if (card.bugs.some(b => {
-            const norm = normalizeBugType(b.type).toLowerCase();
-            return forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm);
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
+            return forbiddenBugs.some(fb => bugMatchesRule(norm, normalizeBugType(fb)));
         })) {
             return false;
         }
         return card.bugs.every(b => {
-            const norm = normalizeBugType(b.type).toLowerCase();
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
             return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level ?? 1);
         });
     }
@@ -183,7 +184,7 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
 
     if (requiredBugs && requiredBugs.length > 0 && card.bugs) {
         for (const b of card.bugs) {
-            const norm = normalizeBugType(b.type).toLowerCase();
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
             if (requiredBugs.some(rb => normalizeBugType(rb).toLowerCase() === norm)) {
                 abilityBonus += 300;
             }
@@ -730,9 +731,9 @@ export function requirementsUnderPolicy(
     const rules = bugRules ?? policy.customRules;
     return requirements.map(req => {
         const forbidden = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id).some(type => {
-            const norm = normalizeBugType(type);
+            const norm = data.gameId === "bn6" && type === "panel" ? "panelCrack" : normalizeBugType(type);
             if (rules !== undefined || policy.type === "custom") {
-                return (rules?.[norm] ?? rules?.[type] ?? "forbidden") === "forbidden";
+                return getBugRule(rules, norm, type) === "forbidden";
             } else if (forbiddenBugs.length > 0) {
                 return forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
                     !(["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1));
@@ -805,7 +806,7 @@ export function doesBuildSatisfyConstraints(
     if (constraints.bugRules && Object.keys(constraints.bugRules).length > 0) {
         for (const b of effectiveBugs) {
             const norm = normalizeBugType(b.bugType);
-            const tolerance = constraints.bugRules[norm] ?? constraints.bugRules[b.bugType] ?? "forbidden";
+            const tolerance = getBugRule(constraints.bugRules, norm, b.bugType);
             if (tolerance === "forbidden") return false;
             if (tolerance === "allowed_lv1" && b.level > 1) return false;
         }
@@ -814,7 +815,7 @@ export function doesBuildSatisfyConstraints(
             if (tolerance === "required") {
                 const norm = normalizeBugType(bugType).toLowerCase();
                 const found = effectiveBugs.some(
-                    b => normalizeBugType(b.bugType).toLowerCase() === norm && b.level >= 1
+                    b => bugMatchesRule(normalizeBugType(b.bugType), norm) && b.level >= 1
                 );
                 if (!found) return false;
             }
@@ -822,7 +823,7 @@ export function doesBuildSatisfyConstraints(
     } else if (constraints.forbiddenBugs && constraints.forbiddenBugs.length > 0) {
         for (const b of effectiveBugs) {
             const norm = normalizeBugType(b.bugType).toLowerCase();
-            if (constraints.forbiddenBugs.some(fb => normalizeBugType(fb).toLowerCase() === norm)) {
+            if (constraints.forbiddenBugs.some(fb => bugMatchesRule(norm, normalizeBugType(fb)))) {
                 return false;
             }
         }
@@ -901,9 +902,9 @@ function runNaviCustBeamSearch(
 
                 const candPart = data.parts[candIdx];
 
-                // Color limit check (4 colors in BN4/5/6)
+                // BN6 allows six colors; its overflow bug is checked by the final policy.
                 if (data.gameId !== "bn3") {
-                    if (!existingColors.has(candPart.color) && existingColors.size >= 4) {
+                    if (!existingColors.has(candPart.color) && existingColors.size >= (data.gameId === "bn6" ? 6 : 4)) {
                         continue;
                     }
                 } else if (data.styleColorRules) {

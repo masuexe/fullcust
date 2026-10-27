@@ -104,7 +104,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
     });
     const coreCells = problem.requirements.reduce((sum, r) => sum + minimumCells(r), 0);
     if (!bodyConstraintsPossible(constraints) || !busterMinimumsPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
-        (data.gameId !== "bn3" && new Set(problem.requirements.map(r => data.parts[r.partIndex].color)).size > 4)) {
+        (data.gameId !== "bn3" && new Set(problem.requirements.map(r => data.parts[r.partIndex].color)).size > (data.gameId === "bn6" ? 6 : 4))) {
         return { ...progress, completed: !shouldStop() };
     }
     const smallestPart = Math.min(...data.parts.map((_, i) => minimumCells(freeReq(i))));
@@ -134,7 +134,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             if (stopped() || occupied > capacity) return;
             if (remaining * smallestPart + occupied > capacity) return;
             if (colorCompatibility(data, { ...problem, requirements }).error) return;
-            if (data.gameId !== "bn3" && new Set(requirements.map(r => data.parts[r.partIndex].color)).size > 4) return;
+            if (data.gameId !== "bn3" && new Set(requirements.map(r => data.parts[r.partIndex].color)).size > (data.gameId === "bn6" ? 6 : 4)) return;
             options.onSearchWork?.("candidate");
             const ids = requirements.map(r => data.partMetas[r.partIndex].id);
             const stats = computeBuildStats(data.gameId, ids, modCards, problem.baseHp ?? 1000);

@@ -844,3 +844,38 @@ export function meetsPlacementBugConstraints(
     }
     return solutionIsAdmissible(parts, requirements, grid);
 }
+
+/** Validate an imported layout before reusing it; unlike placeAll, reject overlaps and clipping. */
+export function isSolutionGeometryValid(
+    parts: Part[], requirements: Requirement[], placements: Placement[], settings: GridSettings,
+    spinnableColors?: boolean[]
+): boolean {
+    if (requirements.length !== placements.length) return false;
+    const occupied = new Set<number>();
+    for (let i = 0; i < requirements.length; i++) {
+        const req = requirements[i], placement = placements[i], part = parts[req.partIndex];
+        if (!part || !placement || !Number.isInteger(placement.loc.rotation) || placement.loc.rotation < 0 || placement.loc.rotation > 3 ||
+            !Number.isInteger(placement.loc.position.x) || !Number.isInteger(placement.loc.position.y)) return false;
+        if (spinnableColors && placement.loc.rotation !== 0 && !spinnableColors[part.color]) return false;
+        if (req.constraint.compressed !== null && req.constraint.compressed !== placement.compressed) return false;
+        let mask = placement.compressed ? part.compressedMask : part.uncompressedMask;
+        for (let r = 0; r < placement.loc.rotation; r++) mask = array2d.rot90(mask);
+        let onLine = false, interior = false, cellCount = 0;
+        for (let y = 0; y < mask.nrows; y++) for (let x = 0; x < mask.ncols; x++) {
+            if (!mask[y * mask.ncols + x]) continue;
+            const px = placement.loc.position.x + x, py = placement.loc.position.y + y;
+            if (px < 0 || py < 0 || px >= settings.width || py >= settings.height) return false;
+            const borderX = px === 0 || px === settings.width - 1;
+            const borderY = py === 0 || py === settings.height - 1;
+            if (settings.hasOob && borderX && borderY) return false;
+            if (!borderX && !borderY) interior = true;
+            const index = py * settings.width + px;
+            if (occupied.has(index)) return false;
+            occupied.add(index); cellCount++;
+            if (py === settings.commandLineRow) onLine = true;
+        }
+        if (!cellCount || (settings.hasOob && !interior)) return false;
+        if (req.constraint.onCommandLine !== null && req.constraint.onCommandLine !== onLine) return false;
+    }
+    return meetsPlacementBugConstraints(parts, requirements, placements, settings);
+}

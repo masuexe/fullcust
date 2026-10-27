@@ -1,3 +1,4 @@
+import { expandPanelBugRules, PANEL_BUG_TYPES, getBugRule } from "./panel-effects";
 import isEqual from "lodash-es/isEqual";
 import React, { ChangeEvent } from "react";
 import { createRoot } from "react-dom/client";
@@ -40,6 +41,7 @@ import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimize
 import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
 import {
+    BUG_SPEC_OPTIONS,
     computeBuildStats,
     computePlacedBuildStats,
     getBusterStatLimits,
@@ -357,15 +359,16 @@ function SolutionBugStatus({
 
     const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
     const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
-    const ncBugCount = ncActiveBugs.length + (analysis.tooManyColors ? 1 : 0);
+    const unlistedColorBug = analysis.tooManyColors && !ncActiveBugs.some(b => b.bugType === "colorStatus");
+    const ncBugCount = ncActiveBugs.length + (unlistedColorBug ? 1 : 0);
     const modBugCount = modActiveBugs.length;
 
-    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), analysis.tooManyColors ? 4 : 0);
+    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), unlistedColorBug ? 4 : 0);
     const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
 
     // When NO mod card bugs are involved, keep clean single badge
     if (modBugCount === 0) {
-        if (analysis.bugStopActive && !analysis.tooManyColors) {
+        if (analysis.bugStopActive && !unlistedColorBug) {
             return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
         }
         return (
@@ -382,7 +385,7 @@ function SolutionBugStatus({
                 <span className="badge bg-success px-2 py-1" title={t("ncNoBugsNotice", lang)}>
                     ✅ {t("ncNoBugs", lang)}
                 </span>
-            ) : analysis.bugStopActive && !analysis.tooManyColors ? (
+            ) : analysis.bugStopActive && !unlistedColorBug ? (
                 <span className="badge bg-info text-dark px-2 py-1" title={t("bugStopNeutralizedNotice", lang)}>
                     🛡️ {t("bugStopActive", lang)} (NC)
                 </span>
@@ -410,10 +413,11 @@ function SolutionBugDetails({
 
     const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
     const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
-    const ncBugCount = ncActiveBugs.length + (analysis.tooManyColors ? 1 : 0);
+    const unlistedColorBug = analysis.tooManyColors && !ncActiveBugs.some(b => b.bugType === "colorStatus");
+    const ncBugCount = ncActiveBugs.length + (unlistedColorBug ? 1 : 0);
     const modBugCount = modActiveBugs.length;
 
-    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), analysis.tooManyColors ? 4 : 0);
+    const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), unlistedColorBug ? 4 : 0);
     const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
 
     const buttonSummary = (() => {
@@ -457,7 +461,7 @@ function SolutionBugDetails({
                             </div>
                         ) : null}
 
-                        {analysis.tooManyColors ? (
+                        {unlistedColorBug ? (
                             <div className="mb-2 pb-1 border-bottom">
                                 <div className="fw-semibold text-danger">
                                     🎨 {analysis.colorBugTitle || tBugTitle("colorStatus", lang)}
@@ -477,7 +481,7 @@ function SolutionBugDetails({
                                     ⚙️ {ab.title}
                                 </div>
                                 <div className="text-muted">
-                                    {t("bugOrigin", lang)}: {ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")}
+                                    {t("bugOrigin", lang)}: {ab.bugType === "colorStatus" ? `${tBugCause("tooManyColors", lang)} (${analysis.distinctColorCount}/4)` : ab.parts.map(p => `${p.partName} (${p.causes.map(c => tBugCause(c, lang)).join(", ")})`).join("、")}
                                 </div>
                                 <div className="mt-1">
                                     {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{ab.mechanics}</span>
@@ -1057,12 +1061,13 @@ function AutoOptimizerPanel({
         problem.constraints?.requiredGauge ?? ""
     );
     const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
-        return problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {};
+        return expandPanelBugRules(data.gameId, problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {});
     });
 
     const cardsEnabled = hasModCards && modCardMode !== "none";
     const abilityOptions = getOptimizerAbilityOptions(data, cardsEnabled);
-    const bugOptions = getOptimizerBugOptions(data, cardsEnabled);
+    const bugOptions = [...getOptimizerBugOptions(data, cardsEnabled),
+        ...(data.gameId === "bn6" && bugRules.panel === "required" ? BUG_SPEC_OPTIONS.filter(option => option.id === "panel") : [])];
     const constraints = getOptimizerModeConstraints(data, {
         ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
         ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
@@ -1109,7 +1114,7 @@ function AutoOptimizerPanel({
     const handleSetBugTolerance = (bugId: string, tol: BugTolerance) => {
         setBugRules(prev => {
             const next = { ...prev };
-            if (tol === "forbidden") {
+            if (tol === "forbidden" && !(prev.panel && PANEL_BUG_TYPES.includes(bugId as typeof PANEL_BUG_TYPES[number]))) {
                 delete next[bugId];
             } else {
                 next[bugId] = tol;
@@ -1611,7 +1616,8 @@ function AutoOptimizerPanel({
 
                                         <div className="d-flex flex-column gap-1">
                                             {bugOptions.map(opt => {
-                                                const currentTol: BugTolerance = bugRules[opt.id] ?? "forbidden";
+                                                const inherited = getBugRule(bugRules, opt.id);
+                                                const currentTol: BugTolerance = bugRules[opt.id] ?? (inherited === "required" ? "allowed_any" : inherited);
                                                 return (
                                                     <div
                                                         key={opt.id}
@@ -1685,7 +1691,7 @@ function AutoOptimizerPanel({
                         {isOptimizing ? (
                             <div className="small text-muted mt-2" role="status" aria-live="polite">
                                 {t(preview ? "optSearchingBetter" : "optSearchingFeasible", lang)}
-                                <div>{t(({ feasible: "optStageFeasible", improve: "optStageImprove", local: "optStageLocal", exhaustive: "optStageExhaustive" } as const)[searchActivity?.stage ?? "feasible"], lang)}</div>
+                                <div>{t(({ library: "optStageLibrary", feasible: "optStageFeasible", improve: "optStageImprove", local: "optStageLocal", exhaustive: "optStageExhaustive" } as const)[searchActivity?.stage ?? "feasible"], lang)}</div>
                                 <div>{t("optElapsed", lang)}: {elapsedSeconds}s · {t("optCandidateChecks", lang)}: {(searchActivity?.candidateChecks ?? 0).toLocaleString()} · {t("optPlacementAttempts", lang)}: {(searchActivity?.placementAttempts ?? 0).toLocaleString()}</div>
                             </div>
                         ) : null}
