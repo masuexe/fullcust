@@ -594,6 +594,28 @@ test("Extended build constraints: BButton, Additions, Body, Gauge and URL round-
     assert.equal(restored.constraints.requiredBody, "Wood");
     assert.equal(restored.constraints.requiredGauge, "fast");
     assert.deepEqual(restored.constraints.bugRules, { buster: "required" });
+
+    // 8. Optimize with requiredGauge: not_slow
+    const { matchGauge } = require("../optimizer.ts");
+    assert.equal(matchGauge(undefined, "not_slow"), true);
+    assert.equal(matchGauge("normal", "not_slow"), true);
+    assert.equal(matchGauge("fast", "not_slow"), true);
+    assert.equal(matchGauge("slow", "not_slow"), false);
+    assert.equal(matchGauge(undefined, "normal"), true);
+
+    const cardsNotSlow = optimizeModCards({
+        gameId: "bn6",
+        target: "max_hp",
+        policy: { type: "custom" },
+        constraints: { requiredGauge: "not_slow" },
+    });
+    const deckNotSlow = computeDeckStats(cardsNotSlow, "bn6");
+    assert.notEqual(deckNotSlow.gauge, "slow", "Must not produce slow gauge under not_slow constraint");
+
+    prob.constraints.requiredGauge = "not_slow";
+    const hashNotSlow = toHashString(prob, data);
+    const restoredNotSlow = fromHashString(hashNotSlow, data);
+    assert.equal(restoredNotSlow.constraints.requiredGauge, "not_slow");
 });
 
 test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {

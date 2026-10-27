@@ -20,6 +20,8 @@ export const DEFAULT_BUG_POLICY: BugPolicy = {
     type: "no_bugs",
 };
 
+export type GaugeOption = "fast" | "slow" | "normal" | "not_slow";
+
 export interface BuildConstraints {
     requiredAbilities?: string[];
     requiredMaxBusterStats?: BusterStat[];
@@ -33,7 +35,7 @@ export interface BuildConstraints {
     requiredBusterAddition?: string;
     requiredBody?: string;
     allowedBodies?: BodyElement[];
-    requiredGauge?: "fast" | "slow" | "normal";
+    requiredGauge?: GaugeOption;
     forbiddenBugs?: string[];
     bugRules?: Record<string, BugTolerance>;
 }
@@ -108,7 +110,7 @@ const SavedProblem = z.object({
         ba: z.string().optional(),
         bd: z.string().optional(),
         ab: z.array(z.enum(BODY_ELEMENTS)).max(5).optional(),
-        g: z.enum(["fast", "slow", "normal"]).optional(),
+        g: z.enum(["fast", "slow", "normal", "not_slow"]).optional(),
         fb: z.array(z.string()).optional(),
         br: z.record(z.string()).optional(),
     }).optional(),

@@ -4,7 +4,7 @@ const { test } = require("node:test");
 const { computeDeckStats } = require("../modcards.ts");
 const { analyzeSolutionBugs, computeBuildStats, isSolutionAcceptable } = require("../effects.ts");
 const { doesBuildSatisfyConstraints } = require("../optimizer.ts");
-const { expandPanelBugRules } = require("../panel-effects.ts");
+const { expandPanelBugRules, getDefaultBugRules, BN6_DEFAULT_FORBIDDEN_BUGS } = require("../panel-effects.ts");
 const { getOptimizerBugOptions } = require("../optimizer-options.ts");
 const { parseGameData } = require("../game-data.ts");
 const { games } = require("../games.ts");
@@ -75,4 +75,28 @@ test("BN6 UI exposes individual terrain controls, and pure NC exposes only crack
     assert.ok(!pure.includes("panelIce"));
     for (const type of ["panelGrass", "panelIce", "panelCrack", "movement"]) assert.ok(cards.includes(type));
     assert.ok(!cards.includes("panel"));
+});
+
+test("BN6 defaults only movement, custom, panelCrack, panelIce, and support to forbidden; others are allowed", () => {
+    const rules = getDefaultBugRules("bn6");
+    const forbidden = BN6_DEFAULT_FORBIDDEN_BUGS;
+    for (const bug of forbidden) {
+        assert.equal(rules[bug], "forbidden", `expected ${bug} to be forbidden`);
+    }
+    const expectedAllowed = [
+        "battleHp", "damageHp", "buster", "customHp",
+        "panelGrass", "status", "emotion", "customDamage",
+        "damageBattleHp", "damageConfusion", "encounter",
+    ];
+    for (const bug of expectedAllowed) {
+        assert.equal(rules[bug], "allowed", `expected ${bug} to be allowed`);
+    }
+    const data = dataFor();
+    const bugOptions = getOptimizerBugOptions(data, true).map(o => o.id);
+    for (const optId of bugOptions) {
+        assert.ok(rules[optId] !== undefined, `expected rule for option ${optId}`);
+    }
+    for (const game of ["bn3", "bn4", "bn5"]) {
+        assert.deepEqual(getDefaultBugRules(game), {});
+    }
 });

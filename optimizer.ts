@@ -244,8 +244,12 @@ export function bodyConstraintsPossible(constraints?: BuildConstraints): boolean
 }
 
 export function matchGauge(cardGauge: string | undefined, req: string): boolean {
-    if (!cardGauge) return false;
-    return cardGauge.toLowerCase() === req.toLowerCase();
+    const effectiveGauge = (cardGauge ?? "normal").toLowerCase();
+    const target = req.toLowerCase();
+    if (target === "not_slow") {
+        return effectiveGauge !== "slow";
+    }
+    return effectiveGauge === target;
 }
 
 /**
@@ -346,8 +350,8 @@ export function orderModCardsForConstraints(
         sorted.sort((aId, bId) => {
             const cardA = getModCard(aId, gameId);
             const cardB = getModCard(bId, gameId);
-            const aMatches = matchGauge(cardA?.gauge, constraints.requiredGauge!);
-            const bMatches = matchGauge(cardB?.gauge, constraints.requiredGauge!);
+            const aMatches = cardA?.gauge !== undefined && matchGauge(cardA.gauge, constraints.requiredGauge!);
+            const bMatches = cardB?.gauge !== undefined && matchGauge(cardB.gauge, constraints.requiredGauge!);
             if (aMatches && !bMatches) return 1;
             if (!aMatches && bMatches) return -1;
             return 0;
@@ -477,8 +481,8 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         if (matchingCards.length > 0) locked.push(matchingCards[0].id);
     }
 
-    // Lock required Gauge speed if specified
-    if (constraints?.requiredGauge && !locked.some(id => {
+    // Lock required Gauge speed if specified (only if baseline 'normal' does not already satisfy it)
+    if (constraints?.requiredGauge && constraints.requiredGauge !== "not_slow" && constraints.requiredGauge !== "normal" && !locked.some(id => {
         const c = getModCard(id, gameId);
         return matchGauge(c?.gauge, constraints.requiredGauge!);
     })) {

@@ -1,4 +1,4 @@
-import { expandPanelBugRules, PANEL_BUG_TYPES, getBugRule } from "./panel-effects";
+import { expandPanelBugRules, PANEL_BUG_TYPES, getBugRule, getDefaultBugRules } from "./panel-effects";
 import isEqual from "lodash-es/isEqual";
 import React, { ChangeEvent } from "react";
 import { createRoot } from "react-dom/client";
@@ -35,6 +35,7 @@ import {
     getBusterMinimums,
     BODY_ELEMENTS,
     BodyElement,
+    GaugeOption,
 } from "./problem";
 import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
@@ -1061,7 +1062,11 @@ function AutoOptimizerPanel({
         problem.constraints?.requiredGauge ?? ""
     );
     const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
-        return expandPanelBugRules(data.gameId, problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>) ?? {});
+        const initial = problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>);
+        if (initial && Object.keys(initial).length > 0) {
+            return expandPanelBugRules(data.gameId, initial);
+        }
+        return getDefaultBugRules(data.gameId);
     });
 
     const cardsEnabled = hasModCards && modCardMode !== "none";
@@ -1079,12 +1084,16 @@ function AutoOptimizerPanel({
         ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
         ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
-        ...(reqGauge ? { requiredGauge: reqGauge as "fast" | "slow" | "normal" } : {}),
+        ...(reqGauge ? { requiredGauge: reqGauge as GaugeOption } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
     }, cardsEnabled);
     const effectiveBugRules = constraints.bugRules ?? {};
     const effectiveMinBusterStats = constraints.minBusterStats ?? {};
-    const numConfiguredBugs = Object.values(effectiveBugRules).filter(v => v !== "forbidden").length;
+    const defaultBugRules = getDefaultBugRules(data.gameId);
+    const numConfiguredBugs = Object.entries(effectiveBugRules).filter(([id, tol]) => {
+        const def = defaultBugRules[id] ?? "forbidden";
+        return tol !== def;
+    }).length;
     const activeConstraintCount =
         (constraints.requiredAbilities?.length ?? 0) + Object.values(effectiveMinBusterStats).filter(value => value > 1).length +
         (minCustom > 0 ? 1 : 0) +
@@ -1112,19 +1121,18 @@ function AutoOptimizerPanel({
     };
 
     const handleSetBugTolerance = (bugId: string, tol: BugTolerance) => {
-        setBugRules(prev => {
-            const next = { ...prev };
-            if (tol === "forbidden" && !(prev.panel && PANEL_BUG_TYPES.includes(bugId as typeof PANEL_BUG_TYPES[number]))) {
-                delete next[bugId];
-            } else {
-                next[bugId] = tol;
-            }
-            return next;
-        });
+        setBugRules(prev => ({
+            ...prev,
+            [bugId]: tol,
+        }));
     };
 
     const handleResetAllBugs = () => {
-        setBugRules({});
+        setBugRules(Object.fromEntries(bugOptions.map(opt => [opt.id, "forbidden"])));
+    };
+
+    const handleResetDefaultBugs = () => {
+        setBugRules(getDefaultBugRules(data.gameId));
     };
 
     const numRequiredBugs = Object.values(effectiveBugRules).filter(v => v === "required").length;
@@ -1599,16 +1607,26 @@ function AutoOptimizerPanel({
                                                     </span>
                                                 )}
                                             </div>
-                                            {Object.keys(effectiveBugRules).length > 0 && (
+                                            <div className="d-flex align-items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-link p-0 text-decoration-none text-muted"
+                                                    style={{ fontSize: "0.72rem" }}
+                                                    onClick={handleResetDefaultBugs}
+                                                    title={t("resetBugRulesDefault", lang)}
+                                                >
+                                                    {t("resetBugRulesDefault", lang)}
+                                                </button>
                                                 <button
                                                     type="button"
                                                     className="btn btn-sm btn-link p-0 text-decoration-none text-muted"
                                                     style={{ fontSize: "0.72rem" }}
                                                     onClick={handleResetAllBugs}
+                                                    title={t("resetAllBugsForbidden", lang)}
                                                 >
                                                     {t("resetAllBugsForbidden", lang)}
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
                                         <div className="text-muted small mb-2" style={{ fontSize: "0.74rem" }}>
                                             {t("bugRulesDesc", lang)}

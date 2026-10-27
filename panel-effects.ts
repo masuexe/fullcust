@@ -25,3 +25,36 @@ export function expandPanelBugRules(gameId: string, rules: Record<string, BugTol
     const { panel, ...rest } = rules;
     return { ...Object.fromEntries(PANEL_BUG_TYPES.map(type => [type, panel])), ...rest };
 }
+
+export const BN6_DEFAULT_FORBIDDEN_BUGS = [
+    "movement",
+    "custom",
+    "panelCrack",
+    "panelIce",
+    "support",
+] as const;
+
+export function getDefaultBugRules(gameId: string): Record<string, BugTolerance> {
+    if (gameId === "bn6") {
+        return {
+            movement: "forbidden",
+            custom: "forbidden",
+            panelCrack: "forbidden",
+            panelIce: "forbidden",
+            support: "forbidden",
+            battleHp: "allowed",
+            damageHp: "allowed",
+            buster: "allowed",
+            customHp: "allowed",
+            panelGrass: "allowed",
+            status: "allowed",
+            emotion: "allowed",
+            customDamage: "allowed",
+            damageBattleHp: "allowed",
+            damageConfusion: "allowed",
+            encounter: "allowed",
+        };
+    }
+    return {};
+}
+
