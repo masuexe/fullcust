@@ -915,6 +915,7 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "emotion",
+        games: ["bn3", "bn5", "bn6"],
         name: { en: "Emotion Window Bug", ja: "ココロバグ", zh: "心灵之窗 BUG" },
         desc: { en: "Emotion window rapidly fluctuates between states in battle", ja: "戦闘中にココロウィンドウの状態が激しく変動", zh: "战斗中心灵之窗的状态持续随机变动" },
     },
@@ -1153,11 +1154,11 @@ export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
     17: "encounter", // Battery
     18: "encounter", // Jungle
     19: "resultZenny", // Collect
-    20: "emotion", // Humor
+    20: "player",  // Humor
     21: "buster",  // BustPack
     22: "player",  // BodyPack
     23: "hpCut",   // HubBatc
-    24: "emotion", // BugStop
+    24: "player",  // BugStop
     25: "player",  // SoulClen
     26: "support", // Rush
     27: "support", // Beat
@@ -1901,18 +1902,6 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "Support program fails to trigger in battle.",
                 ja: "サポートプログラムが発動しなくなります。",
                 zh: "支援程序在战斗中无法正常触发。",
-            },
-        },
-        emotion: {
-            title: {
-                en: "Emotion Window Bug",
-                ja: "ココロバグ",
-                zh: "心灵之窗 BUG",
-            },
-            mechanics: {
-                en: "Emotion window rapidly fluctuates between states in battle.",
-                ja: "ココロウィンドウの状態が激しく変動します。",
-                zh: "战斗中心灵之窗在普通、疲劳、愤怒与完全同步间持续随机变动。",
             },
         },
         hpCut: {

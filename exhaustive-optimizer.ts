@@ -126,7 +126,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
             new Array(grid.height * grid.width).fill(null), grid, "en", modCards);
         const deckStats = computeBuildStats(data.gameId, [], modCards, problem.baseHp ?? 1000);
-        if (!doesBuildSatisfyConstraints(deckStats, emptyAnalysis, cardConstraints)) return;
+        if (!doesBuildSatisfyConstraints(deckStats, emptyAnalysis, cardConstraints, data.gameId)) return;
 
         const requirements = [...problem.requirements];
         const added: number[] = [];

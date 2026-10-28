@@ -107,7 +107,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             if (deck.isOverCapacity || deck.hasSlotConflict) continue;
             const stats = computePlacedBuildStats(data.gameId, data.partMetas, base.problem.requirements,
                 cells, grid, cards, problem.baseHp ?? 1000);
-            if (!doesBuildSatisfyConstraints(stats, emptyAnalysis, cardConstraints)) continue;
+            if (!doesBuildSatisfyConstraints(stats, emptyAnalysis, cardConstraints, data.gameId)) continue;
             candidates.push({ cards, stats, changesSupply: supplySignature(cards) !== signature });
         }
         candidates.sort((a, b) => compareBuildStats(b.stats, a.stats, target));

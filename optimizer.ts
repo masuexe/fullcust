@@ -292,7 +292,8 @@ export function matchBody(cardBody: string | undefined, req: string): boolean {
     return (cardBody ?? "Normal").toLowerCase() === req.toLowerCase();
 }
 
-export function isBodyAllowed(body: string | undefined, constraints?: BuildConstraints): boolean {
+export function isBodyAllowed(body: string | undefined, constraints?: BuildConstraints, gameId?: string): boolean {
+    if (gameId === "bn4") return true;
     return (!constraints?.requiredBody || matchBody(body, constraints.requiredBody)) &&
         (constraints?.allowedBodies === undefined || constraints.allowedBodies.some(allowed => matchBody(body, allowed)));
 }
@@ -917,7 +918,7 @@ export function doesBuildSatisfyConstraints(
     if (!isChargeAdditionAllowed(stats.modChargeAddition, constraints)) return false;
     if (!isBusterAdditionAllowed(stats.modBusterAddition, constraints)) return false;
 
-    if (!isBodyAllowed(stats.modBody, constraints)) return false;
+    if (!isBodyAllowed(stats.modBody, constraints, gameId)) return false;
 
     if (!isGaugeAllowed(stats.modGauge, constraints)) return false;
 

@@ -133,3 +133,20 @@ test("body allowance lists survive shared links alongside legacy scalar body req
     assert.ok(isBodyAllowed("Wood", restored.constraints));
     assert.ok(!isBodyAllowed("Fire", restored.constraints));
 });
+
+test("BN4 ignores body constraints in solver, mode constraints, and build satisfaction", () => {
+    const { getOptimizerModeConstraints } = require("../optimizer-options.ts");
+    const bn4Data = parseGameData(require("../data/bn4.json"), games.find(g => g.id === "bn4"));
+    const rawConstraints = { allowedBodies: ["Fire", "Elec"], requiredBody: "Wood" };
+    const filtered = getOptimizerModeConstraints(bn4Data, rawConstraints, "auto");
+    assert.equal(filtered.allowedBodies, undefined);
+    assert.equal(filtered.requiredBody, undefined);
+
+    assert.equal(isBodyAllowed(undefined, { allowedBodies: ["Fire"] }, "bn4"), true);
+    assert.equal(isBodyAllowed("Normal", { allowedBodies: ["Wood"] }, "bn4"), true);
+
+    const stats = computeBuildStats("bn4", [], [], 1000);
+    const analysis = analyzeSolutionBugs("bn4", [], [], new Array(25).fill(null), { width: 5, height: 5, commandLineRow: 2, hasOob: false }, "en", []);
+    assert.equal(doesBuildSatisfyConstraints(stats, analysis, { allowedBodies: ["Fire"] }, "bn4"), true);
+});
+
