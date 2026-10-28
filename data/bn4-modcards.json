@@ -1793,7 +1793,7 @@
     "mb": 0,
     "part": "part3",
     "name": "First DreamAura",
-    "nameZh": "初始梦幻气场",
+    "nameZh": "初始梦之灵",
     "nameJa": "ファーストドリームオーラ",
     "posRaw": [
       "戦闘開始時にドリームオーラを展開する"
@@ -1802,7 +1802,9 @@
       "ただし、戦闘中にHPが減っていく"
     ],
     "stats": {},
-    "abilities": [],
+    "abilities": [
+      "firstDreamAura"
+    ],
     "disabledAbilities": [],
     "firstBarrier": "DreamAura",
     "repairs": [],

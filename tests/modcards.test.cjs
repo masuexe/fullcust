@@ -231,6 +231,18 @@ test("searchModCards searches abilities bidirectionally (granting vs removing) a
     const fastGauge = searchModCards("快速量表", "all", "zh");
     assert.ok(fastGauge.allCards.length > 0);
     assert.ok(fastGauge.allCards.every(c => c.gauge === "fast"));
+
+    // 7. Search 初始梦之灵 (First DreamAura)
+    const dreamZh = searchModCards("初始梦之灵", "all", "zh", "bn6");
+    assert.ok(dreamZh.matchedAbility);
+    assert.equal(dreamZh.matchedAbility.key, "firstDreamAura");
+    assert.ok(dreamZh.grantingCards.some(c => c.id === "137-C004"));
+
+    const dreamBn5 = searchModCards("初始梦之灵", "all", "zh", "bn5");
+    assert.ok(dreamBn5.grantingCards.some(c => c.id === "136-C001"));
+
+    const dreamBn4 = searchModCards("初始梦之灵", "all", "zh", "bn4");
+    assert.ok(dreamBn4.grantingCards.some(c => c.id === "134-078"));
 });
 
 test("BN5 has all 112 patch card entries (111 unique cards) with complete translations and valid parameters", () => {

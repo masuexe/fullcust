@@ -3545,7 +3545,9 @@
       "megaFolder": 2,
       "gigaFolder": 2
     },
-    "abilities": [],
+    "abilities": [
+      "firstDreamAura"
+    ],
     "disabledAbilities": [],
     "bugs": [],
     "repairs": [],

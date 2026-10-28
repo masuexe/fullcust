@@ -718,6 +718,22 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
     const deckBarrier100 = computeDeckStats(cardsBarrier100, "bn6");
     assert.ok(deckBarrier100.activeAbilities.includes("firstBarrier100"), "Deck must include firstBarrier100");
     assert.ok(cardsBarrier100.includes("137-A005"), "Deck must include Heady (137-A005)");
+
+    // 9. Test First DreamAura / LifeAura (初始梦之灵) in BN4, BN5, BN6
+    for (const [gameId, expectedCardId] of [["bn6", "137-C004"], ["bn5", "136-C001"], ["bn4", "134-078"]]) {
+        const abilities = getCoreAbilityOptions(gameId);
+        assert.ok(abilities.some(o => o.id === "firstDreamAura"), `${gameId} core abilities must include firstDreamAura`);
+
+        const cardsAura = optimizeModCards({
+            gameId,
+            target: "max_hp",
+            policy: { type: "custom" },
+            constraints: { requiredAbilities: ["firstDreamAura"], bugRules: { customDamage: "allowed_any", battleHp: "allowed_any" } },
+        });
+        const deckAura = computeDeckStats(cardsAura, gameId);
+        assert.ok(deckAura.activeAbilities.includes("firstDreamAura"), `${gameId} deck must include firstDreamAura`);
+        assert.ok(cardsAura.includes(expectedCardId), `${gameId} deck must include ${expectedCardId}`);
+    }
 });
 
 test("optimizer finds valid core layouts beyond the old first-50 cutoff", () => {

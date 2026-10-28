@@ -169,7 +169,7 @@ function isCardAcceptableUnderPolicy(
 /**
  * Evaluates the fitness score of a mod card based on the target.
  */
-function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBugs?: string[]): number {
+function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBugs?: string[], requiredAbilities?: string[]): number {
     const hp = (card.stats.hp ?? 0) + (card.stats.hpPercent ? card.stats.hpPercent * 15 : 0);
     const attack = (card.stats.attack ?? 0) + (card.stats.attackMult && card.stats.attackMult > 1 ? 5 : 0);
 
@@ -180,6 +180,13 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
         if (card.abilities.includes("airShoes")) abilityBonus += 30;
         if (card.abilities.includes("underShirt")) abilityBonus += 20;
         if (card.abilities.includes("statusGuard")) abilityBonus += 40;
+        if (requiredAbilities && requiredAbilities.length > 0) {
+            for (const ab of requiredAbilities) {
+                if (card.abilities.includes(ab)) {
+                    abilityBonus += 400;
+                }
+            }
+        }
     }
 
     if (requiredBugs && requiredBugs.length > 0 && card.bugs) {
@@ -649,6 +656,27 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         }
     }
 
+    // Lock required abilities in BN4
+    if (gameId === "bn4" && constraints?.requiredAbilities && constraints.requiredAbilities.length > 0) {
+        const covered = new Set<string>();
+        for (const id of locked) {
+            const card = getModCard(id, gameId);
+            for (const ab of card?.abilities || []) covered.add(ab);
+        }
+        for (const ab of constraints.requiredAbilities) {
+            if (covered.has(ab)) continue;
+            const matchingCards = allCards.filter(
+                c => c.abilities && c.abilities.includes(ab) && isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            );
+            if (matchingCards.length > 0) {
+                matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs, constraints?.requiredAbilities) - evaluateCardScore(a, target, requiredBugs, constraints?.requiredAbilities));
+                const pick = matchingCards[0];
+                locked.push(pick.id);
+                for (const a of pick.abilities || []) covered.add(a);
+            }
+        }
+    }
+
     const lockedSet = new Set(locked);
 
     const candidateCards = allCards.filter(c => {
@@ -667,6 +695,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     });
 
     if (gameId === "bn4") {
+        const requiredAbilities = constraints?.requiredAbilities || [];
         const usedSlots = new Set<string>();
         for (const id of locked) {
             const card = getModCard(id, gameId);
@@ -680,7 +709,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             if (usedSlots.has(slot)) continue;
             const slotCandidates = candidateCards
                 .filter(c => c.slot === slot)
-                .map(c => ({ card: c, score: evaluateCardScore(c, target, requiredBugs) }))
+                .map(c => ({ card: c, score: evaluateCardScore(c, target, requiredBugs, requiredAbilities) }))
                 .filter(item => item.score > 0)
                 .sort((a, b) => b.score - a.score);
 

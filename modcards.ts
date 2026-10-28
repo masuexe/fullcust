@@ -254,7 +254,13 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
                 abilitiesSet.delete("chipRecovery");
             }
         }
-        if (card.firstBarrier !== undefined) firstBarrier = card.firstBarrier;
+        if (card.firstBarrier !== undefined) {
+            firstBarrier = card.firstBarrier;
+            if (firstBarrier === "DreamAura" || firstBarrier === "lifeAura") {
+                abilitiesSet.add("firstDreamAura");
+                disabledSet.delete("firstDreamAura");
+            }
+        }
         if (card.tripleBuster !== undefined) tripleBuster = card.tripleBuster;
 
         // Handle negative disable attributes from cards
@@ -487,6 +493,40 @@ export const ABILITY_SEARCH_DEFS: AbilitySearchDefinition[] = [
         removes: c =>
             (c.disabledAbilities || []).includes("firstBarrier") ||
             (c.negRaw || []).some(n => n.toLowerCase().includes("firstbarrier") || n.includes("ファーストバリア")),
+    },
+    {
+        key: "firstDreamAura",
+        name: { en: "First DreamAura", ja: "ファーストドリームオーラ", zh: "初始梦之灵" },
+        synonyms: [
+            "firstdreamaura",
+            "first dreamaura",
+            "first dream aura",
+            "first lifeaura",
+            "first life aura",
+            "dreamaura",
+            "lifeaura",
+            "初始梦之灵",
+            "梦之灵",
+            "初始梦幻气场",
+            "梦幻气场",
+            "初始梦之光环",
+            "梦之光环",
+            "ファーストドリームオーラ",
+            "ドリームオーラ",
+        ],
+        grants: c =>
+            (c.abilities || []).includes("firstDreamAura") ||
+            c.firstBarrier === "DreamAura" ||
+            c.firstBarrier === "lifeAura" ||
+            (c.posRaw || []).some(
+                p =>
+                    p.toLowerCase().includes("first dream") ||
+                    p.toLowerCase().includes("first lifeaura") ||
+                    p.includes("ドリームオーラ")
+            ),
+        removes: c =>
+            (c.disabledAbilities || []).includes("firstDreamAura") ||
+            (c.negRaw || []).some(n => n.includes("ドリームオーラ")),
     },
     {
         key: "busterAddition",

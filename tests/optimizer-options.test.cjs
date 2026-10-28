@@ -15,7 +15,7 @@ for (const game of ["bn4", "bn5", "bn6"]) {
         const pure = ids(getOptimizerAbilityOptions(data, false));
         const cards = ids(getOptimizerAbilityOptions(data, true));
         assert.ok(pure.includes("firstBarrier"));
-        for (const id of ["firstBarrier100", "firstBarrier200"]) {
+        for (const id of ["firstBarrier100", "firstBarrier200", "firstDreamAura"]) {
             assert.ok(!pure.includes(id));
             assert.ok(cards.includes(id));
         }
