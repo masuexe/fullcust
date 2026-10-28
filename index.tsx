@@ -1187,7 +1187,7 @@ function AutoOptimizerPanel({
     const panelOption = React.useMemo(() => BUG_SPEC_OPTIONS.find(option => option.id === "panel")!, []);
     const bugOptions = React.useMemo(() => {
         const raw = getOptimizerBugOptions(data, cardsEnabled);
-        const hasMovePanel = getMovePanelOptions(data.gameId).length > 0;
+        const hasMovePanel = getMovePanelOptions(data.gameId, cardsEnabled).length > 0;
         if (!hasMovePanel) return raw;
         const withoutPanels = raw.filter(opt => !PANEL_BUG_TYPES.includes(opt.id as any) && opt.id !== "panel");
         const statusIdx = withoutPanels.findIndex(opt => opt.id === "status");
@@ -1817,7 +1817,7 @@ function AutoOptimizerPanel({
 
                                         <div className="d-flex flex-column gap-1">
                                             {bugOptions.map(opt => {
-                                                const isPanelBug = opt.id === "panel" && getMovePanelOptions(data.gameId).length > 0;
+                                                const isPanelBug = opt.id === "panel" && getMovePanelOptions(data.gameId, cardsEnabled).length > 0;
                                                 const inherited = getBugRule(bugRules, opt.id);
                                                 const currentTol: BugTolerance = isPanelBug
                                                     ? panelTolerance
@@ -1883,7 +1883,7 @@ function AutoOptimizerPanel({
                                                                     )}
                                                                 </div>
                                                                 <MultiSelectDropdown
-                                                                    options={getMovePanelOptions(data.gameId)}
+                                                                    options={getMovePanelOptions(data.gameId, cardsEnabled)}
                                                                     selected={allowedMovePanels}
                                                                     onChange={setAllowedMovePanels}
                                                                     lang={lang}

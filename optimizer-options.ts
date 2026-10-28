@@ -1,6 +1,6 @@
 import { expandPanelBugRules } from "./panel-effects";
 import type { Data } from "./game-data";
-import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType } from "./effects";
+import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType, getMovePanelOptions } from "./effects";
 import { BUSTER_STATS, BuildConstraints } from "./problem";
 
 function usesCards(data: Data, enabled: boolean): boolean {
@@ -83,8 +83,11 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     if (data.gameId === "bn6" && bugRules?.panel === "required") bugIds.add("panel");
     const rules = bugRules && Object.fromEntries(Object.entries(expandPanelBugRules(data.gameId, bugRules)).filter(([type]) => bugIds.has(normalizeBugType(type))));
     const forbidden = forbiddenBugs?.filter(type => bugIds.has(normalizeBugType(type)));
+    const ncValidPanels = new Set(getMovePanelOptions(data.gameId, false).map(o => o.id));
+    const ncMovePanels = allowedMovePanels?.filter(p => ncValidPanels.has(p));
     return {
         ...rest,
+        ...(ncMovePanels && ncMovePanels.length > 0 ? { allowedMovePanels: ncMovePanels } : {}),
         ...(required?.length ? { requiredAbilities: required } : {}),
         ...(Object.keys(minima).length ? { minBusterStats: minima } : {}),
         ...(rules && Object.keys(rules).length ? { bugRules: rules } : {}),

@@ -230,20 +230,56 @@ test("toHashString and fromHashString preserve allowedMovePanels in bc.amp", () 
     assert.deepEqual(restored.constraints.allowedMovePanels, ["none", "panelCrack1", "panelGrass"]);
 });
 
-test("getOptimizerModeConstraints strips allowedMovePanels when cardsEnabled is false", () => {
+test("getMovePanelOptions filters out card-only move panels (like grass and ice) when cardsEnabled is false", () => {
+    const { getMovePanelOptions } = require("../effects.ts");
+    // BN6
+    const bn6Cards = getMovePanelOptions("bn6", true).map(o => o.id);
+    const bn6Pure = getMovePanelOptions("bn6", false).map(o => o.id);
+    assert.ok(bn6Cards.includes("panelGrass"));
+    assert.ok(bn6Cards.includes("panelIce"));
+    assert.ok(!bn6Pure.includes("panelGrass"));
+    assert.ok(!bn6Pure.includes("panelIce"));
+    assert.deepEqual(bn6Pure, ["none", "panelCrack1", "panelCrack2", "panelCrack3"]);
+
+    // BN5
+    const bn5Cards = getMovePanelOptions("bn5", true).map(o => o.id);
+    const bn5Pure = getMovePanelOptions("bn5", false).map(o => o.id);
+    assert.ok(bn5Cards.includes("panelGrass"));
+    assert.ok(bn5Cards.includes("panelIce"));
+    assert.ok(bn5Cards.includes("panelHoly"));
+    assert.ok(!bn5Pure.includes("panelGrass"));
+    assert.ok(!bn5Pure.includes("panelIce"));
+    assert.ok(!bn5Pure.includes("panelHoly"));
+    assert.deepEqual(bn5Pure, ["none", "panelCrack1", "panelCrack2", "panelCrack3"]);
+
+    // BN4
+    const bn4Cards = getMovePanelOptions("bn4", true).map(o => o.id);
+    const bn4Pure = getMovePanelOptions("bn4", false).map(o => o.id);
+    assert.ok(bn4Cards.includes("panelHoly"));
+    assert.ok(bn4Cards.includes("panelMetal"));
+    assert.ok(!bn4Pure.includes("panelHoly"));
+    assert.ok(!bn4Pure.includes("panelMetal"));
+    assert.deepEqual(bn4Pure, ["none", "panelCrack", "panelHole", "panelPoison"]);
+
+    // BN3
+    assert.deepEqual(getMovePanelOptions("bn3", true), []);
+    assert.deepEqual(getMovePanelOptions("bn3", false), []);
+});
+
+test("getOptimizerModeConstraints filters card-only move panels when cardsEnabled is false", () => {
     const rawBn6 = require("../data/bn6.json");
     const game = games.find(g => g.id === "bn6");
     const data = parseGameData(rawBn6, game);
     const constraints = {
-        allowedMovePanels: ["none", "panelCrack1"],
+        allowedMovePanels: ["none", "panelGrass", "panelCrack1"],
         minCustom: 8,
     };
 
     const withCards = getOptimizerModeConstraints(data, constraints, true);
-    assert.deepEqual(withCards.allowedMovePanels, ["none", "panelCrack1"]);
+    assert.deepEqual(withCards.allowedMovePanels, ["none", "panelGrass", "panelCrack1"]);
 
     const withoutCards = getOptimizerModeConstraints(data, constraints, false);
-    assert.equal(withoutCards.allowedMovePanels, undefined);
+    assert.deepEqual(withoutCards.allowedMovePanels, ["none", "panelCrack1"]);
     assert.equal(withoutCards.minCustom, 8);
 });
 

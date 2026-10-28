@@ -851,7 +851,34 @@ export const BN4_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
     { id: "panelPoison", name: { en: "Poison Panel (Poison Walk / Panel Bug Lv3)", ja: "毒沼パネル（毒歩行バグ / パネルバグLv3）", zh: "毒沼面板（毒沼步履 / 移动面板 BUG Lv3）" } },
 ];
 
-export function getMovePanelOptions(gameId: string): ConstraintOption[] {
+export const BN6_NC_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelCrack1", name: { en: "Cracked Panel Lv1 (25% Cracking)", ja: "ヒビパネル Lv1（25% 確率）", zh: "裂缝面板 Lv1（25% 碎裂率）" } },
+    { id: "panelCrack2", name: { en: "Cracked Panel Lv2 (37.5% Cracking)", ja: "ヒビパネル Lv2（37.5% 確率）", zh: "裂缝面板 Lv2（37.5% 碎裂率）" } },
+    { id: "panelCrack3", name: { en: "Cracked Panel Lv3 (50% Cracking)", ja: "ヒビパネル Lv3（50% 確率）", zh: "裂缝面板 Lv3（50% 碎裂率）" } },
+];
+
+export const BN5_NC_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelCrack1", name: { en: "Cracked Panel Lv1 (25% Cracking)", ja: "ヒビパネル Lv1（25% 確率）", zh: "裂缝面板 Lv1（25% 碎裂率）" } },
+    { id: "panelCrack2", name: { en: "Cracked Panel Lv2 (50% Cracking)", ja: "ヒビパネル Lv2（50% 確率）", zh: "裂缝面板 Lv2（50% 碎裂率）" } },
+    { id: "panelCrack3", name: { en: "Cracked Panel Lv3 (100% Cracking)", ja: "ヒビパネル Lv3（100% 確率）", zh: "裂缝面板 Lv3（100% 碎裂率）" } },
+];
+
+export const BN4_NC_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelCrack", name: { en: "Cracked Panel (Panel Bug Lv1)", ja: "ヒビパネル（パネルバグLv1）", zh: "裂缝面板（移动面板 BUG Lv1）" } },
+    { id: "panelHole", name: { en: "Hole Panel (Panel Bug Lv2)", ja: "穴パネル（パネルバグLv2）", zh: "空洞面板（移动面板 BUG Lv2）" } },
+    { id: "panelPoison", name: { en: "Poison Panel (Panel Bug Lv3)", ja: "毒沼パネル（毒歩行バグ / パネルバグLv3）", zh: "毒沼面板（移动面板 BUG Lv3）" } },
+];
+
+export function getMovePanelOptions(gameId: string, cardsEnabled: boolean = true): ConstraintOption[] {
+    if (gameId === "bn3") return [];
+    if (!cardsEnabled) {
+        if (gameId === "bn4") return BN4_NC_MOVE_PANEL_OPTIONS;
+        if (gameId === "bn5") return BN5_NC_MOVE_PANEL_OPTIONS;
+        return BN6_NC_MOVE_PANEL_OPTIONS;
+    }
     if (gameId === "bn5") return BN5_MOVE_PANEL_OPTIONS;
     if (gameId === "bn4") return BN4_MOVE_PANEL_OPTIONS;
     return BN6_MOVE_PANEL_OPTIONS;
