@@ -1,4 +1,4 @@
-import { getBugRule } from "./panel-effects";
+import { getBugRule, PANEL_BUG_TYPES } from "./panel-effects";
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCards } from "./modcards";
@@ -36,7 +36,7 @@ export function findFeasibleBuild(
         goals.push({ satisfied, advances: advances ?? ((_before, after) => satisfied(after)) });
     };
     for (const ability of constraints?.requiredAbilities ?? []) addGoal(stats => stats.abilities.includes(ability));
-    for (const type of ["panelGrass", "panelIce"]) {
+    for (const type of PANEL_BUG_TYPES) {
         if ((constraints?.bugRules ?? policy.customRules)?.[type] === "required") addGoal(stats => stats.modPanelEffect === type);
     }
     if (constraints?.allowedMovePanels !== undefined && constraints.allowedMovePanels.length > 0 && !constraints.allowedMovePanels.includes("none")) {
@@ -162,7 +162,7 @@ export function findFeasibleBuild(
     const rules = constraints?.bugRules ?? policy.customRules;
     const requiresBug = Object.values(rules ?? {}).includes("required");
     const restrictsBugs = data.partMetas.some(part => getPartBugTypes(data.gameId, part.id).some(type => {
-        const tolerance = getBugRule(rules, data.gameId === "bn6" && type === "panel" ? "panelCrack" : normalizeBugType(type));
+        const tolerance = getBugRule(rules, (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type));
         return tolerance !== "allowed" && tolerance !== "allowed_any";
     }));
     if (data.gameId === "bn6" && (modCardMode === "auto" || (modCardMode === "keep" && cards.length > 0)) &&

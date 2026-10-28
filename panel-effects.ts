@@ -13,6 +13,15 @@ export const PANEL_BUG_TYPES = [
 
 export const BN6_PANEL_BUG_TYPES = ["panelGrass", "panelIce", "panelCrack"] as const;
 
+export const BN5_PANEL_BUG_TYPES = [
+    "panelGrass",
+    "panelIce",
+    "panelCrack",
+    "panelHoly",
+    "panelSea",
+    "panelHole",
+] as const;
+
 /** Preserve the raw source category; classify card effects for final policy checks. */
 export function getCardBugType(cardId: string, type: string, movePanel?: string): string {
     if (type !== "panel") return type;
@@ -51,9 +60,10 @@ export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefi
 
 /** Old broad defaults become individual controls; retain a broad required rule as an OR. */
 export function expandPanelBugRules(gameId: string, rules: Record<string, BugTolerance>): Record<string, BugTolerance> {
-    if (gameId !== "bn6" || !rules.panel || rules.panel === "required") return rules;
+    if ((gameId !== "bn6" && gameId !== "bn5") || !rules.panel || rules.panel === "required") return rules;
+    const panelTypes = gameId === "bn5" ? BN5_PANEL_BUG_TYPES : BN6_PANEL_BUG_TYPES;
     const { panel, ...rest } = rules;
-    return { ...Object.fromEntries(BN6_PANEL_BUG_TYPES.map(type => [type, panel])), ...rest };
+    return { ...Object.fromEntries(panelTypes.map(type => [type, panel])), ...rest };
 }
 
 export const BN6_DEFAULT_FORBIDDEN_BUGS = [
@@ -61,6 +71,14 @@ export const BN6_DEFAULT_FORBIDDEN_BUGS = [
     "custom",
     "panelCrack",
     "panelIce",
+    "support",
+] as const;
+
+export const BN5_DEFAULT_FORBIDDEN_BUGS = [
+    "movement",
+    "panelCrack",
+    "panelIce",
+    "panelHole",
     "support",
 ] as const;
 
@@ -87,7 +105,20 @@ export function getDefaultBugRules(gameId: string): Record<string, BugTolerance>
     }
     if (gameId === "bn5") {
         return {
+            movement: "forbidden",
+            panelCrack: "forbidden",
+            panelIce: "forbidden",
+            panelHole: "forbidden",
+            support: "forbidden",
+            battleHp: "allowed",
+            buster: "allowed",
+            status: "allowed",
+            emotion: "allowed",
+            customDamage: "allowed",
+            encounter: "allowed",
             resultZenny: "allowed",
+            panelGrass: "allowed",
+            panelHoly: "allowed",
         };
     }
     return {};

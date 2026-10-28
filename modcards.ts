@@ -340,7 +340,7 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         chargeAddition,
         invalidatedBusterAddition,
         invalidatedChargeAddition,
-        movePanel: gameId === "bn6" ? (() => {
+        movePanel: (gameId === "bn6" || gameId === "bn5") ? (() => {
             const final = deckBugs.find(entry => entry.bug.type === "panel");
             return final ? getModCard(final.sourceCardId, gameId)?.movePanel : undefined;
         })() : movePanel,

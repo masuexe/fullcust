@@ -1,4 +1,4 @@
-import { expandPanelBugRules, PANEL_BUG_TYPES, getBugRule, getDefaultBugRules } from "./panel-effects";
+import { expandPanelBugRules, PANEL_BUG_TYPES, BN6_PANEL_BUG_TYPES, BN5_PANEL_BUG_TYPES, getBugRule, getDefaultBugRules } from "./panel-effects";
 import isEqual from "lodash-es/isEqual";
 import React, { ChangeEvent } from "react";
 import { createRoot } from "react-dom/client";
@@ -1223,8 +1223,9 @@ function AutoOptimizerPanel({
     }
     const panelTolerance: BugTolerance = React.useMemo(() => {
         if (bugRules.panel) return bugRules.panel;
-        if (data.gameId === "bn6") {
-            if (bugRules.panelGrass === "allowed" || bugRules.panelCrack === "allowed" || bugRules.panelIce === "allowed") {
+        if (data.gameId === "bn6" || data.gameId === "bn5") {
+            const types = data.gameId === "bn5" ? BN5_PANEL_BUG_TYPES : BN6_PANEL_BUG_TYPES;
+            if (types.some(t => bugRules[t] === "allowed" || bugRules[t] === "allowed_any" || bugRules[t] === "allowed_lv1")) {
                 return "allowed";
             }
         }

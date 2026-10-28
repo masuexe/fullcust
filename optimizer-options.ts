@@ -19,9 +19,10 @@ export function getOptimizerAbilityOptions(data: Data, cardsEnabled: boolean) {
 }
 
 export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
-    const options = BUG_SPEC_OPTIONS.filter(option => (!option.games || option.games.includes(data.gameId)) && !(data.gameId === "bn6" && option.id === "panel"));
+    const isPanelRefined = data.gameId === "bn6" || data.gameId === "bn5";
+    const options = BUG_SPEC_OPTIONS.filter(option => (!option.games || option.games.includes(data.gameId)) && !(isPanelRefined && option.id === "panel"));
     if (usesCards(data, cardsEnabled)) return options;
-    const types = new Set(data.partMetas.flatMap(part => getPartBugTypes(data.gameId, part.id)).map(type => data.gameId === "bn6" && type === "panel" ? "panelCrack" : normalizeBugType(type)));
+    const types = new Set(data.partMetas.flatMap(part => getPartBugTypes(data.gameId, part.id)).map(type => isPanelRefined && type === "panel" ? "panelCrack" : normalizeBugType(type)));
     // Color overflow is an NC source even though it has no single supplier part.
     if (GAME_BUG_DEFINITIONS[data.gameId]?.colorStatus) types.add(normalizeBugType("colorStatus"));
     return options.filter(option => types.has(option.id));
@@ -80,7 +81,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     const minima = Object.fromEntries(BUSTER_STATS.filter(stat => minBusterStats?.[stat] !== undefined)
         .map(stat => [stat, Math.min(5, minBusterStats![stat]!)]));
     const bugIds = new Set(getOptimizerBugOptions(data, false).map(option => option.id));
-    if (data.gameId === "bn6" && bugRules?.panel === "required") bugIds.add("panel");
+    if ((data.gameId === "bn6" || data.gameId === "bn5") && bugRules?.panel === "required") bugIds.add("panel");
     const rules = bugRules && Object.fromEntries(Object.entries(expandPanelBugRules(data.gameId, bugRules)).filter(([type]) => bugIds.has(normalizeBugType(type))));
     const forbidden = forbiddenBugs?.filter(type => bugIds.has(normalizeBugType(type)));
     const ncValidPanels = new Set(getMovePanelOptions(data.gameId, false).map(o => o.id));

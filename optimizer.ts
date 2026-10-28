@@ -871,7 +871,7 @@ export function requirementsUnderPolicy(
     const rules = bugRules ?? policy.customRules;
     return requirements.map(req => {
         const forbidden = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id).some(type => {
-            const norm = data.gameId === "bn6" && type === "panel" ? "panelCrack" : normalizeBugType(type);
+            const norm = (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type);
             if (rules !== undefined || policy.type === "custom") {
                 return getBugRule(rules, norm, type) === "forbidden";
             } else if (forbiddenBugs.length > 0) {

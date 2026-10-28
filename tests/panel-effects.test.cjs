@@ -4,7 +4,7 @@ const { test } = require("node:test");
 const { computeDeckStats } = require("../modcards.ts");
 const { analyzeSolutionBugs, computeBuildStats, isSolutionAcceptable } = require("../effects.ts");
 const { doesBuildSatisfyConstraints } = require("../optimizer.ts");
-const { expandPanelBugRules, getDefaultBugRules, BN6_DEFAULT_FORBIDDEN_BUGS } = require("../panel-effects.ts");
+const { expandPanelBugRules, getDefaultBugRules, BN6_DEFAULT_FORBIDDEN_BUGS, BN5_DEFAULT_FORBIDDEN_BUGS } = require("../panel-effects.ts");
 const { getOptimizerBugOptions } = require("../optimizer-options.ts");
 const { parseGameData } = require("../game-data.ts");
 const { games } = require("../games.ts");
@@ -35,6 +35,8 @@ test("a specific required panel effect is an exception to a broad forbidden pane
     assert.ok(isSolutionAcceptable(analysis(["137-A016"]), { type: "custom" }, [], { panel: "required" }));
     assert.deepEqual(expandPanelBugRules("bn6", { panel: "allowed_any", panelIce: "forbidden" }),
         { panelGrass: "allowed_any", panelIce: "forbidden", panelCrack: "allowed_any" });
+    assert.deepEqual(expandPanelBugRules("bn5", { panel: "allowed_any", panelIce: "forbidden" }),
+        { panelGrass: "allowed_any", panelIce: "forbidden", panelCrack: "allowed_any", panelHoly: "allowed_any", panelSea: "allowed_any", panelHole: "allowed_any" });
 });
 
 test("repairs and later panel writes determine the effective terrain without stale movePanel", () => {
@@ -99,5 +101,19 @@ test("BN6 defaults only movement, custom, panelCrack, panelIce, and support to f
     for (const game of ["bn3", "bn4"]) {
         assert.deepEqual(getDefaultBugRules(game), {});
     }
-    assert.deepEqual(getDefaultBugRules("bn5"), { resultZenny: "allowed" });
+});
+
+test("BN5 defaults movement, panelCrack, panelIce, panelHole, and support to forbidden; allowed bugs include battleHp, buster, status, emotion, customDamage, encounter, resultZenny, panelGrass, panelHoly", () => {
+    const rules = getDefaultBugRules("bn5");
+    const forbidden = BN5_DEFAULT_FORBIDDEN_BUGS;
+    for (const bug of forbidden) {
+        assert.equal(rules[bug], "forbidden", `expected ${bug} to be forbidden`);
+    }
+    const expectedAllowed = [
+        "battleHp", "buster", "status", "emotion", "customDamage",
+        "encounter", "resultZenny", "panelGrass", "panelHoly",
+    ];
+    for (const bug of expectedAllowed) {
+        assert.equal(rules[bug], "allowed", `expected ${bug} to be allowed`);
+    }
 });
