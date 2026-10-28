@@ -967,6 +967,18 @@ export const translations = {
     gaugeSlowTitle: {
         en: "Allow SlowGauge", ja: "ヘビーゲージを許可", zh: "允许缓慢量表",
     },
+    clearAll: {
+        en: "Clear (Any)", ja: "解除（任意）", zh: "清除（设为任意）",
+    },
+    searchOptions: {
+        en: "Search options...", ja: "検索...", zh: "搜索选项...",
+    },
+    selectedCount: {
+        en: "selected", ja: "件選択中", zh: "项已选",
+    },
+    noMatchingOptions: {
+        en: "No matching options", ja: "一致する項目がありません", zh: "无匹配选项",
+    },
     abilityStrippedNotice: {
         en: "Stripped by Mod Card",
         ja: "改造カードにより無効化",

@@ -634,7 +634,7 @@ test("Full Special CS and B+Left move catalog across BN6, BN5, and BN4", () => {
     assert.equal(bn4Cs.length, 31, "BN4 must have all BN4 CS options");
 
     const bn6BLeft = getBLeftOptions("bn6");
-    assert.equal(bn6BLeft.length, 8, "BN6 must have 8 B+Left options (including MachineSword)");
+    assert.equal(bn6BLeft.length, 9, "BN6 must have 9 B+Left options (including none and MachineSword)");
 
     const bn6BButton = getBButtonOptions("bn6");
     assert.equal(bn6BButton.length, 5, "BN6 must have 5 B-Button options (none, Sword, MiniBomb, CrackShot, Meteor1)");

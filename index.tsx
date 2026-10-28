@@ -76,6 +76,7 @@ import {
 } from "./modcards";
 import { BuildLibraryModal } from "./build-library-modal";
 import { SaveExportModal } from "./save-export-modal";
+import { MultiSelectDropdown } from "./multi-select-dropdown";
 import { getSavedBuilds, buildDataToProblem } from "./build-data";
 
 const LangContext = React.createContext<{
@@ -1040,21 +1041,31 @@ function AutoOptimizerPanel({
         () => getBusterMinimums(problem.constraints)
     );
     const [minCustom, setMinCustom] = React.useState(problem.constraints?.minCustom ?? 0);
-    const [reqSpecialMove, setReqSpecialMove] = React.useState<string>(
-        problem.constraints?.requiredSpecialMove ?? ""
-    );
-    const [reqBLeft, setReqBLeft] = React.useState<string>(
-        problem.constraints?.requiredBLeft ?? ""
-    );
-    const [reqBButton, setReqBButton] = React.useState<string>(
-        problem.constraints?.requiredBButton ?? ""
-    );
-    const [reqChargeAddition, setReqChargeAddition] = React.useState<string>(
-        problem.constraints?.requiredChargeAddition ?? ""
-    );
-    const [reqBusterAddition, setReqBusterAddition] = React.useState<string>(
-        problem.constraints?.requiredBusterAddition ?? ""
-    );
+    const [allowedSpecialMoves, setAllowedSpecialMoves] = React.useState<string[]>(() => {
+        if (problem.constraints?.allowedSpecialMoves !== undefined) return problem.constraints.allowedSpecialMoves;
+        if (problem.constraints?.requiredSpecialMove) return [problem.constraints.requiredSpecialMove];
+        return [];
+    });
+    const [allowedBLefts, setAllowedBLefts] = React.useState<string[]>(() => {
+        if (problem.constraints?.allowedBLefts !== undefined) return problem.constraints.allowedBLefts;
+        if (problem.constraints?.requiredBLeft) return [problem.constraints.requiredBLeft];
+        return [];
+    });
+    const [allowedBButtons, setAllowedBButtons] = React.useState<string[]>(() => {
+        if (problem.constraints?.allowedBButtons !== undefined) return problem.constraints.allowedBButtons;
+        if (problem.constraints?.requiredBButton) return [problem.constraints.requiredBButton];
+        return [];
+    });
+    const [allowedChargeAdditions, setAllowedChargeAdditions] = React.useState<string[]>(() => {
+        if (problem.constraints?.allowedChargeAdditions !== undefined) return problem.constraints.allowedChargeAdditions;
+        if (problem.constraints?.requiredChargeAddition) return [problem.constraints.requiredChargeAddition];
+        return [];
+    });
+    const [allowedBusterAdditions, setAllowedBusterAdditions] = React.useState<string[]>(() => {
+        if (problem.constraints?.allowedBusterAdditions !== undefined) return problem.constraints.allowedBusterAdditions;
+        if (problem.constraints?.requiredBusterAddition) return [problem.constraints.requiredBusterAddition];
+        return [];
+    });
     const [allowedBodies, setAllowedBodies] = React.useState<BodyElement[]>(() => BODY_ELEMENTS.filter(body =>
         (problem.constraints?.allowedBodies === undefined || problem.constraints.allowedBodies.includes(body)) &&
         (!problem.constraints?.requiredBody || problem.constraints.requiredBody.toLowerCase() === body.toLowerCase())
@@ -1087,11 +1098,11 @@ function AutoOptimizerPanel({
         ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
         ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
         ...(minCustom > 0 ? { minCustom } : {}),
-        ...(reqSpecialMove ? { requiredSpecialMove: reqSpecialMove } : {}),
-        ...(reqBLeft ? { requiredBLeft: reqBLeft } : {}),
-        ...(reqBButton ? { requiredBButton: reqBButton } : {}),
-        ...(reqChargeAddition ? { requiredChargeAddition: reqChargeAddition } : {}),
-        ...(reqBusterAddition ? { requiredBusterAddition: reqBusterAddition } : {}),
+        ...(allowedSpecialMoves.length > 0 ? { allowedSpecialMoves } : {}),
+        ...(allowedBLefts.length > 0 ? { allowedBLefts } : {}),
+        ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
+        ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
+        ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
         ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
@@ -1106,11 +1117,11 @@ function AutoOptimizerPanel({
     const activeConstraintCount =
         (constraints.requiredAbilities?.length ?? 0) + Object.values(effectiveMinBusterStats).filter(value => value > 1).length +
         (minCustom > 0 ? 1 : 0) +
-        (constraints.requiredSpecialMove ? 1 : 0) +
-        (constraints.requiredBLeft ? 1 : 0) +
-        (constraints.requiredBButton ? 1 : 0) +
-        (constraints.requiredChargeAddition ? 1 : 0) +
-        (constraints.requiredBusterAddition ? 1 : 0) +
+        (constraints.allowedSpecialMoves || constraints.requiredSpecialMove ? 1 : 0) +
+        (constraints.allowedBLefts || constraints.requiredBLeft ? 1 : 0) +
+        (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
+        (constraints.allowedChargeAdditions || constraints.requiredChargeAddition ? 1 : 0) +
+        (constraints.allowedBusterAdditions || constraints.requiredBusterAddition ? 1 : 0) +
         (constraints.allowedBodies ? 1 : 0) +
         (constraints.allowedGauges ? 1 : 0) +
         (constraints.requiredGauge ? 1 : 0) +
@@ -1460,35 +1471,23 @@ function AutoOptimizerPanel({
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqSpecialMoveTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqSpecialMove}
-                                                        onChange={e => setReqSpecialMove(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {getSpecialCsOptions(data.gameId).map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <MultiSelectDropdown
+                                                        options={getSpecialCsOptions(data.gameId)}
+                                                        selected={allowedSpecialMoves}
+                                                        onChange={setAllowedSpecialMoves}
+                                                        lang={lang}
+                                                    />
                                                 </div>
                                                 <div className="col-12 col-md-6">
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqBLeftTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqBLeft}
-                                                        onChange={e => setReqBLeft(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {getBLeftOptions(data.gameId).map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <MultiSelectDropdown
+                                                        options={getBLeftOptions(data.gameId)}
+                                                        selected={allowedBLefts}
+                                                        onChange={setAllowedBLefts}
+                                                        lang={lang}
+                                                    />
                                                 </div>
                                             </div>
 
@@ -1498,18 +1497,12 @@ function AutoOptimizerPanel({
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqBButtonTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqBButton}
-                                                        onChange={e => setReqBButton(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {getBButtonOptions(data.gameId).map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <MultiSelectDropdown
+                                                        options={getBButtonOptions(data.gameId)}
+                                                        selected={allowedBButtons}
+                                                        onChange={setAllowedBButtons}
+                                                        lang={lang}
+                                                    />
                                                 </div>
                                                 <div className="col-12 col-md-6">
                                                     <label className="form-label small fw-semibold mb-1">
@@ -1555,35 +1548,23 @@ function AutoOptimizerPanel({
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqChargeAdditionTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqChargeAddition}
-                                                        onChange={e => setReqChargeAddition(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {CHARGE_ADDITION_OPTIONS.map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <MultiSelectDropdown
+                                                        options={CHARGE_ADDITION_OPTIONS}
+                                                        selected={allowedChargeAdditions}
+                                                        onChange={setAllowedChargeAdditions}
+                                                        lang={lang}
+                                                    />
                                                 </div>
                                                 <div className="col-12 col-md-6">
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqBusterAdditionTitle", lang)}:
                                                     </label>
-                                                    <select
-                                                        className="form-select form-select-sm"
-                                                        value={reqBusterAddition}
-                                                        onChange={e => setReqBusterAddition(e.target.value)}
-                                                    >
-                                                        <option value="">{t("anyOption", lang)}</option>
-                                                        {BUSTER_ADDITION_OPTIONS.map(opt => (
-                                                            <option key={opt.id} value={opt.id}>
-                                                                {opt.name[lang] || opt.name.en}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <MultiSelectDropdown
+                                                        options={BUSTER_ADDITION_OPTIONS}
+                                                        selected={allowedBusterAdditions}
+                                                        onChange={setAllowedBusterAdditions}
+                                                        lang={lang}
+                                                    />
                                                 </div>
                                             </div>
 

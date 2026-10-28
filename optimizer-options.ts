@@ -33,7 +33,9 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
 export function getOptimizerModeConstraints(data: Data, constraints: BuildConstraints, cardsEnabled: boolean): BuildConstraints {
     if (usesCards(data, cardsEnabled)) return constraints;
     const {
-        requiredSpecialMove, requiredBLeft, requiredBButton, requiredChargeAddition, requiredBusterAddition,
+        requiredSpecialMove, allowedSpecialMoves, requiredBLeft, allowedBLefts,
+        requiredBButton, allowedBButtons, requiredChargeAddition, allowedChargeAdditions,
+        requiredBusterAddition, allowedBusterAdditions,
         allowedBodies, requiredBody, requiredGauge, allowedGauges, minChipRecovery,
         requiredAbilities, minBusterStats, bugRules, forbiddenBugs,
         ...rest

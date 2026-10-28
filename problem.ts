@@ -31,10 +31,15 @@ export interface BuildConstraints {
     minCustom?: number;
     minChipRecovery?: ChipRecoveryMinimum;
     requiredSpecialMove?: string;
+    allowedSpecialMoves?: string[];
     requiredBLeft?: string;
+    allowedBLefts?: string[];
     requiredBButton?: string;
+    allowedBButtons?: string[];
     requiredChargeAddition?: string;
+    allowedChargeAdditions?: string[];
     requiredBusterAddition?: string;
+    allowedBusterAdditions?: string[];
     requiredBody?: string;
     allowedBodies?: BodyElement[];
     requiredGauge?: GaugeOption;
@@ -107,10 +112,15 @@ const SavedProblem = z.object({
         cr: z.union([z.literal(10), z.literal(20), z.literal(30), z.literal(40)]).optional(),
         cm: z.number().int().min(5).max(10).optional(),
         cs: z.string().optional(),
+        acs: z.array(z.string()).optional(),
         bl: z.string().optional(),
+        abl: z.array(z.string()).optional(),
         bb: z.string().optional(),
+        abb: z.array(z.string()).optional(),
         ca: z.string().optional(),
+        aca: z.array(z.string()).optional(),
         ba: z.string().optional(),
+        aba: z.array(z.string()).optional(),
         bd: z.string().optional(),
         ab: z.array(z.enum(BODY_ELEMENTS)).max(5).optional(),
         g: z.enum(["fast", "slow", "normal", "not_slow"]).optional(),
@@ -196,10 +206,15 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.cr ? { minChipRecovery: saved.bc.cr } : {}),
         ...(saved.bc.cm !== undefined ? { minCustom: saved.bc.cm } : {}),
         ...(saved.bc.cs ? { requiredSpecialMove: saved.bc.cs } : {}),
+        ...(saved.bc.acs !== undefined ? { allowedSpecialMoves: saved.bc.acs } : {}),
         ...(saved.bc.bl ? { requiredBLeft: saved.bc.bl } : {}),
+        ...(saved.bc.abl !== undefined ? { allowedBLefts: saved.bc.abl } : {}),
         ...(saved.bc.bb ? { requiredBButton: saved.bc.bb } : {}),
+        ...(saved.bc.abb !== undefined ? { allowedBButtons: saved.bc.abb } : {}),
         ...(saved.bc.ca ? { requiredChargeAddition: saved.bc.ca } : {}),
+        ...(saved.bc.aca !== undefined ? { allowedChargeAdditions: saved.bc.aca } : {}),
         ...(saved.bc.ba ? { requiredBusterAddition: saved.bc.ba } : {}),
+        ...(saved.bc.aba !== undefined ? { allowedBusterAdditions: saved.bc.aba } : {}),
         ...(saved.bc.bd ? { requiredBody: saved.bc.bd } : {}),
         ...(saved.bc.ab !== undefined ? { allowedBodies: saved.bc.ab } : {}),
         ...(saved.bc.g ? { requiredGauge: saved.bc.g } : {}),
@@ -255,10 +270,15 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.minChipRecovery ||
             problem.constraints.minCustom !== undefined ||
             problem.constraints.requiredSpecialMove ||
+            problem.constraints.allowedSpecialMoves?.length ||
             problem.constraints.requiredBLeft ||
+            problem.constraints.allowedBLefts?.length ||
             problem.constraints.requiredBButton ||
+            problem.constraints.allowedBButtons?.length ||
             problem.constraints.requiredChargeAddition ||
+            problem.constraints.allowedChargeAdditions?.length ||
             problem.constraints.requiredBusterAddition ||
+            problem.constraints.allowedBusterAdditions?.length ||
             problem.constraints.requiredBody ||
             problem.constraints.allowedBodies !== undefined ||
             problem.constraints.requiredGauge ||
@@ -273,10 +293,15 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.minChipRecovery ? { cr: problem.constraints.minChipRecovery } : {}),
                 ...(problem.constraints.minCustom !== undefined ? { cm: problem.constraints.minCustom } : {}),
                 ...(problem.constraints.requiredSpecialMove ? { cs: problem.constraints.requiredSpecialMove } : {}),
+                ...(problem.constraints.allowedSpecialMoves?.length ? { acs: problem.constraints.allowedSpecialMoves } : {}),
                 ...(problem.constraints.requiredBLeft ? { bl: problem.constraints.requiredBLeft } : {}),
+                ...(problem.constraints.allowedBLefts?.length ? { abl: problem.constraints.allowedBLefts } : {}),
                 ...(problem.constraints.requiredBButton ? { bb: problem.constraints.requiredBButton } : {}),
+                ...(problem.constraints.allowedBButtons?.length ? { abb: problem.constraints.allowedBButtons } : {}),
                 ...(problem.constraints.requiredChargeAddition ? { ca: problem.constraints.requiredChargeAddition } : {}),
+                ...(problem.constraints.allowedChargeAdditions?.length ? { aca: problem.constraints.allowedChargeAdditions } : {}),
                 ...(problem.constraints.requiredBusterAddition ? { ba: problem.constraints.requiredBusterAddition } : {}),
+                ...(problem.constraints.allowedBusterAdditions?.length ? { aba: problem.constraints.allowedBusterAdditions } : {}),
                 ...(problem.constraints.requiredBody ? { bd: problem.constraints.requiredBody } : {}),
                 ...(problem.constraints.allowedBodies !== undefined ? { ab: problem.constraints.allowedBodies } : {}),
                 ...(problem.constraints.requiredGauge ? { g: problem.constraints.requiredGauge } : {}),

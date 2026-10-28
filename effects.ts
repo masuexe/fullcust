@@ -504,58 +504,65 @@ export function tAbility(ability: string, lang: Lang): string {
 export interface ConstraintOption {
     id: string;
     name: { en: string; ja: string; zh: string };
+    category?: { en: string; ja: string; zh: string };
 }
+
+const CAT_SHOOTING = { en: "Shooting", ja: "射撃・銃砲", zh: "射击 / 枪炮类" };
+const CAT_MELEE = { en: "Melee & Sword", ja: "近接・ソード", zh: "近战 / 剑类" };
+const CAT_ELEMENT = { en: "Element & Field", ja: "属性・フィールド", zh: "元素 / 场地类" };
+const CAT_BOMB = { en: "Bombs", ja: "ボム", zh: "炸弹类" };
+const CAT_TACTIC = { en: "Special & Tactics", ja: "特殊・戦術", zh: "特殊 / 战术类" };
 
 export const BN6_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
     { id: "ChargeShot", name: { en: "Standard ChargeShot (No Special CS)", ja: "通常チャージショット（特殊CSなし）", zh: "标准集气射击 (禁用特殊CS)" } },
     // 射击 / 枪炮类
-    { id: "Cannon", name: { en: "CS: Cannon (CanGard)", ja: "CS: キャノン（キャノガード）", zh: "CS: 加农炮 (CanGard / 加农防卫弹)" } },
-    { id: "M-Cannon", name: { en: "CS: M-Cannon (Canodumb)", ja: "CS: Mキャノン（キャノーダム）", zh: "CS: M加农炮 (Canodumb / 加农弹)" } },
-    { id: "Spreader", name: { en: "CS: Spreader (Kettle)", ja: "CS: ショットガン（ヤカーン）", zh: "CS: 散射枪 (Spreader / 沸水壶)" } },
-    { id: "BubbleSpread", name: { en: "CS: BubbleSpread (Puffy)", ja: "CS: バブルスプレッド（プクール）", zh: "CS: 泡沫散射 (BubbleSpread / 河豚尔)" } },
-    { id: "WideShot", name: { en: "CS: WideShot (DiveMan)", ja: "CS: ワイドショット（ダイブマン）", zh: "CS: 广域射击 (WideShot / 潜水人)" } },
-    { id: "CornShot", name: { en: "CS: CornShot (BombCorn)", ja: "CS: コーンショット（ボムコーン）", zh: "CS: 玉米射击 (BombCorn / 炸弹玉米)" } },
-    { id: "MachineGun", name: { en: "CS: MachineGun (Gunner)", ja: "CS: ガンナー（ガンナー）", zh: "CS: 气力机枪 (MachineGun / 枪手)" } },
-    { id: "Vulcan", name: { en: "CS: Vulcan (BowlMan)", ja: "CS: バルカン（ボウルマン）", zh: "CS: 火神炮 (BowlMan / 保龄球人)" } },
-    { id: "CircleGun", name: { en: "CS: CircleGun (SearchMan)", ja: "CS: サークルガン（サーチマン）", zh: "CS: 旋转枪 (CircleGun / 侦察人)" } },
-    { id: "SuperVulcan", name: { en: "CS: SuperVulcan (SoulBattler)", ja: "CS: スーパーバルカン（ソウルバトラー）", zh: "CS: 超级火神炮 (SuperVulcan / 魂斗士改装)" } },
-    { id: "ShootingBuster", name: { en: "CS: Shooting Buster (BassBX / BassCross)", ja: "CS: シューティングバスター（フォルテBX / フォルテクロス）", zh: "CS: 疾风射击 (Shooting Buster / 佛鲁迪BX)" } },
-    { id: "Gun del Sol", name: { en: "CS: Gun del Sol (Django)", ja: "CS: ガン・デル・ソル（ジャンゴ）", zh: "CS: 太阳枪 (Gun del Sol / 强戈)" } },
+    { id: "Cannon", name: { en: "CS: Cannon (CanGard)", ja: "CS: キャノン（キャノガード）", zh: "CS: 加农炮 (CanGard / 加农防卫弹)" }, category: CAT_SHOOTING },
+    { id: "M-Cannon", name: { en: "CS: M-Cannon (Canodumb)", ja: "CS: Mキャノン（キャノーダム）", zh: "CS: M加农炮 (Canodumb / 加农弹)" }, category: CAT_SHOOTING },
+    { id: "Spreader", name: { en: "CS: Spreader (Kettle)", ja: "CS: ショットガン（ヤカーン）", zh: "CS: 散射枪 (Spreader / 沸水壶)" }, category: CAT_SHOOTING },
+    { id: "BubbleSpread", name: { en: "CS: BubbleSpread (Puffy)", ja: "CS: バブルスプレッド（プクール）", zh: "CS: 泡沫散射 (BubbleSpread / 河豚尔)" }, category: CAT_SHOOTING },
+    { id: "WideShot", name: { en: "CS: WideShot (DiveMan)", ja: "CS: ワイドショット（ダイブマン）", zh: "CS: 广域射击 (WideShot / 潜水人)" }, category: CAT_SHOOTING },
+    { id: "CornShot", name: { en: "CS: CornShot (BombCorn)", ja: "CS: コーンショット（ボムコーン）", zh: "CS: 玉米射击 (BombCorn / 炸弹玉米)" }, category: CAT_SHOOTING },
+    { id: "MachineGun", name: { en: "CS: MachineGun (Gunner)", ja: "CS: ガンナー（ガンナー）", zh: "CS: 气力机枪 (MachineGun / 枪手)" }, category: CAT_SHOOTING },
+    { id: "Vulcan", name: { en: "CS: Vulcan (BowlMan)", ja: "CS: バルカン（ボウルマン）", zh: "CS: 火神炮 (BowlMan / 保龄球人)" }, category: CAT_SHOOTING },
+    { id: "CircleGun", name: { en: "CS: CircleGun (SearchMan)", ja: "CS: サークルガン（サーチマン）", zh: "CS: 旋转枪 (CircleGun / 侦察人)" }, category: CAT_SHOOTING },
+    { id: "SuperVulcan", name: { en: "CS: SuperVulcan (SoulBattler)", ja: "CS: スーパーバルカン（ソウルバトラー）", zh: "CS: 超级火神炮 (SuperVulcan / 魂斗士改装)" }, category: CAT_SHOOTING },
+    { id: "ShootingBuster", name: { en: "CS: Shooting Buster (BassBX / BassCross)", ja: "CS: シューティングバスター（フォルテBX / フォルテクロス）", zh: "CS: 疾风射击 (Shooting Buster / 佛鲁迪BX)" }, category: CAT_SHOOTING },
+    { id: "Gun del Sol", name: { en: "CS: Gun del Sol (Django)", ja: "CS: ガン・デル・ソル（ジャンゴ）", zh: "CS: 太阳枪 (Gun del Sol / 强戈)" }, category: CAT_SHOOTING },
     // 近战 / 剑类
-    { id: "LongSword", name: { en: "CS: LongSword (ShadowMan)", ja: "CS: ロングソード（シャドーマン）", zh: "CS: 长剑 (LongSword / 阴影人)" } },
-    { id: "WideSword", name: { en: "CS: WideSword (SlashMan)", ja: "CS: ワイドソード（スラッシュマン）", zh: "CS: 宽剑 (WideSword / 利爪人)" } },
-    { id: "ElecSword", name: { en: "CS: ElecSword (ThunderMan)", ja: "CS: エレキソード（サンダーマン）", zh: "CS: 电力剑 (ElecSword / 闪电人)" } },
-    { id: "BambooSword", name: { en: "CS: BambooSword (KendoMan)", ja: "CS: バンブーソード（ケンドーマン）", zh: "CS: 竹剑 (BambooSword / 剑道人)" } },
-    { id: "StepSword", name: { en: "CS: StepSword (BeastMan)", ja: "CS: フミコミザン（ビーストマン）", zh: "CS: 接近斩 (StepSword / 野兽人)" } },
-    { id: "DarkSword", name: { en: "CS: DarkSword (DarkMega)", ja: "CS: ダークソード（ダークロックマン）", zh: "CS: 黑暗剑 (DarkSword / 黑暗洛克人)" } },
-    { id: "Z Saber", name: { en: "CS: Z Saber (Zero)", ja: "CS: Zセイバー（ロックマンゼロ）", zh: "CS: Z光剑 (Z Saber / 洛克人ZERO)" } },
-    { id: "Lance", name: { en: "CS: BambooLance (Kilby)", ja: "CS: バンブーランス（キルブー）", zh: "CS: 竹枪 (Lance / 杀人竹)" } },
-    { id: "Yo-Yo", name: { en: "CS: Yo-Yo (CutMan)", ja: "CS: ヨーヨー（カットマン）", zh: "CS: 溜溜球 (Yo-Yo / 剪刀人)" } },
-    { id: "DrillArm", name: { en: "CS: DrillArm (GroundMan)", ja: "CS: ドリルアーム（グランドマン）", zh: "CS: 钻椎臂 (DrillArm / 地面人)" } },
+    { id: "LongSword", name: { en: "CS: LongSword (ShadowMan)", ja: "CS: ロングソード（シャドーマン）", zh: "CS: 长剑 (LongSword / 阴影人)" }, category: CAT_MELEE },
+    { id: "WideSword", name: { en: "CS: WideSword (SlashMan)", ja: "CS: ワイドソード（スラッシュマン）", zh: "CS: 宽剑 (WideSword / 利爪人)" }, category: CAT_MELEE },
+    { id: "ElecSword", name: { en: "CS: ElecSword (ThunderMan)", ja: "CS: エレキソード（サンダーマン）", zh: "CS: 电力剑 (ElecSword / 闪电人)" }, category: CAT_MELEE },
+    { id: "BambooSword", name: { en: "CS: BambooSword (KendoMan)", ja: "CS: バンブーソード（ケンドーマン）", zh: "CS: 竹剑 (BambooSword / 剑道人)" }, category: CAT_MELEE },
+    { id: "StepSword", name: { en: "CS: StepSword (BeastMan)", ja: "CS: フミコミザン（ビーストマン）", zh: "CS: 接近斩 (StepSword / 野兽人)" }, category: CAT_MELEE },
+    { id: "DarkSword", name: { en: "CS: DarkSword (DarkMega)", ja: "CS: ダークソード（ダークロックマン）", zh: "CS: 黑暗剑 (DarkSword / 黑暗洛克人)" }, category: CAT_MELEE },
+    { id: "Z Saber", name: { en: "CS: Z Saber (Zero)", ja: "CS: Zセイバー（ロックマンゼロ）", zh: "CS: Z光剑 (Z Saber / 洛克人ZERO)" }, category: CAT_MELEE },
+    { id: "Lance", name: { en: "CS: BambooLance (Kilby)", ja: "CS: バンブーランス（キルブー）", zh: "CS: 竹枪 (Lance / 杀人竹)" }, category: CAT_MELEE },
+    { id: "Yo-Yo", name: { en: "CS: Yo-Yo (CutMan)", ja: "CS: ヨーヨー（カットマン）", zh: "CS: 溜溜球 (Yo-Yo / 剪刀人)" }, category: CAT_MELEE },
+    { id: "DrillArm", name: { en: "CS: DrillArm (GroundMan)", ja: "CS: ドリルアーム（グランドマン）", zh: "CS: 钻椎臂 (DrillArm / 地面人)" }, category: CAT_MELEE },
     // 元素 / 场地 / 风雷类
-    { id: "Tornado", name: { en: "CS: Tornado (AirMan)", ja: "CS: トルネード（エアーマン）", zh: "CS: 龙卷风 (Tornado / 空气人)" } },
-    { id: "WindRacket", name: { en: "CS: WindRacket (TenguMan)", ja: "CS: フウジンラケット（テングマン）", zh: "CS: 风神球拍 (WindRacket / 天狗人)" } },
-    { id: "Thunder", name: { en: "CS: Thunder (CloudMan)", ja: "CS: サンダー（クラウドマン）", zh: "CS: 雷击 (Thunder / 云人)" } },
-    { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" } },
-    { id: "ElecPulse", name: { en: "CS: ElecPulse (PulseBulb)", ja: "CS: エレキパルス（パルフォロン）", zh: "CS: 电力脉冲 (ElecPulse / 帕尔佛龙)" } },
-    { id: "FireBurn", name: { en: "CS: FireBurn (OldStove)", ja: "CS: ファイアバーン（ダルスト）", zh: "CS: 地狱燃烧者 (FireBurn / 达摩斯托)" } },
-    { id: "BlizzardBall", name: { en: "CS: BlizzardBall (BlizMan)", ja: "CS: ブリザード（ブリザードマン）", zh: "CS: 暴风雪 (BlizzardBall / 暴风雪人)" } },
-    { id: "IceCube", name: { en: "CS: IceCube (ColdBear)", ja: "CS: アイスキューブ（コールドベア）", zh: "CS: 冰块 (IceCube / 冷漠熊)" } },
-    { id: "IceSeed", name: { en: "CS: IceSeed (IceMan)", ja: "CS: アイスシード（アイスマン）", zh: "CS: 冰之种子 (IceSeed / 冰冻人)" } },
-    { id: "GrassSeed", name: { en: "CS: GrassSeed (KillPlant)", ja: "CS: クサシード（キルプラント）", zh: "CS: 草地种子 (GrassSeed / 杀手植物)" } },
-    { id: "SandWorm", name: { en: "CS: SandWorm (SnakeArm)", ja: "CS: スナーム（スナーム）", zh: "CS: 沙虫 (SandWorm / 石纳姆)" } },
+    { id: "Tornado", name: { en: "CS: Tornado (AirMan)", ja: "CS: トルネード（エアーマン）", zh: "CS: 龙卷风 (Tornado / 空气人)" }, category: CAT_ELEMENT },
+    { id: "WindRacket", name: { en: "CS: WindRacket (TenguMan)", ja: "CS: フウジンラケット（テングマン）", zh: "CS: 风神球拍 (WindRacket / 天狗人)" }, category: CAT_ELEMENT },
+    { id: "Thunder", name: { en: "CS: Thunder (CloudMan)", ja: "CS: サンダー（クラウドマン）", zh: "CS: 雷击 (Thunder / 云人)" }, category: CAT_ELEMENT },
+    { id: "DollThunder", name: { en: "CS: DollThunder (ScarCrow)", ja: "CS: ドールサンダー（カカジー）", zh: "CS: 稻草雷 (DollThunder / 稻草吉)" }, category: CAT_ELEMENT },
+    { id: "ElecPulse", name: { en: "CS: ElecPulse (PulseBulb)", ja: "CS: エレキパルス（パルフォロン）", zh: "CS: 电力脉冲 (ElecPulse / 帕尔佛龙)" }, category: CAT_ELEMENT },
+    { id: "FireBurn", name: { en: "CS: FireBurn (OldStove)", ja: "CS: ファイアバーン（ダルスト）", zh: "CS: 地狱燃烧者 (FireBurn / 达摩斯托)" }, category: CAT_ELEMENT },
+    { id: "BlizzardBall", name: { en: "CS: BlizzardBall (BlizMan)", ja: "CS: ブリザード（ブリザードマン）", zh: "CS: 暴风雪 (BlizzardBall / 暴风雪人)" }, category: CAT_ELEMENT },
+    { id: "IceCube", name: { en: "CS: IceCube (ColdBear)", ja: "CS: アイスキューブ（コールドベア）", zh: "CS: 冰块 (IceCube / 冷漠熊)" }, category: CAT_ELEMENT },
+    { id: "IceSeed", name: { en: "CS: IceSeed (IceMan)", ja: "CS: アイスシード（アイスマン）", zh: "CS: 冰之种子 (IceSeed / 冰冻人)" }, category: CAT_ELEMENT },
+    { id: "GrassSeed", name: { en: "CS: GrassSeed (KillPlant)", ja: "CS: クサシード（キルプラント）", zh: "CS: 草地种子 (GrassSeed / 杀手植物)" }, category: CAT_ELEMENT },
+    { id: "SandWorm", name: { en: "CS: SandWorm (SnakeArm)", ja: "CS: スナーム（スナーム）", zh: "CS: 沙虫 (SandWorm / 石纳姆)" }, category: CAT_ELEMENT },
     // 炸弹类
-    { id: "BlackBomb", name: { en: "CS: BlackBomb (Volcano)", ja: "CS: ブラックボム（ボルカノ）", zh: "CS: 黑色炸弹 (BlackBomb / 火山炮)" } },
-    { id: "BigBomb", name: { en: "CS: BigBomb (NapalmMan)", ja: "CS: ビッグボム（ナパームマン）", zh: "CS: 大型炸弹 (BigBomb / 烧夷弹人)" } },
-    { id: "TimeBomb", name: { en: "CS: TimeBomb (Handi)", ja: "CS: タイムボム（ハンディース）", zh: "CS: 定时炸弹 (TimeBomb / 手迪斯)" } },
-    { id: "FlashBomb", name: { en: "CS: FlashBomb (BigHat)", ja: "CS: フラッシュボム（グラサン）", zh: "CS: 闪光炸弹 (FlashBomb / 墨镜)" } },
+    { id: "BlackBomb", name: { en: "CS: BlackBomb (Volcano)", ja: "CS: ブラックボム（ボルカノ）", zh: "CS: 黑色炸弹 (BlackBomb / 火山炮)" }, category: CAT_BOMB },
+    { id: "BigBomb", name: { en: "CS: BigBomb (NapalmMan)", ja: "CS: ビッグボム（ナパームマン）", zh: "CS: 大型炸弹 (BigBomb / 烧夷弹人)" }, category: CAT_BOMB },
+    { id: "TimeBomb", name: { en: "CS: TimeBomb (Handi)", ja: "CS: タイムボム（ハンディース）", zh: "CS: 定时炸弹 (TimeBomb / 手迪斯)" }, category: CAT_BOMB },
+    { id: "FlashBomb", name: { en: "CS: FlashBomb (BigHat)", ja: "CS: フラッシュボム（グラサン）", zh: "CS: 闪光炸弹 (FlashBomb / 墨镜)" }, category: CAT_BOMB },
     // 特殊 / 战术类
-    { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" } },
-    { id: "Invisible", name: { en: "CS: Invisible (Shadow / Momogra)", ja: "CS: インビジブル（ダークシャドー / モモグラン）", zh: "CS: 隐身 (Invisible / 暗影 / 鼹地鼠)" } },
-    { id: "PanelGrab", name: { en: "CS: PanelGrab (Slimer)", ja: "CS: エリアスチール（ジェライム）", zh: "CS: 地面窃取 (PanelGrab / 胶莱姆)" } },
-    { id: "GrabBanish", name: { en: "CS: GrabBanish (JudgeMan)", ja: "CS: スチールパニシュ（ジャッジマン）", zh: "CS: 偷窃惩罚 (GrabBanish / 审判人)" } },
-    { id: "Blood Rain", name: { en: "CS: Blood Rain (Count)", ja: "CS: ブラッドレイン（ハクシャク）", zh: "CS: 血雨 (Blood Rain / 伯爵)" } },
-    { id: "HelzRolling", name: { en: "CS: HelzRolling (BassCross Falzar)", ja: "CS: ヘルズローリング（フォルテクロス ファルザー）", zh: "CS: 地狱转轮 (HelzRolling / 佛鲁迪Cross)" } },
+    { id: "V-Doll", name: { en: "CS: V-Doll (DarkMan)", ja: "CS: ブードゥー（ダークマン）", zh: "CS: 替身人偶 (V-Doll / 黑暗人)" }, category: CAT_TACTIC },
+    { id: "Invisible", name: { en: "CS: Invisible (Shadow / Momogra)", ja: "CS: インビジブル（ダークシャドー / モモグラン）", zh: "CS: 隐身 (Invisible / 暗影 / 鼹地鼠)" }, category: CAT_TACTIC },
+    { id: "PanelGrab", name: { en: "CS: PanelGrab (Slimer)", ja: "CS: エリアスチール（ジェライム）", zh: "CS: 地面窃取 (PanelGrab / 胶莱姆)" }, category: CAT_TACTIC },
+    { id: "GrabBanish", name: { en: "CS: GrabBanish (JudgeMan)", ja: "CS: スチールパニシュ（ジャッジマン）", zh: "CS: 偷窃惩罚 (GrabBanish / 审判人)" }, category: CAT_TACTIC },
+    { id: "Blood Rain", name: { en: "CS: Blood Rain (Count)", ja: "CS: ブラッドレイン（ハクシャク）", zh: "CS: 血雨 (Blood Rain / 伯爵)" }, category: CAT_TACTIC },
+    { id: "HelzRolling", name: { en: "CS: HelzRolling (BassCross Falzar)", ja: "CS: ヘルズローリング（フォルテクロス ファルザー）", zh: "CS: 地狱转轮 (HelzRolling / 佛鲁迪Cross)" }, category: CAT_TACTIC },
 ];
 
 export const BN5_SPECIAL_CS_OPTIONS: ConstraintOption[] = [
@@ -636,6 +643,7 @@ export function getSpecialCsOptions(gameId: string): ConstraintOption[] {
 export const SPECIAL_CS_OPTIONS = BN6_SPECIAL_CS_OPTIONS;
 
 export const BN6_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No B+Left Override)", ja: "通常（B+左上書きなし）", zh: "标准状态 (禁用B+左覆盖)" } },
     { id: "AntiDamage", name: { en: "B+Left: AntiDamage (ShadowMan)", ja: "B+左: カワリミ（シャドーマン）", zh: "B+左: 替身魔术 (AntiDamage / 阴影人)" } },
     { id: "Reflect", name: { en: "B+Left: Reflect (JapanMan / Punk)", ja: "B+左: リフレクト（ヤマトマン / パンク）", zh: "B+左: 反射盾 (Reflect / 大和人 / 庞克)" } },
     { id: "Shield", name: { en: "B+Left: Shield (Kettle / Mettaur)", ja: "B+左: シールド（ヤカーン / メットール）", zh: "B+左: 盾 (Shield / 沸水壶 / 钢盔怪)" } },
@@ -647,12 +655,14 @@ export const BN6_BLEFT_OPTIONS: ConstraintOption[] = [
 ];
 
 export const BN5_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No B+Left Override)", ja: "通常（B+左上書きなし）", zh: "标准状态 (禁用B+左覆盖)" } },
     { id: "Shield", name: { en: "B+Left: Shield (WindBox / SharkMan)", ja: "B+左: シールド（ラウンダ / ブルース）", zh: "B+左: 盾 (Shield / 吹风机 / 鲨鱼人)" } },
     { id: "CurseShield", name: { en: "B+Left: CurseShield (Cactikil)", ja: "B+左: カーズシールド（カーズ）", zh: "B+左: 诅咒护盾 (CurseShield / 仙人掌)" } },
     { id: "MetGuard", name: { en: "B+Left: MetGuard (Mettaur)", ja: "B+左: メットガード（メットール）", zh: "B+左: 钢盔防御 (MetGuard / 钢盔怪)" } },
 ];
 
 export const BN4_BLEFT_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No B+Left Override)", ja: "通常（B+左上書きなし）", zh: "标准状态 (禁用B+左覆盖)" } },
     { id: "AirShot", name: { en: "B+Left: AirShot", ja: "B+左: エアシュート", zh: "B+左: 空气枪" } },
     { id: "BugBomb", name: { en: "B+Left: BugBomb", ja: "B+左: バグボム", zh: "B+左: BUG炸弹" } },
     { id: "CrackOut", name: { en: "B+Left: CrackOut", ja: "B+左: クラックアウト", zh: "B+左: 砸裂地面" } },
@@ -760,6 +770,7 @@ export function getCoreAbilityOptions(gameId: string): ConstraintOption[] {
 export const CORE_ABILITY_OPTIONS = BN6_CORE_ABILITY_OPTIONS;
 
 export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No CS Addition)", ja: "通常（CS付加なし）", zh: "标准集气 (禁用CS附加)" } },
     { id: "Paralyze", name: { en: "CS: Paralyze (ToadMan)", ja: "CS: 麻痺（トードマン）", zh: "CS: 麻痹 (Paralyze / 青蛙人)" } },
     { id: "Confusion", name: { en: "CS: Confusion (Punk / Skarab)", ja: "CS: 混乱（パンク / スカラビア）", zh: "CS: 混乱 (Confusion / 庞克 / 骷髅比亚)" } },
     { id: "Freeze", name: { en: "CS: Freeze (ColdMan)", ja: "CS: 凍結（コールドマン）", zh: "CS: 冻结 (Freeze / 寒冷人)" } },
@@ -776,6 +787,7 @@ export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
 ];
 
 export const BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Buster Addition)", ja: "通常（連射付加なし）", zh: "标准连射 (禁用连射附加)" } },
     { id: "1 square knock back", name: { en: "Knockback 1 Square (BomBoy)", ja: "1マスノックバック（ボムボーイ）", zh: "击退 1 格 (1 square knock back / 炸弹小弟)" } },
     { id: "Knock back all the way", name: { en: "Knockback to Edge (AirMan)", ja: "端までノックバック（エアーマン）", zh: "击退到底 (Knock back all / 气力人)" } },
     { id: "Cracked Panel", name: { en: "Cracked Panel (DustMan / Twisty)", ja: "ヒビパネル（ダストマン / ツイスティ）", zh: "裂地面 (Cracked Panel / 尘埃人 / 扭扭虫)" } },
