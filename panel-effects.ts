@@ -22,8 +22,19 @@ export const BN5_PANEL_BUG_TYPES = [
     "panelHole",
 ] as const;
 
+export const BN4_PLAYER_BUG_TYPES = [
+    "playerConfuse",
+    "playerMoveForward",
+    "playerMoveBackward",
+] as const;
+
 /** Preserve the raw source category; classify card effects for final policy checks. */
-export function getCardBugType(cardId: string, type: string, movePanel?: string): string {
+export function getCardBugType(cardId: string, type: string, movePanel?: string, level?: number | null): string {
+    if (cardId.startsWith("134-") && type === "player") {
+        if (level === 1) return "playerConfuse";
+        if (level === 3) return "playerMoveBackward";
+        return "playerMoveForward";
+    }
     if (type !== "panel") return type;
     if (cardId.startsWith("137-")) {
         if (movePanel === "Grass Panel") return "panelGrass";
@@ -50,12 +61,18 @@ export function getCardBugType(cardId: string, type: string, movePanel?: string)
 }
 
 export function bugMatchesRule(actual: string, rule: string): boolean {
-    return actual.toLowerCase() === rule.toLowerCase() ||
-        (rule.toLowerCase() === "panel" && PANEL_BUG_TYPES.some(type => type.toLowerCase() === actual.toLowerCase()));
+    const act = actual.toLowerCase();
+    const rul = rule.toLowerCase();
+    return act === rul ||
+        (rul === "panel" && PANEL_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act));
 }
 
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
-    return rules?.[type] ?? rules?.[originalType] ?? (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ?? "forbidden";
+    return rules?.[type] ?? rules?.[originalType] ??
+        (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
+        (BN4_PLAYER_BUG_TYPES.includes(type as typeof BN4_PLAYER_BUG_TYPES[number]) ? rules?.player : undefined) ??
+        "forbidden";
 }
 
 /** Old broad defaults become individual controls; retain a broad required rule as an OR. */

@@ -162,6 +162,14 @@ export function findFeasibleBuild(
     const rules = constraints?.bugRules ?? policy.customRules;
     const requiresBug = Object.values(rules ?? {}).includes("required");
     const restrictsBugs = data.partMetas.some(part => getPartBugTypes(data.gameId, part.id).some(type => {
+        if (data.gameId === "bn4" && type === "player") {
+            const conf = getBugRule(rules, "playerConfuse");
+            const fwd = getBugRule(rules, "playerMoveForward");
+            const bwd = getBugRule(rules, "playerMoveBackward");
+            return (conf !== "allowed" && conf !== "allowed_any") ||
+                   (fwd !== "allowed" && fwd !== "allowed_any") ||
+                   (bwd !== "allowed" && bwd !== "allowed_any");
+        }
         const tolerance = getBugRule(rules, (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type));
         return tolerance !== "allowed" && tolerance !== "allowed_any";
     }));

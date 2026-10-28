@@ -4,6 +4,7 @@ const { test } = require("node:test");
 const { BUG_SPEC_OPTIONS, GAME_PART_BUG_TYPES, getPartBugTypes, normalizeBugType,
     analyzeSolutionBugs, computeBuildStats, isSolutionAcceptable, getEffectiveInBattleBugs } = require("../effects.ts");
 const { getModCards, getModCard, computeDeckStats, repairsBugType } = require("../modcards.ts");
+const { BN4_PLAYER_BUG_TYPES } = require("../panel-effects.ts");
 const { doesBuildSatisfyConstraints } = require("../optimizer.ts");
 const manifest = require("./fixtures/modcard-bug-audit.json");
 const grid = { width: 5, height: 5, commandLineRow: 2, hasOob: false };
@@ -17,7 +18,13 @@ for (const game of ["bn3", "bn4", "bn5", "bn6"]) {
         assert.equal(new Set(keys).size, keys.length);
         const types = Object.keys(GAME_PART_BUG_TYPES[game]).flatMap(id => getPartBugTypes(game, Number(id)));
         if (game !== "bn3") types.push(...getModCards(game).flatMap(card => card.bugs.map(b => b.type)));
-        for (const type of types) assert.ok(keys.includes(normalizeBugType(type)), `Hidden ${game} bug: ${type}`);
+        for (const type of types) {
+            if (game === "bn4" && type === "player") {
+                for (const pt of BN4_PLAYER_BUG_TYPES) assert.ok(keys.includes(pt), `Hidden ${game} bug: ${pt}`);
+            } else {
+                assert.ok(keys.includes(normalizeBugType(type)), `Hidden ${game} bug: ${type}`);
+            }
+        }
         for (const option of options) for (const lang of ["en", "ja", "zh"]) {
             assert.ok(option.name[lang]);
             assert.ok(option.desc[lang]);
@@ -202,6 +209,10 @@ test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugSto
 
     const bn4Options = BUG_SPEC_OPTIONS.filter(o => !o.games || o.games.includes("bn4"));
     assert.ok(!bn4Options.some(o => o.id === "emotion"));
+    assert.ok(!bn4Options.some(o => o.id === "movement"));
+    for (const pt of BN4_PLAYER_BUG_TYPES) {
+        assert.ok(bn4Options.some(o => o.id === pt));
+    }
     assert.deepEqual(getPartBugTypes("bn4", 20), ["player"]);
     assert.deepEqual(getPartBugTypes("bn4", 24), ["player"]);
 });

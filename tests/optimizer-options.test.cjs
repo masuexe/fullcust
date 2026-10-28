@@ -46,6 +46,17 @@ test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain 
     const bn3 = ids(getOptimizerBugOptions(dataFor("bn3"), false));
     assert.ok(bn3.includes("customHp"));
     assert.ok(bn3.includes("charge"));
+
+    const bn4 = ids(getOptimizerBugOptions(dataFor("bn4"), false));
+    assert.ok(!bn4.includes("movement"));
+    assert.ok(bn4.includes("playerConfuse"));
+    assert.ok(bn4.includes("playerMoveForward"));
+    assert.ok(bn4.includes("playerMoveBackward"));
+    const bn4Cards = ids(getOptimizerBugOptions(dataFor("bn4"), true));
+    assert.ok(!bn4Cards.includes("movement"));
+    assert.ok(bn4Cards.includes("playerConfuse"));
+    assert.ok(bn4Cards.includes("playerMoveForward"));
+    assert.ok(bn4Cards.includes("playerMoveBackward"));
 });
 
 const draft = () => ({

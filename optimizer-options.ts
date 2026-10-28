@@ -22,7 +22,20 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
     const isPanelRefined = data.gameId === "bn6" || data.gameId === "bn5";
     const options = BUG_SPEC_OPTIONS.filter(option => (!option.games || option.games.includes(data.gameId)) && !(isPanelRefined && option.id === "panel"));
     if (usesCards(data, cardsEnabled)) return options;
-    const types = new Set(data.partMetas.flatMap(part => getPartBugTypes(data.gameId, part.id)).map(type => isPanelRefined && type === "panel" ? "panelCrack" : normalizeBugType(type)));
+    const types = new Set<string>();
+    for (const part of data.partMetas) {
+        for (const type of getPartBugTypes(data.gameId, part.id)) {
+            if (isPanelRefined && type === "panel") {
+                types.add("panelCrack");
+            } else if (data.gameId === "bn4" && type === "player") {
+                types.add("playerConfuse");
+                types.add("playerMoveForward");
+                types.add("playerMoveBackward");
+            } else {
+                types.add(normalizeBugType(type));
+            }
+        }
+    }
     // Color overflow is an NC source even though it has no single supplier part.
     if (GAME_BUG_DEFINITIONS[data.gameId]?.colorStatus) types.add(normalizeBugType("colorStatus"));
     return options.filter(option => types.has(option.id));

@@ -896,8 +896,39 @@ export interface BugSpecOption {
 export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     {
         id: "movement",
+        games: ["bn3", "bn5", "bn6"],
         name: { en: "Movement Bug", ja: "移動バグ", zh: "边界移动 BUG" },
         desc: { en: "Warping or forced movement, depending on game and source", ja: "作品・原因により強制移動や端へのワープ", zh: "依作品和来源产生强制移动或边界瞬移" },
+    },
+    {
+        id: "playerConfuse",
+        games: ["bn4"],
+        name: { en: "Battle-Start Confusion", ja: "戦闘開始時混乱", zh: "开局混乱 BUG" },
+        desc: {
+            en: "Starts combat in Confused status for 10 seconds (Player Bug Lv1)",
+            ja: "戦闘開始時に10秒間混乱状態になります（プレイヤーバグLv1）",
+            zh: "战斗开始时短暂陷入混乱状态持续 10 秒（玩家 BUG Lv1）",
+        },
+    },
+    {
+        id: "playerMoveForward",
+        games: ["bn4"],
+        name: { en: "Always Move Forward", ja: "前進バグ", zh: "向前走 BUG" },
+        desc: {
+            en: "MegaMan involuntarily always moves forward during battle (Player Bug Lv2)",
+            ja: "戦闘中、勝手に前進（前移動）し続けます（プレイヤーバグLv2）",
+            zh: "战斗中不受控制地持续向前移动（玩家 BUG Lv2）",
+        },
+    },
+    {
+        id: "playerMoveBackward",
+        games: ["bn4"],
+        name: { en: "Always Move Backward", ja: "後退バグ", zh: "向后走 BUG" },
+        desc: {
+            en: "MegaMan involuntarily always moves backward during battle (Player Bug Lv3)",
+            ja: "戦闘中、勝手に後退（後ろ移動）し続けます（プレイヤーバグLv3）",
+            zh: "战斗中不受控制地持续向后退（玩家 BUG Lv3）",
+        },
     },
     {
         id: "custom",
@@ -1031,7 +1062,11 @@ export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
 
 export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
-    if (t === "involuntarymove" || t === "player" || t === "movement") return "movement";
+    if (t === "playerconfuse" || t === "playerconfusion") return "playerConfuse";
+    if (t === "playermoveforward" || t === "playerforward") return "playerMoveForward";
+    if (t === "playermovebackward" || t === "playerbackward") return "playerMoveBackward";
+    if (t === "involuntarymove" || t === "movement") return "movement";
+    if (t === "player") return "player";
     if (t === "battlehp") return "battleHp";
     if (t === "damagebattlehp" || t === "damagehp") return "damageHp";
     if (t === "customhp") return "customHp";
@@ -1071,6 +1106,9 @@ export type BugType =
     | "movement"
     | "status"
     | "player"
+    | "playerConfuse"
+    | "playerMoveForward"
+    | "playerMoveBackward"
     | "involuntaryMove"
     | "buster"
     | "charge"
@@ -1748,6 +1786,42 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                     ja: "戦闘中、勝手に後退（後ろ移動）し続けます。",
                     zh: "战斗中不受控制地持续向后退（会向后走）。",
                 },
+            },
+        },
+        playerConfuse: {
+            title: {
+                en: "Battle-Start Confusion",
+                ja: "戦闘開始時混乱",
+                zh: "开局混乱 BUG",
+            },
+            mechanics: {
+                en: "Starts battle in Confused status for 10 seconds (Player Bug Lv1).",
+                ja: "戦闘開始時に10秒間混乱状態になります（プレイヤーバグLv1）。",
+                zh: "战斗开始时短暂陷入混乱状态持续 10 秒（玩家 BUG Lv1）。",
+            },
+        },
+        playerMoveForward: {
+            title: {
+                en: "Always Move Forward",
+                ja: "前進バグ",
+                zh: "向前走 BUG",
+            },
+            mechanics: {
+                en: "MegaMan involuntarily always moves forward during battle (Player Bug Lv2).",
+                ja: "戦闘中、勝手に前進（前移動）し続けます（プレイヤーバグLv2）。",
+                zh: "战斗中不受控制地持续向前移动（玩家 BUG Lv2）。",
+            },
+        },
+        playerMoveBackward: {
+            title: {
+                en: "Always Move Backward",
+                ja: "後退バグ",
+                zh: "向后走 BUG",
+            },
+            mechanics: {
+                en: "MegaMan involuntarily always moves backward during battle (Player Bug Lv3).",
+                ja: "戦闘中、勝手に後退（後ろ移動）し続けます（プレイヤーバグLv3）。",
+                zh: "战斗中不受控制地持续向后退（玩家 BUG Lv3）。",
             },
         },
         status: {
@@ -2498,8 +2572,17 @@ export function analyzeSolutionBugs(
             "";
         const titleWithLevel = bugDef?.levels ? `${baseTitle} (Lv${effectiveLevel})` : baseTitle;
 
+        let effectiveBugType = bugType;
+        if (gameId === "bn6" && bugType === "panel") {
+            effectiveBugType = "panelCrack";
+        } else if (gameId === "bn4" && bugType === "player") {
+            if (effectiveLevel === 1) effectiveBugType = "playerConfuse";
+            else if (effectiveLevel === 2) effectiveBugType = "playerMoveForward";
+            else effectiveBugType = "playerMoveBackward";
+        }
+
         activeBugs.push({
-            bugType: (gameId === "bn6" && bugType === "panel" ? "panelCrack" : bugType) as BugType,
+            bugType: effectiveBugType as BugType,
             level: effectiveLevel,
             title: titleWithLevel,
             mechanics: levelMechanics,
@@ -2561,7 +2644,7 @@ export function analyzeSolutionBugs(
                 });
 
                 finalActiveBugs.push({
-                    bugType: getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel) as BugType,
+                    bugType: getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level) as BugType,
                     level: entry.bug.level ?? 1,
                     title: `[${cardDisplayName}] ${entry.bug.name[lang]}`,
                     mechanics: entry.bug.description[lang],

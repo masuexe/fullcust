@@ -138,7 +138,7 @@ function isCardAcceptableUnderPolicy(
     if (activeRules && Object.keys(activeRules).length > 0) {
         if (!card.bugs || card.bugs.length === 0) return true;
         for (const b of card.bugs) {
-            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel));
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level));
             const rule = getBugRule(activeRules, norm, b.type);
             if (rule === "forbidden") return false;
             if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
@@ -149,13 +149,13 @@ function isCardAcceptableUnderPolicy(
     if (!card.bugs || card.bugs.length === 0) return true;
     if (forbiddenBugs && forbiddenBugs.length > 0) {
         if (card.bugs.some(b => {
-            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level)).toLowerCase();
             return forbiddenBugs.some(fb => bugMatchesRule(norm, normalizeBugType(fb)));
         })) {
             return false;
         }
         return card.bugs.every(b => {
-            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level)).toLowerCase();
             return norm === "buster" || norm === "customhp" || norm === "emotion" || isBenignBug(norm, b.level ?? 1);
         });
     }
@@ -184,7 +184,7 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
 
     if (requiredBugs && requiredBugs.length > 0 && card.bugs) {
         for (const b of card.bugs) {
-            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel)).toLowerCase();
+            const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level)).toLowerCase();
             if (requiredBugs.some(rb => normalizeBugType(rb).toLowerCase() === norm)) {
                 abilityBonus += 300;
             }
@@ -873,6 +873,11 @@ export function requirementsUnderPolicy(
         const forbidden = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id).some(type => {
             const norm = (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type);
             if (rules !== undefined || policy.type === "custom") {
+                if (data.gameId === "bn4" && type === "player") {
+                    return getBugRule(rules, "playerConfuse") === "forbidden" &&
+                           getBugRule(rules, "playerMoveForward") === "forbidden" &&
+                           getBugRule(rules, "playerMoveBackward") === "forbidden";
+                }
                 return getBugRule(rules, norm, type) === "forbidden";
             } else if (forbiddenBugs.length > 0) {
                 return forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
