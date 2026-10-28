@@ -19,7 +19,7 @@ Previously, normalization merged `customDamage` into `customHp`, `damageBattleHp
 
 Existing shared links remain readable. BN5 legacy `custom` rules migrate to `customDamage` in both policy and constraints; an explicit new `customDamage` value takes precedence. BN6 `custom` remains chip-slot loss. Other stored keys remain unchanged. New categories are independent and default to forbidden, so allowing menu HP drain no longer implicitly allows Custom Screen entry damage. Entry damage is not automatically treated as benign menu drain. Required rules check the actual distinct effect.
 
-The UI also exposes previously modeled NC categories that had no tolerance row: modified charge shots, encounters, support failure, Zenny-only rewards, slow Custom Gauge, automatic chip use, and the HubBatch HP penalty. Availability is filtered by game. No new combat scoring weights are introduced.
+The UI also exposes previously modeled NC categories that had no tolerance row: modified charge shots, encounters, support failure, Zenny-only rewards, slow Custom Gauge, and automatic chip use. (The HubBatch Max HP halved penalty in BN3 and BN4 is directly computed into build HP stats rather than exposed as a bug tolerance option). Availability is filtered by game. No new combat scoring weights are introduced.
 
 ## Corrected card omissions
 

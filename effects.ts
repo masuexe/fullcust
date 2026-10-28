@@ -425,6 +425,12 @@ export function computeBuildStats(
             }
         }
     }
+    const hasHubBatchCut = (gameId === "bn3" && partIds.includes(49) && !partIds.includes(44)) ||
+                           (gameId === "bn4" && partIds.includes(23) && !partIds.includes(24));
+    if (hasHubBatchCut) {
+        runningHp = Math.floor(runningHp / 2);
+        hpPercent = hpPercent !== 0 ? Math.floor((1 + hpPercent / 100) * 0.5 * 100) - 100 : -50;
+    }
     const finalHp = Math.max(1, runningHp);
 
     const attack = Math.max(1, Math.min(attackLimit, baseAttack));
@@ -1116,12 +1122,6 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         name: { en: "Automatic Chip Use", ja: "チップ自動使用バグ", zh: "芯片自动使用 BUG" },
         desc: { en: "Selected chips are used automatically", ja: "選択したチップが自動で使われる", zh: "选中的芯片会自动使用" },
     },
-    {
-        id: "hpCut",
-        games: ["bn3", "bn4"],
-        name: { en: "Max HP Halved", ja: "最大HP半減", zh: "最大 HP 减半" },
-        desc: { en: "HubBatch-related maximum HP penalty", ja: "サイトバッチによる最大HP低下", zh: "彩斗修正档带来的最大 HP 减半惩罚" },
-    },
 ];
 
 BUG_SPEC_OPTIONS.push(
@@ -1239,7 +1239,6 @@ export type BugType =
     | "chipAutoFire"
     | "resultZenny"
     | "gaugeSlow"
-    | "hpCut"
     | "customScreenMinus"
     | "emotion"
     | "encounter"
@@ -1301,7 +1300,7 @@ export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
     46: "battleHp",       // BlckMind
     47: "chipAutoFire",   // BustrMAX
     48: "poisonWalk",     // GigFldr1
-    49: "hpCut",          // HubBatc
+    49: "involuntaryMove", // HubBatc
     50: "customHp",       // DarkLcns
 };
 
@@ -1328,7 +1327,7 @@ export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
     20: "player",  // Humor
     21: "buster",  // BustPack
     22: "player",  // BodyPack
-    23: "hpCut",   // HubBatc
+    23: "player",   // HubBatc
     24: "player",  // BugStop
     25: "player",  // SoulClen
     26: "support", // Rush
@@ -2111,18 +2110,6 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "支援程序在战斗中无法正常触发。",
             },
         },
-        hpCut: {
-            title: {
-                en: "Max HP Halved",
-                ja: "HP半減",
-                zh: "最大 HP 减半",
-            },
-            mechanics: {
-                en: "HubBatch built-in handicap: Permanently halves MegaMan's maximum HP.",
-                ja: "サイトバッチ固有ペナルティ：最大HPが永続的に半分になります。",
-                zh: "彩斗修正档固有效果：最大生命值永久减半。",
-            },
-        },
         colorStatus: {
             title: {
                 en: "Color Bug",
@@ -2496,18 +2483,6 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "GigaFolder1 program violation: Every panel stepped on permanently turns into a Poison panel.",
                 ja: "ギガフォルダ1違反：移動して通過したパネルがすべて毒沼パネルに変化します。",
                 zh: "受到GIGA文件1违规影响：走过的面板全部变成毒沼。",
-            },
-        },
-        hpCut: {
-            title: {
-                en: "Max HP Halved",
-                ja: "HP半減",
-                zh: "最大 HP 减半",
-            },
-            mechanics: {
-                en: "HubBatch built-in handicap: Permanently halves MegaMan's maximum HP.",
-                ja: "サイトバッチ固有ペナルティ：最大HPが永続的に半分になります。",
-                zh: "彩斗修正档固有效果：最大生命值永久减半。",
             },
         },
     },

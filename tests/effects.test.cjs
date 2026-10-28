@@ -388,3 +388,34 @@ test("BN5 bug level scaling: adjacent same-color parts count distinct neighbors,
     assert.equal(panelBug.title, "地面 BUG (Lv2)");
     assert.equal(panelBug.mechanics, "移动离开面板时有 1/2 (50%) 几率使面板开裂。");
 });
+
+test("BN3 and BN4 HubBatch halves Max HP directly in build stats unless negated by BugStop in BN3", () => {
+    // BN3 HubBatch (part 49) alone: Max HP halved to 500 (-50%)
+    const bn3HubAlone = computeBuildStats("bn3", [49], [], 1000);
+    assert.equal(bn3HubAlone.baseHp, 1000);
+    assert.equal(bn3HubAlone.finalHp, 500);
+    assert.equal(bn3HubAlone.hpPercent, -50);
+    assert.equal(bn3HubAlone.custom, 6);
+    assert.equal(bn3HubAlone.megaFolder, 6);
+    assert(bn3HubAlone.abilities.includes("superArmor"));
+    assert(bn3HubAlone.abilities.includes("shield"));
+
+    // BN3 HubBatch (part 49) + BugStop (part 44): BugStop cancels the HP halving penalty
+    const bn3HubBugStop = computeBuildStats("bn3", [49, 44], [], 1000);
+    assert.equal(bn3HubBugStop.baseHp, 1000);
+    assert.equal(bn3HubBugStop.finalHp, 1000);
+    assert.equal(bn3HubBugStop.hpPercent, 0);
+    assert.equal(bn3HubBugStop.custom, 6);
+    assert(bn3HubBugStop.abilities.includes("superArmor"));
+    assert(bn3HubBugStop.abilities.includes("bugStop"));
+
+    // BN4 HubBatch (part 23): Max HP halved to 500 (-50%)
+    const bn4HubAlone = computeBuildStats("bn4", [23], [], 1000);
+    assert.equal(bn4HubAlone.baseHp, 1000);
+    assert.equal(bn4HubAlone.finalHp, 500);
+    assert.equal(bn4HubAlone.hpPercent, -50);
+    assert.equal(bn4HubAlone.custom, 6);
+    assert.equal(bn4HubAlone.megaFolder, 6);
+    assert(bn4HubAlone.abilities.includes("superArmor"));
+    assert(bn4HubAlone.abilities.includes("shield"));
+});
