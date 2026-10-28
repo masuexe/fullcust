@@ -962,7 +962,7 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "custom",
-        games: ["bn3", "bn6"],
+        games: ["bn6"],
         name: { en: "Custom Screen -1", ja: "カスタム減少", zh: "改装视窗减少 BUG" },
         desc: { en: "Reduces initial chip selection by 1", ja: "カスタム画面の選択枠-1", zh: "选芯片视窗每回合少选 1 枚" },
     },
@@ -1233,7 +1233,7 @@ export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
     47: "chipAutoFire",   // BustrMAX
     48: "poisonWalk",     // GigFldr1
     49: "hpCut",          // HubBatc
-    50: "customScreenMinus", // DarkLcns
+    50: "customHp",       // DarkLcns
 };
 
 export const BN4_PART_BUG_TYPES: Record<number, BugType> = {
@@ -2367,18 +2367,6 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "HubBatch built-in handicap: Permanently halves MegaMan's maximum HP.",
                 ja: "サイトバッチ固有ペナルティ：最大HPが永続的に半分になります。",
                 zh: "彩斗修正档固有效果：最大生命值永久减半。",
-            },
-        },
-        customScreenMinus: {
-            title: {
-                en: "Custom Screen Minus Bug",
-                ja: "カスタム枚数減少バグ",
-                zh: "自定义芯片减少 BUG",
-            },
-            mechanics: {
-                en: "DarkLicense program violation: Reduces initial custom screen chip selection by 1.",
-                ja: "ダークライセンス違反：カスタム画面で最初に選べるチップ枚数が1枚減少します。",
-                zh: "受到黑暗执照违规影响：自定义视窗初始可选芯片数量减少 1 枚。",
             },
         },
     },

@@ -207,6 +207,7 @@ test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugSto
     const bn3Options = BUG_SPEC_OPTIONS.filter(o => !o.games || o.games.includes("bn3"));
     assert.ok(!bn3Options.some(o => o.id === "emotion"));
     assert.ok(!bn3Options.some(o => o.id === "movement"));
+    assert.ok(!bn3Options.some(o => o.id === "custom"));
     for (const pt of BN3_INVOLUNTARY_MOVE_BUG_TYPES) {
         assert.ok(bn3Options.some(o => o.id === pt));
     }
@@ -216,6 +217,7 @@ test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugSto
     const bn4Options = BUG_SPEC_OPTIONS.filter(o => !o.games || o.games.includes("bn4"));
     assert.ok(!bn4Options.some(o => o.id === "emotion"));
     assert.ok(!bn4Options.some(o => o.id === "movement"));
+    assert.ok(!bn4Options.some(o => o.id === "custom"));
     for (const pt of BN4_PLAYER_BUG_TYPES) {
         assert.ok(bn4Options.some(o => o.id === pt));
     }
