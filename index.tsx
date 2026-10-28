@@ -171,6 +171,97 @@ function ConstraintDropdown({
     );
 }
 
+interface StepperOption {
+    value: number;
+    label: string;
+}
+
+function NumericStepper({
+    id,
+    options,
+    value,
+    onChange,
+    ariaLabel,
+    resetTooltip,
+}: {
+    id?: string;
+    options: StepperOption[];
+    value: number;
+    onChange: (value: number) => void;
+    ariaLabel?: string;
+    resetTooltip?: string;
+}) {
+    const currentIndex = options.findIndex((opt) => opt.value === value);
+    const validIndex = currentIndex >= 0 ? currentIndex : 0;
+    const currentOption = options[validIndex] ?? options[0];
+
+    const canDecrement = validIndex > 0;
+    const canIncrement = validIndex < options.length - 1;
+
+    const handleDecrement = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (canDecrement) {
+            onChange(options[validIndex - 1].value);
+        }
+    };
+
+    const handleIncrement = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (canIncrement) {
+            onChange(options[validIndex + 1].value);
+        }
+    };
+
+    const isActive = value > 0;
+
+    return (
+        <div id={id} className="input-group input-group-sm" role="group" aria-label={ariaLabel}>
+            <button
+                type="button"
+                className="btn btn-outline-secondary px-2"
+                disabled={!canDecrement}
+                onClick={handleDecrement}
+                aria-label="Decrease"
+                style={{ minWidth: "28px" }}
+            >
+                −
+            </button>
+            <div
+                className={`form-control form-control-sm text-center px-1 user-select-none d-flex align-items-center justify-content-center ${
+                    isActive ? "fw-bold text-primary bg-primary-subtle border-primary-subtle" : "text-muted"
+                }`}
+                style={{
+                    fontSize: "0.8rem",
+                    lineHeight: "1.2",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    cursor: isActive ? "pointer" : "default",
+                }}
+                title={
+                    currentOption.label +
+                    (isActive && resetTooltip ? ` (${resetTooltip})` : "")
+                }
+                onDoubleClick={() => {
+                    if (isActive) onChange(0);
+                }}
+            >
+                {currentOption.label}
+            </div>
+            <button
+                type="button"
+                className="btn btn-outline-secondary px-2"
+                disabled={!canIncrement}
+                onClick={handleIncrement}
+                aria-label="Increase"
+                style={{ minWidth: "28px" }}
+            >
+                +
+            </button>
+        </div>
+    );
+}
+
 function BuildStatsView({
     data,
     problem,
@@ -1130,6 +1221,26 @@ function AutoOptimizerPanel({
     }, cardsEnabled);
     const effectiveBugRules = constraints.bugRules ?? {};
     const effectiveMinBusterStats = constraints.minBusterStats ?? {};
+    const busterLimits = cardsEnabled ? getBusterStatLimits(data.gameId) : { attack: 5, rapid: 5, charge: 5 };
+    const busterOptions: Record<BusterStat, StepperOption[]> = React.useMemo(() => {
+        const res = {} as Record<BusterStat, StepperOption[]>;
+        for (const stat of BUSTER_STATS) {
+            const max = busterLimits[stat];
+            const opts: StepperOption[] = [
+                { value: 0, label: t("anyOption", lang) },
+            ];
+            for (let v = 1; v <= max; v++) {
+                opts.push({ value: v, label: `≥ ${v}` });
+            }
+            const currentVal = effectiveMinBusterStats[stat] ?? 0;
+            if (currentVal > 0 && !opts.some(o => o.value === currentVal)) {
+                opts.push({ value: currentVal, label: `≥ ${currentVal}` });
+                opts.sort((a, b) => a.value - b.value);
+            }
+            res[stat] = opts;
+        }
+        return res;
+    }, [cardsEnabled, data.gameId, lang, busterLimits.attack, busterLimits.rapid, busterLimits.charge, effectiveMinBusterStats.attack, effectiveMinBusterStats.rapid, effectiveMinBusterStats.charge]);
     const defaultBugRules = getDefaultBugRules(data.gameId);
     const numConfiguredBugs = Object.entries(effectiveBugRules).filter(([id, tol]) => {
         const def = defaultBugRules[id] ?? "forbidden";
@@ -1405,15 +1516,17 @@ function AutoOptimizerPanel({
                                     </div>
 
                                     <div className="mb-3">
-                                        <label htmlFor="optimizer-custom-min" className="form-label small fw-semibold mb-1">
+                                        <div className="form-label small fw-semibold mb-1">
                                             {t("minCustomTitle", lang)}
-                                        </label>
-                                        <select id="optimizer-custom-min" className="form-select form-select-sm"
-                                            value={minCustom} onChange={event => setMinCustom(Number(event.target.value))}>
-                                            {customOptions.map(option => (
-                                                <option key={option.value} value={option.value}>{option.label}</option>
-                                            ))}
-                                        </select>
+                                        </div>
+                                        <NumericStepper
+                                            id="optimizer-custom-min"
+                                            options={customOptions}
+                                            value={minCustom}
+                                            onChange={setMinCustom}
+                                            ariaLabel={t("minCustomTitle", lang)}
+                                            resetTooltip={lang === "zh" ? "双击重置为不限" : lang === "ja" ? "ダブルクリックでリセット" : "Double-click to reset"}
+                                        />
                                         <div className="small text-muted mt-1">{t("minCustomDesc", lang)}</div>
                                     </div>
 
@@ -1421,24 +1534,25 @@ function AutoOptimizerPanel({
                                         <div className="form-label small fw-semibold mb-1">{t("minBusterStatsTitle", lang)}</div>
                                         <div className="row g-2">
                                             {BUSTER_STATS.map(stat => (
-                                                <label key={stat} className="col-4 small">
-                                                    <span className="d-block mb-1">{t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}</span>
-                                                    <select className="form-select form-select-sm" value={effectiveMinBusterStats[stat] ?? 0}
-                                                        onChange={event => {
-                                                            const value = Number(event.target.value);
+                                                <div key={stat} className="col-4 small">
+                                                    <span className="d-block mb-1 text-truncate">
+                                                        {t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}
+                                                    </span>
+                                                    <NumericStepper
+                                                        options={busterOptions[stat]}
+                                                        value={effectiveMinBusterStats[stat] ?? 0}
+                                                        onChange={value => {
                                                             setMinBusterStats(prev => {
                                                                 const next = { ...prev };
                                                                 if (value === 0) delete next[stat];
                                                                 else next[stat] = value;
                                                                 return next;
                                                             });
-                                                        }}>
-                                                        <option value={0}>{t("anyOption", lang)}</option>
-                                                        {Array.from({ length: cardsEnabled ? getBusterStatLimits(data.gameId)[stat] : 5 }, (_, index) => index + 1).map(value => (
-                                                            <option key={value} value={value}>≥ {value}</option>
-                                                        ))}
-                                                    </select>
-                                                </label>
+                                                        }}
+                                                        ariaLabel={t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}
+                                                        resetTooltip={lang === "zh" ? "双击重置为不限" : lang === "ja" ? "ダブルクリックでリセット" : "Double-click to reset"}
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                         <div className="small text-muted mt-1">{t("minBusterStatsDesc", lang)}</div>
