@@ -926,6 +926,16 @@ export const translations = {
         ja: "バスター付加効果",
         zh: "洛克炮附加效果",
     },
+    reqMovePanelTitle: {
+        en: "Move Panel Effect",
+        ja: "移動時パネル効果",
+        zh: "移动变地效果",
+    },
+    reqMovePanelDesc: {
+        en: "Select allowed move panel effects and crack levels. Unchecked effects are rejected.",
+        ja: "移動時に発生する足元のパネル変化効果・ヒビ割れ確率を選択します。未選択の効果は除外されます。",
+        zh: "选择允许的走地效果与地面碎裂等级。未勾选的效果将被排除。",
+    },
     reqBodyTitle: {
         en: "Body Element",
         ja: "ボディ属性",

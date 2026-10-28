@@ -65,7 +65,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
     const validInitial = initial && !initialDeck?.isOverCapacity && !initialDeck?.hasSlotConflict &&
         !colorCompatibility(data, initial.problem).error &&
         isSolutionAcceptable(initial.analysis, policy, forbidden, constraints?.bugRules) &&
-        doesBuildSatisfyConstraints(initial.stats, initial.analysis, constraints);
+        doesBuildSatisfyConstraints(initial.stats, initial.analysis, constraints, data.gameId);
     const progress: SearchProgress = { checkedBuilds: 0, best: validInitial ? initial : null };
     if (progress.best) onProgress?.({ ...progress });
     let bestCells = progress.best ? occupiedBuildCells(data, progress.best) : Infinity;
@@ -122,7 +122,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         // NC cannot change card-only properties. Ability and bug constraints are
         // deliberately excluded here because added NC parts can still satisfy them.
         const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined,
-            bugRules: undefined, forbiddenBugs: undefined };
+            bugRules: undefined, forbiddenBugs: undefined, allowedMovePanels: undefined };
         const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
             new Array(grid.height * grid.width).fill(null), grid, "en", modCards);
         const deckStats = computeBuildStats(data.gameId, [], modCards, problem.baseHp ?? 1000);
@@ -157,7 +157,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, "en", modCards);
                     if (!isSolutionAcceptable(analysis, policy, forbidden, constraints?.bugRules) ||
-                        !doesBuildSatisfyConstraints(placedStats, analysis, constraints)) continue;
+                        !doesBuildSatisfyConstraints(placedStats, analysis, constraints, data.gameId)) continue;
                     const comparison = progress.best ? compareBuildStats(placedStats, progress.best.stats, target) : 1;
                     if (comparison >= 0) {
                         const candidate = removeRedundantAbilityParts(options, {

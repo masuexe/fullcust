@@ -50,7 +50,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
     const ids = modCardMode === "auto" && data.gameId !== "bn3" ? getModCards(data.gameId).map(card => card.id) : [];
     const minimums = getBusterMinimums(constraints);
     const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined,
-        bugRules: undefined, forbiddenBugs: undefined };
+        bugRules: undefined, forbiddenBugs: undefined, allowedMovePanels: undefined };
     const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
         new Array(grid.height * grid.width).fill(null), grid, "en");
     const accept = (candidate: OptimizeResult) => {
@@ -58,7 +58,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         const deck = computeDeckStats(result.problem.modCards ?? [], data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict || colorCompatibility(data, result.problem).error ||
             !isSolutionAcceptable(result.analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
-            !doesBuildSatisfyConstraints(result.stats, result.analysis, constraints)) return;
+            !doesBuildSatisfyConstraints(result.stats, result.analysis, constraints, data.gameId)) return;
         const comparison = compareBuildStats(result.stats, best.stats, target);
         const cells = occupiedBuildCells(data, result);
         if (comparison < 0 || (comparison === 0 &&
@@ -140,7 +140,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
                 placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
             const reduced: OptimizeResult = { ...base, problem: { ...base.problem, requirements }, solution, stats, analysis };
             const valid = isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) &&
-                doesBuildSatisfyConstraints(stats, analysis, constraints);
+                doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId);
             const deadline = Date.now() + 30;
             const removedReq = base.problem.requirements[index];
             const removingBugStop = getPartEffect(data.gameId, data.partMetas[removedReq.partIndex].id)?.abilities?.includes("bugStop");

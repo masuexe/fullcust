@@ -64,6 +64,7 @@ import {
     getSpecialCsOptions,
     getBLeftOptions,
     getBButtonOptions,
+    getMovePanelOptions,
     FORBIDDEN_BUG_OPTIONS,
 } from "./effects";
 import {
@@ -1157,6 +1158,7 @@ function AutoOptimizerPanel({
         if (problem.constraints?.requiredBusterAddition) return [problem.constraints.requiredBusterAddition];
         return [];
     });
+    const [allowedMovePanels, setAllowedMovePanels] = React.useState<string[]>(() => problem.constraints?.allowedMovePanels ?? []);
     const [allowedBodies, setAllowedBodies] = React.useState<BodyElement[]>(() => BODY_ELEMENTS.filter(body =>
         (problem.constraints?.allowedBodies === undefined || problem.constraints.allowedBodies.includes(body)) &&
         (!problem.constraints?.requiredBody || problem.constraints.requiredBody.toLowerCase() === body.toLowerCase())
@@ -1215,6 +1217,7 @@ function AutoOptimizerPanel({
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
         ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
         ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
+        ...(allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length ? { allowedBodies } : {}),
         ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
@@ -1254,6 +1257,7 @@ function AutoOptimizerPanel({
         (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
         (constraints.allowedChargeAdditions || constraints.requiredChargeAddition ? 1 : 0) +
         (constraints.allowedBusterAdditions || constraints.requiredBusterAddition ? 1 : 0) +
+        (constraints.allowedMovePanels ? 1 : 0) +
         (constraints.allowedBodies ? 1 : 0) +
         (constraints.allowedGauges ? 1 : 0) +
         (constraints.requiredGauge ? 1 : 0) +
@@ -1702,7 +1706,20 @@ function AutoOptimizerPanel({
                                                 </div>
                                             </div>
 
-
+                                            {/* Row 4: Move Panel Effect */}
+                                            <div className="row g-2 mb-2">
+                                                <div className="col-12 col-md-6">
+                                                    <label className="form-label small fw-semibold mb-1">
+                                                        {t("reqMovePanelTitle", lang)}:
+                                                    </label>
+                                                    <MultiSelectDropdown
+                                                        options={getMovePanelOptions(data.gameId)}
+                                                        selected={allowedMovePanels}
+                                                        onChange={setAllowedMovePanels}
+                                                        lang={lang}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
 

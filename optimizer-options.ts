@@ -67,6 +67,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
         requiredBButton, allowedBButtons, requiredChargeAddition, allowedChargeAdditions,
         requiredBusterAddition, allowedBusterAdditions,
         allowedBodies, requiredBody, requiredGauge, allowedGauges, minChipRecovery,
+        allowedMovePanels,
         requiredAbilities, minBusterStats, bugRules, forbiddenBugs,
         ...rest
     } = constraints;

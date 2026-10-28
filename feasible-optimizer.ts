@@ -4,7 +4,7 @@ import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildS
 import { computeDeckStats, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
-import { cardSpecConstraintsPossible, busterMinimumsPossible, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
+import { cardSpecConstraintsPossible, busterMinimumsPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
 
 interface Goal {
     satisfied: (stats: BuildStats) => boolean;
@@ -39,6 +39,9 @@ export function findFeasibleBuild(
     for (const type of ["panelGrass", "panelIce"]) {
         if ((constraints?.bugRules ?? policy.customRules)?.[type] === "required") addGoal(stats => stats.modPanelEffect === type);
     }
+    if (constraints?.allowedMovePanels !== undefined && constraints.allowedMovePanels.length > 0 && !constraints.allowedMovePanels.includes("none")) {
+        addGoal(stats => stats.modPanelEffect !== undefined && constraints.allowedMovePanels!.some(allowed => matchMovePanel(stats.modPanelEffect!, allowed)));
+    }
     const minimums = getBusterMinimums(constraints);
     for (const stat of BUSTER_STATS.filter(stat => minimums[stat] !== undefined)) {
         addGoal(stats => stats[stat] >= minimums[stat]!, (before, after) => after[stat] > before[stat]);
@@ -49,7 +52,9 @@ export function findFeasibleBuild(
     const { requiredAbilities: _abilities, requiredMaxBusterStats: _buster,
         minBusterStats: _minimums,
         minCustom: _minCustom,
-        bugRules: _rules, forbiddenBugs: _forbidden, ...cardConstraints } = constraints ?? {};
+        bugRules: _rules, forbiddenBugs: _forbidden,
+        allowedMovePanels: _panels,
+        ...cardConstraints } = constraints ?? {};
     for (const [key, value] of Object.entries(cardConstraints)) {
         if (value !== undefined) addGoal(stats => doesBuildSatisfyConstraints(stats, emptyAnalysis, { [key]: value }));
     }
@@ -94,7 +99,7 @@ export function findFeasibleBuild(
                 const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, state.requirements,
                     placeAll(data.parts, state.requirements, solution, grid), grid, "en", state.cards);
                 if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
-                    !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
+                    !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) continue;
                 return removeRedundantAbilityParts(options, {
                     problem: { ...problem, requirements: state.requirements, modCards: state.cards, constraints, bugPolicy: policy },
                     solution, stats, analysis, addedPartIndices: state.added,

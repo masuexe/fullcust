@@ -1,13 +1,43 @@
 import type { BugTolerance } from "./problem";
 
-export const PANEL_BUG_TYPES = ["panelGrass", "panelIce", "panelCrack"] as const;
+export const PANEL_BUG_TYPES = [
+    "panelGrass",
+    "panelIce",
+    "panelCrack",
+    "panelHoly",
+    "panelSea",
+    "panelHole",
+    "panelMetal",
+    "panelPoison",
+] as const;
 
-/** Preserve the raw source category; classify BN6 card effects for final policy checks. */
+export const BN6_PANEL_BUG_TYPES = ["panelGrass", "panelIce", "panelCrack"] as const;
+
+/** Preserve the raw source category; classify card effects for final policy checks. */
 export function getCardBugType(cardId: string, type: string, movePanel?: string): string {
-    if (!cardId.startsWith("137-") || type !== "panel") return type;
-    if (movePanel === "Grass Panel") return "panelGrass";
-    if (movePanel === "Ice Panel") return "panelIce";
-    return "panelCrack";
+    if (type !== "panel") return type;
+    if (cardId.startsWith("137-")) {
+        if (movePanel === "Grass Panel") return "panelGrass";
+        if (movePanel === "Ice Panel") return "panelIce";
+        return "panelCrack";
+    }
+    if (cardId.startsWith("136-")) {
+        if (cardId === "136-A017" || movePanel === "Holy Panel") return "panelHoly";
+        if (cardId === "136-A029") return "panelSea";
+        if (cardId === "136-B007") return "panelGrass";
+        if (cardId === "136-B019" || cardId === "136-B025") return "panelIce";
+        if (cardId === "136-B012" || cardId === "136-B016" || cardId === "136-B039") return "panelHole";
+        return "panelCrack";
+    }
+    if (cardId.startsWith("134-")) {
+        if (cardId === "134-091" || cardId === "134-095") return "panelPoison";
+        if (movePanel === "Metal Panel") return "panelMetal";
+        if (movePanel === "Cracked Panel") return "panelCrack";
+        if (movePanel === "Hole Panel") return "panelHole";
+        if (movePanel === "Holy Panel") return "panelHoly";
+        return "panelCrack";
+    }
+    return type;
 }
 
 export function bugMatchesRule(actual: string, rule: string): boolean {
@@ -23,7 +53,7 @@ export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefi
 export function expandPanelBugRules(gameId: string, rules: Record<string, BugTolerance>): Record<string, BugTolerance> {
     if (gameId !== "bn6" || !rules.panel || rules.panel === "required") return rules;
     const { panel, ...rest } = rules;
-    return { ...Object.fromEntries(PANEL_BUG_TYPES.map(type => [type, panel])), ...rest };
+    return { ...Object.fromEntries(BN6_PANEL_BUG_TYPES.map(type => [type, panel])), ...rest };
 }
 
 export const BN6_DEFAULT_FORBIDDEN_BUGS = [

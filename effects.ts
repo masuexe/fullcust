@@ -353,7 +353,18 @@ export function computeBuildStats(
     if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
         const deck = computeDeckStats(modCardIds, gameId);
         const panel = deck.activeBugs.find(entry => entry.bug.type === "panel");
-        if (gameId === "bn6" && panel) modPanelEffect = getCardBugType(panel.sourceCardId, "panel", deck.movePanel);
+        if ((gameId === "bn6" || gameId === "bn5") && panel) {
+            modPanelEffect = getCardBugType(panel.sourceCardId, "panel", deck.movePanel);
+        } else if (gameId === "bn4") {
+            if (panel) {
+                modPanelEffect = getCardBugType(panel.sourceCardId, "panel", deck.movePanel);
+            } else if (deck.movePanel) {
+                if (deck.movePanel === "Metal Panel") modPanelEffect = "panelMetal";
+                else if (deck.movePanel === "Cracked Panel") modPanelEffect = "panelCrack";
+                else if (deck.movePanel === "Hole Panel") modPanelEffect = "panelHole";
+                else if (deck.movePanel === "Holy Panel") modPanelEffect = "panelHoly";
+            }
+        }
         if (gameId === "bn6" || (gameId === "bn5" && deck.stats.attackMult > 1)) attackLimit = 10;
         modMbUsed = deck.totalMb;
         modCardCount = modCardIds.length;
@@ -810,6 +821,44 @@ export const GAUGE_OPTIONS: ConstraintOption[] = [
     { id: "slow", name: { en: "SlowGauge", ja: "ヘビーゲージ", zh: "缓慢量表 (SlowGauge)" } },
 ];
 
+export const BN6_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelGrass", name: { en: "Grass Panel (Spidy / Kilby)", ja: "クサムラパネル（スパイディ / キルビィ）", zh: "草地面板（Spidy / Kilby）" } },
+    { id: "panelIce", name: { en: "Ice Panel (ColdBear / ColdMan)", ja: "こおりパネル（コールドベア / コールドマン）", zh: "冰雪面板（ColdBear / ColdMan）" } },
+    { id: "panelCrack1", name: { en: "Cracked Panel Lv1 (25% Cracking)", ja: "ヒビパネル Lv1（25% 確率）", zh: "裂缝面板 Lv1（25% 碎裂率）" } },
+    { id: "panelCrack2", name: { en: "Cracked Panel Lv2 (37.5% Cracking)", ja: "ヒビパネル Lv2（37.5% 確率）", zh: "裂缝面板 Lv2（37.5% 碎裂率）" } },
+    { id: "panelCrack3", name: { en: "Cracked Panel Lv3 (50% Cracking)", ja: "ヒビパネル Lv3（50% 確率）", zh: "裂缝面板 Lv3（50% 碎裂率）" } },
+];
+
+export const BN5_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelHoly", name: { en: "Holy Panel (Lark)", ja: "ホーリーパネル（ラーク）", zh: "神圣面板（Lark）" } },
+    { id: "panelSea", name: { en: "Sea Panel (ElecMan)", ja: "水パネル（エレキマン）", zh: "水流面板（ElecMan）" } },
+    { id: "panelGrass", name: { en: "Grass Panel (KillPlant)", ja: "クサムラパネル（キルプラント）", zh: "草地面板（KillPlant）" } },
+    { id: "panelIce", name: { en: "Ice Panel (Coripen / Curling)", ja: "こおりパネル（コーリペン / カーリング）", zh: "冰雪面板（Coripen / Curling）" } },
+    { id: "panelHole", name: { en: "Hole Panel (Fan / MagmaDragon / DesertMan)", ja: "穴パネル（ファン / マグマドラゴン / デザートマン）", zh: "空洞面板（Fan / MagmaDragon / DesertMan）" } },
+    { id: "panelCrack1", name: { en: "Cracked Panel Lv1 (25% Cracking)", ja: "ヒビパネル Lv1（25% 確率）", zh: "裂缝面板 Lv1（25% 碎裂率）" } },
+    { id: "panelCrack2", name: { en: "Cracked Panel Lv2 (50% Cracking)", ja: "ヒビパネル Lv2（50% 確率）", zh: "裂缝面板 Lv2（50% 碎裂率）" } },
+    { id: "panelCrack3", name: { en: "Cracked Panel Lv3 (100% Cracking)", ja: "ヒビパネル Lv3（100% 確率）", zh: "裂缝面板 Lv3（100% 碎裂率）" } },
+];
+
+export const BN4_MOVE_PANEL_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Move Panel Effect)", ja: "通常（移動効果なし）", zh: "标准（无移动变地效果）" } },
+    { id: "panelHoly", name: { en: "Holy Panel (Holy Panel Walk)", ja: "ホーリーパネル（ホーリーパネル歩行）", zh: "神圣面板（神圣步履）" } },
+    { id: "panelMetal", name: { en: "Metal Panel (Metal Panel Walk)", ja: "メタルパネル（メタルパネル歩行）", zh: "金属面板（金属步履）" } },
+    { id: "panelCrack", name: { en: "Cracked Panel (Cracked Walk / Panel Bug Lv1)", ja: "ヒビパネル（ヒビパネル歩行 / パネルバグLv1）", zh: "裂缝面板（裂缝步履 / 移动面板 BUG Lv1）" } },
+    { id: "panelHole", name: { en: "Hole Panel (Hole Walk / Panel Bug Lv2)", ja: "穴パネル（穴パネル歩行 / パネルバグLv2）", zh: "空洞面板（地穴步履 / 移动面板 BUG Lv2）" } },
+    { id: "panelPoison", name: { en: "Poison Panel (Poison Walk / Panel Bug Lv3)", ja: "毒沼パネル（毒歩行バグ / パネルバグLv3）", zh: "毒沼面板（毒沼步履 / 移动面板 BUG Lv3）" } },
+];
+
+export function getMovePanelOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_MOVE_PANEL_OPTIONS;
+    if (gameId === "bn4") return BN4_MOVE_PANEL_OPTIONS;
+    return BN6_MOVE_PANEL_OPTIONS;
+}
+
+export const MOVE_PANEL_OPTIONS = BN6_MOVE_PANEL_OPTIONS;
+
 export interface BugSpecOption {
     id: string;
     games?: string[];
@@ -932,12 +981,22 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
 ];
 
 BUG_SPEC_OPTIONS.push(
-    { id: "panelGrass", games: ["bn6"], name: { en: "Move: Grass", ja: "移動：クサムラ", zh: "移动草地" },
+    { id: "panelGrass", games: ["bn6", "bn5"], name: { en: "Move: Grass", ja: "移動：クサムラ", zh: "移动草地" },
         desc: { en: "Moving off a panel can turn it into grass", ja: "移動後のパネルがクサムラに変化", zh: "移动后，离开的面板有概率变成草地" } },
-    { id: "panelIce", games: ["bn6"], name: { en: "Move: Ice", ja: "移動：アイス", zh: "移动冰块" },
+    { id: "panelIce", games: ["bn6", "bn5"], name: { en: "Move: Ice", ja: "移動：アイス", zh: "移动冰块" },
         desc: { en: "Moving off a panel can turn it into ice", ja: "移動後のパネルがアイスに変化", zh: "移动后，离开的面板有概率变成冰块" } },
-    { id: "panelCrack", games: ["bn6"], name: { en: "Move: Crack", ja: "移動：ヒビ", zh: "移动碎裂" },
+    { id: "panelCrack", games: ["bn6", "bn5", "bn4"], name: { en: "Move: Crack", ja: "移動：ヒビ", zh: "移动碎裂" },
         desc: { en: "Moving off a panel can crack or break it", ja: "移動後にパネルがひび割れ・消失", zh: "移动后，离开的面板有概率碎裂或形成地穴；与瞬移 BUG 独立" } },
+    { id: "panelHoly", games: ["bn5", "bn4"], name: { en: "Move: Holy", ja: "移動：ホーリー", zh: "移动神圣" },
+        desc: { en: "Moving off a panel can turn it into Holy panel", ja: "移動後のパネルがホーリーに変化", zh: "移动后，离开的面板有概率变成神圣面板" } },
+    { id: "panelSea", games: ["bn5"], name: { en: "Move: Sea", ja: "移動：水", zh: "移动水流" },
+        desc: { en: "Moving off a panel can turn it into sea panel", ja: "移動後のパネルが水パネルに変化", zh: "移动后，离开的面板有概率变成水流面板" } },
+    { id: "panelHole", games: ["bn5", "bn4"], name: { en: "Move: Hole", ja: "移動：穴", zh: "移动破洞" },
+        desc: { en: "Moving off a panel can turn it into a hole", ja: "移動後のパネルにあなが開く", zh: "移动后，离开的面板有概率变成地穴" } },
+    { id: "panelMetal", games: ["bn4"], name: { en: "Move: Metal", ja: "移動：メタル", zh: "移动金属" },
+        desc: { en: "Moving off a panel can turn it into metal panel", ja: "移動後のパネルがメタルに変化", zh: "移动后，离开的面板有概率变成金属面板" } },
+    { id: "panelPoison", games: ["bn4"], name: { en: "Move: Poison", ja: "移動：毒沼", zh: "移动毒沼" },
+        desc: { en: "Moving off a panel can turn it into poison panel", ja: "移動後のパネルが毒沼に変化", zh: "移动后，离开的面板有概率变成毒沼面板" } },
 );
 
 export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
@@ -955,6 +1014,11 @@ export function normalizeBugType(type: string): string {
     if (t === "panelgrass") return "panelGrass";
     if (t === "panelice") return "panelIce";
     if (t === "panelcrack") return "panelCrack";
+    if (t === "panelholy") return "panelHoly";
+    if (t === "panelsea") return "panelSea";
+    if (t === "panelhole") return "panelHole";
+    if (t === "panelmetal") return "panelMetal";
+    if (t === "panelpoison") return "panelPoison";
     if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
     if (t === "customscreenminus" || t === "custom") return "custom";
     if (t === "buster") return "buster";
@@ -993,6 +1057,11 @@ export type BugType =
     | "panelGrass"
     | "panelIce"
     | "panelCrack"
+    | "panelHoly"
+    | "panelSea"
+    | "panelHole"
+    | "panelMetal"
+    | "panelPoison"
     | "panelSet"
     | "poisonWalk"
     | "chipAutoFire"

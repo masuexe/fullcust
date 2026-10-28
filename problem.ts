@@ -40,6 +40,7 @@ export interface BuildConstraints {
     allowedChargeAdditions?: string[];
     requiredBusterAddition?: string;
     allowedBusterAdditions?: string[];
+    allowedMovePanels?: string[];
     requiredBody?: string;
     allowedBodies?: BodyElement[];
     requiredGauge?: GaugeOption;
@@ -121,6 +122,7 @@ const SavedProblem = z.object({
         aca: z.array(z.string()).optional(),
         ba: z.string().optional(),
         aba: z.array(z.string()).optional(),
+        amp: z.array(z.string()).optional(),
         bd: z.string().optional(),
         ab: z.array(z.enum(BODY_ELEMENTS)).max(5).optional(),
         g: z.enum(["fast", "slow", "normal", "not_slow"]).optional(),
@@ -215,6 +217,7 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.aca !== undefined ? { allowedChargeAdditions: saved.bc.aca } : {}),
         ...(saved.bc.ba ? { requiredBusterAddition: saved.bc.ba } : {}),
         ...(saved.bc.aba !== undefined ? { allowedBusterAdditions: saved.bc.aba } : {}),
+        ...(saved.bc.amp !== undefined ? { allowedMovePanels: saved.bc.amp } : {}),
         ...(saved.bc.bd ? { requiredBody: saved.bc.bd } : {}),
         ...(saved.bc.ab !== undefined ? { allowedBodies: saved.bc.ab } : {}),
         ...(saved.bc.g ? { requiredGauge: saved.bc.g } : {}),
@@ -279,6 +282,7 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.allowedChargeAdditions?.length ||
             problem.constraints.requiredBusterAddition ||
             problem.constraints.allowedBusterAdditions?.length ||
+            problem.constraints.allowedMovePanels?.length ||
             problem.constraints.requiredBody ||
             problem.constraints.allowedBodies !== undefined ||
             problem.constraints.requiredGauge ||
@@ -302,6 +306,7 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.allowedChargeAdditions?.length ? { aca: problem.constraints.allowedChargeAdditions } : {}),
                 ...(problem.constraints.requiredBusterAddition ? { ba: problem.constraints.requiredBusterAddition } : {}),
                 ...(problem.constraints.allowedBusterAdditions?.length ? { aba: problem.constraints.allowedBusterAdditions } : {}),
+                ...(problem.constraints.allowedMovePanels?.length ? { amp: problem.constraints.allowedMovePanels } : {}),
                 ...(problem.constraints.requiredBody ? { bd: problem.constraints.requiredBody } : {}),
                 ...(problem.constraints.allowedBodies !== undefined ? { ab: problem.constraints.allowedBodies } : {}),
                 ...(problem.constraints.requiredGauge ? { g: problem.constraints.requiredGauge } : {}),

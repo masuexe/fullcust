@@ -92,7 +92,7 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
             placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
         if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
-            !doesBuildSatisfyConstraints(stats, analysis, constraints)) continue;
+            !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) continue;
         cleaned = { ...cleaned, problem: { ...cleaned.problem, requirements }, solution, stats, analysis,
             addedPartIndices: requirements.slice(problem.requirements.length).map(req => req.partIndex) };
         removed.add(candidate.index);
@@ -329,6 +329,74 @@ export function gaugeConstraintsPossible(constraints?: BuildConstraints): boolea
     return GAUGE_VALUES.some(gauge => isGaugeAllowed(gauge, constraints));
 }
 
+export function getEffectiveMovePanel(
+    analysis: SolutionBugAnalysis,
+    gameId?: string,
+    stats?: BuildStats
+): string {
+    const effectiveBugs = getEffectiveInBattleBugs(analysis);
+    const cardPanelBug = effectiveBugs.find(b => b.isModCardBug && (
+        b.bugType === "panelGrass" ||
+        b.bugType === "panelIce" ||
+        b.bugType === "panelHoly" ||
+        b.bugType === "panelSea" ||
+        b.bugType === "panelHole" ||
+        b.bugType === "panelMetal" ||
+        b.bugType === "panelPoison" ||
+        b.bugType === "panelCrack" ||
+        b.bugType === "panel"
+    ));
+
+    const panelBug = cardPanelBug ?? effectiveBugs.find(b =>
+        b.bugType === "panel" ||
+        b.bugType === "panelCrack" ||
+        b.bugType === "panelGrass" ||
+        b.bugType === "panelIce" ||
+        b.bugType === "panelHoly" ||
+        b.bugType === "panelSea" ||
+        b.bugType === "panelHole" ||
+        b.bugType === "panelMetal" ||
+        b.bugType === "panelPoison"
+    );
+
+    if (panelBug) {
+        if (panelBug.bugType === "panelCrack" || panelBug.bugType === "panel") {
+            if (gameId === "bn4") {
+                if (panelBug.level === 2) return "panelHole";
+                if (panelBug.level === 3) return "panelPoison";
+                return "panelCrack";
+            }
+            const lvl = Math.min(3, Math.max(1, panelBug.level ?? 1));
+            return `panelCrack${lvl}`;
+        }
+        return panelBug.bugType;
+    }
+
+    if (stats?.modPanelEffect) {
+        return stats.modPanelEffect;
+    }
+
+    return "none";
+}
+
+export function matchMovePanel(actual: string, target: string): boolean {
+    if (actual.toLowerCase() === target.toLowerCase()) return true;
+    if (target.toLowerCase() === "panelcrack" && actual.toLowerCase().startsWith("panelcrack")) return true;
+    return false;
+}
+
+export function isMovePanelAllowed(
+    analysis: SolutionBugAnalysis,
+    allowedMovePanels?: string[],
+    gameId?: string,
+    stats?: BuildStats
+): boolean {
+    if (allowedMovePanels === undefined) return true;
+    if (allowedMovePanels.length === 0) return false;
+    const actual = getEffectiveMovePanel(analysis, gameId, stats);
+    return allowedMovePanels.some(target => matchMovePanel(actual, target));
+}
+
 export function cardSpecConstraintsPossible(constraints?: BuildConstraints): boolean {
     if (!constraints) return true;
     if (!bodyConstraintsPossible(constraints)) return false;
@@ -338,6 +406,7 @@ export function cardSpecConstraintsPossible(constraints?: BuildConstraints): boo
     if (constraints.allowedBButtons !== undefined && constraints.allowedBButtons.length === 0) return false;
     if (constraints.allowedChargeAdditions !== undefined && constraints.allowedChargeAdditions.length === 0) return false;
     if (constraints.allowedBusterAdditions !== undefined && constraints.allowedBusterAdditions.length === 0) return false;
+    if (constraints.allowedMovePanels !== undefined && constraints.allowedMovePanels.length === 0) return false;
     if (constraints.requiredSpecialMove && !isSpecialMoveAllowed(constraints.requiredSpecialMove, constraints)) return false;
     if (constraints.requiredBLeft && !isBLeftAllowed(constraints.requiredBLeft, constraints)) return false;
     if (constraints.requiredBButton && !isBButtonAllowed(constraints.requiredBButton, constraints)) return false;
@@ -436,6 +505,18 @@ export function orderModCardsForConstraints(
             const cardB = getModCard(bId, gameId);
             const aMatches = cardA?.gauge !== undefined && isGaugeAllowed(cardA.gauge, constraints);
             const bMatches = cardB?.gauge !== undefined && isGaugeAllowed(cardB.gauge, constraints);
+            return Number(aMatches) - Number(bMatches);
+        });
+    }
+
+    if (constraints.allowedMovePanels !== undefined) {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aType = cardA?.movePanel ? getCardBugType(aId, "panel", cardA.movePanel) : cardA?.bugs?.find(b => b.type === "panel") ? getCardBugType(aId, "panel") : "none";
+            const bType = cardB?.movePanel ? getCardBugType(bId, "panel", cardB.movePanel) : cardB?.bugs?.find(b => b.type === "panel") ? getCardBugType(bId, "panel") : "none";
+            const aMatches = constraints.allowedMovePanels!.some(allowed => matchMovePanel(aType, allowed));
+            const bMatches = constraints.allowedMovePanels!.some(allowed => matchMovePanel(bType, allowed));
             return Number(aMatches) - Number(bMatches);
         });
     }
@@ -812,7 +893,8 @@ export function requirementsUnderPolicy(
 export function doesBuildSatisfyConstraints(
     stats: BuildStats,
     analysis: SolutionBugAnalysis,
-    constraints?: BuildConstraints
+    constraints?: BuildConstraints,
+    gameId?: string
 ): boolean {
     if (!constraints) return true;
 
@@ -838,6 +920,8 @@ export function doesBuildSatisfyConstraints(
     if (!isBodyAllowed(stats.modBody, constraints)) return false;
 
     if (!isGaugeAllowed(stats.modGauge, constraints)) return false;
+
+    if (!isMovePanelAllowed(analysis, constraints.allowedMovePanels, gameId, stats)) return false;
 
     const effectiveBugs = getEffectiveInBattleBugs(analysis);
 
@@ -1150,7 +1234,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
 
         if (!node) continue;
 
-        if (!doesBuildSatisfyConstraints(node.stats, node.analysis, constraints)) {
+        if (!doesBuildSatisfyConstraints(node.stats, node.analysis, constraints, data.gameId)) {
             continue;
         }
 

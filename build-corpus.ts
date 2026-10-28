@@ -62,7 +62,7 @@ export function findKnownBuild(options: OptimizeOptions & {
             const stats = computePlacedBuildStats(data.gameId, data.partMetas, requirements, occupied, grid, seed.cards, problem.baseHp ?? 1000);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occupied, grid, "en", seed.cards);
             if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
-                !doesBuildSatisfyConstraints(stats, analysis, constraints)) return null;
+                !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) return null;
             return removeRedundantAbilityParts(options, { problem: candidateProblem, solution, stats, analysis,
                 addedPartIndices: requirements.slice(problem.requirements.length).map(r => r.partIndex),
                 addedCardIds: modCardMode === "auto" ? [...seed.cards] : [] });
