@@ -293,7 +293,7 @@ export function matchBody(cardBody: string | undefined, req: string): boolean {
 }
 
 export function isBodyAllowed(body: string | undefined, constraints?: BuildConstraints, gameId?: string): boolean {
-    if (gameId === "bn4") return true;
+    if (gameId === "bn3" || gameId === "bn4") return true;
     return (!constraints?.requiredBody || matchBody(body, constraints.requiredBody)) &&
         (constraints?.allowedBodies === undefined || constraints.allowedBodies.some(allowed => matchBody(body, allowed)));
 }

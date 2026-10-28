@@ -61,9 +61,9 @@ export function getOptimizerCustomValues(gameId: string, cardsEnabled: boolean):
  * hidden settings must not enter the worker request, result, or constraint counts.
  */
 export function getOptimizerModeConstraints(data: Data, constraints: BuildConstraints, cardsEnabled: boolean): BuildConstraints {
-    if (data.gameId === "bn4") {
-        const { allowedBodies: _ab, requiredBody: _rb, ...restBn4 } = constraints;
-        constraints = restBn4;
+    if (data.gameId === "bn3" || data.gameId === "bn4") {
+        const { allowedBodies: _ab, requiredBody: _rb, ...restNoBody } = constraints;
+        constraints = restNoBody;
     }
     if (usesCards(data, cardsEnabled)) return constraints;
     const {

@@ -194,7 +194,12 @@ test("explicit new BN5 entry-damage rules take precedence over legacy aliases", 
     assert.deepEqual(restored.constraints.bugRules, { customDamage: "forbidden" });
 });
 
-test("BN4 does not include emotion bug in catalog and maps Humor and BugStop to player bug", () => {
+test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugStop appropriately", () => {
+    const bn3Options = BUG_SPEC_OPTIONS.filter(o => !o.games || o.games.includes("bn3"));
+    assert.ok(!bn3Options.some(o => o.id === "emotion"));
+    assert.deepEqual(getPartBugTypes("bn3", 44), ["involuntaryMove"]);
+    assert.deepEqual(getPartBugTypes("bn3", 45), ["involuntaryMove"]);
+
     const bn4Options = BUG_SPEC_OPTIONS.filter(o => !o.games || o.games.includes("bn4"));
     assert.ok(!bn4Options.some(o => o.id === "emotion"));
     assert.deepEqual(getPartBugTypes("bn4", 20), ["player"]);

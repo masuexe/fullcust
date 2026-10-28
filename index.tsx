@@ -1218,7 +1218,7 @@ function AutoOptimizerPanel({
         ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
         ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
         ...(allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
-        ...(allowedBodies.length !== BODY_ELEMENTS.length && data.gameId !== "bn4" ? { allowedBodies } : {}),
+        ...(allowedBodies.length !== BODY_ELEMENTS.length && data.gameId !== "bn3" && data.gameId !== "bn4" ? { allowedBodies } : {}),
         ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
     }, cardsEnabled);
@@ -1258,7 +1258,7 @@ function AutoOptimizerPanel({
         (constraints.allowedChargeAdditions || constraints.requiredChargeAddition ? 1 : 0) +
         (constraints.allowedBusterAdditions || constraints.requiredBusterAddition ? 1 : 0) +
         (constraints.allowedMovePanels ? 1 : 0) +
-        (constraints.allowedBodies && data.gameId !== "bn4" ? 1 : 0) +
+        (constraints.allowedBodies && data.gameId !== "bn3" && data.gameId !== "bn4" ? 1 : 0) +
         (constraints.allowedGauges ? 1 : 0) +
         (constraints.requiredGauge ? 1 : 0) +
         numConfiguredBugs;
@@ -1723,7 +1723,7 @@ function AutoOptimizerPanel({
                                         </div>
                                     )}
 
-                                    {cardsEnabled && data.gameId !== "bn4" && (
+                                    {cardsEnabled && data.gameId !== "bn3" && data.gameId !== "bn4" && (
                                         <div className="row g-2 mb-2">
                                             <div className="col-12">
                                                 <div className="form-label small fw-semibold mb-1">{t("allowedBodiesTitle", lang)}</div>
