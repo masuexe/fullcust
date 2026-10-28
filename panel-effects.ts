@@ -28,6 +28,12 @@ export const BN4_PLAYER_BUG_TYPES = [
     "playerMoveBackward",
 ] as const;
 
+export const BN3_INVOLUNTARY_MOVE_BUG_TYPES = [
+    "involuntaryMoveUp",
+    "involuntaryMoveDown",
+    "involuntaryMoveConfuse",
+] as const;
+
 /** Preserve the raw source category; classify card effects for final policy checks. */
 export function getCardBugType(cardId: string, type: string, movePanel?: string, level?: number | null): string {
     if (cardId.startsWith("134-") && type === "player") {
@@ -65,13 +71,15 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
     const rul = rule.toLowerCase();
     return act === rul ||
         (rul === "panel" && PANEL_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
-        (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act));
+        (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        ((rul === "involuntarymove" || rul === "movement") && BN3_INVOLUNTARY_MOVE_BUG_TYPES.some(type => type.toLowerCase() === act));
 }
 
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
     return rules?.[type] ?? rules?.[originalType] ??
         (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
         (BN4_PLAYER_BUG_TYPES.includes(type as typeof BN4_PLAYER_BUG_TYPES[number]) ? rules?.player : undefined) ??
+        (BN3_INVOLUNTARY_MOVE_BUG_TYPES.includes(type as typeof BN3_INVOLUNTARY_MOVE_BUG_TYPES[number]) ? (rules?.involuntaryMove ?? rules?.movement) : undefined) ??
         "forbidden";
 }
 

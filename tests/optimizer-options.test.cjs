@@ -46,6 +46,10 @@ test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain 
     const bn3 = ids(getOptimizerBugOptions(dataFor("bn3"), false));
     assert.ok(bn3.includes("customHp"));
     assert.ok(bn3.includes("charge"));
+    assert.ok(!bn3.includes("movement"));
+    assert.ok(bn3.includes("involuntaryMoveUp"));
+    assert.ok(bn3.includes("involuntaryMoveDown"));
+    assert.ok(bn3.includes("involuntaryMoveConfuse"));
 
     const bn4 = ids(getOptimizerBugOptions(dataFor("bn4"), false));
     assert.ok(!bn4.includes("movement"));

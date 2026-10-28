@@ -896,9 +896,39 @@ export interface BugSpecOption {
 export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     {
         id: "movement",
-        games: ["bn3", "bn5", "bn6"],
+        games: ["bn5", "bn6"],
         name: { en: "Movement Bug", ja: "移動バグ", zh: "边界移动 BUG" },
         desc: { en: "Warping or forced movement, depending on game and source", ja: "作品・原因により強制移動や端へのワープ", zh: "依作品和来源产生强制移动或边界瞬移" },
+    },
+    {
+        id: "involuntaryMoveUp",
+        games: ["bn3"],
+        name: { en: "Always Move Up", ja: "上移動バグ", zh: "向上走 BUG" },
+        desc: {
+            en: "MegaMan involuntarily always moves Up during battle (Movement Bug Lv1)",
+            ja: "戦闘中、勝手に上へ移動し続けます（移動バグLv1）",
+            zh: "战斗中不受控制地持续向上移动（自动移动 BUG Lv1）",
+        },
+    },
+    {
+        id: "involuntaryMoveDown",
+        games: ["bn3"],
+        name: { en: "Always Move Down", ja: "下移動バグ", zh: "向下走 BUG" },
+        desc: {
+            en: "MegaMan involuntarily always moves Down during battle (Movement Bug Lv2)",
+            ja: "戦闘中、勝手に下へ移動し続けます（移動バグLv2）",
+            zh: "战斗中不受控制地持续向下移动（自动移动 BUG Lv2）",
+        },
+    },
+    {
+        id: "involuntaryMoveConfuse",
+        games: ["bn3"],
+        name: { en: "Permanent Confusion", ja: "永続混乱バグ", zh: "战斗混乱 BUG" },
+        desc: {
+            en: "MegaMan is permanently Confused during battle (Movement Bug Lv3)",
+            ja: "戦闘中、永続的に混乱状態になります（移動バグLv3）",
+            zh: "战斗中处于永续混乱状态（自动移动 BUG Lv3）",
+        },
     },
     {
         id: "playerConfuse",
@@ -1062,10 +1092,14 @@ export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
 
 export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
+    if (t === "involuntarymoveup" || t === "moveup") return "involuntaryMoveUp";
+    if (t === "involuntarymovedown" || t === "movedown") return "involuntaryMoveDown";
+    if (t === "involuntarymoveconfuse" || t === "involuntaryconfuse") return "involuntaryMoveConfuse";
     if (t === "playerconfuse" || t === "playerconfusion") return "playerConfuse";
     if (t === "playermoveforward" || t === "playerforward") return "playerMoveForward";
     if (t === "playermovebackward" || t === "playerbackward") return "playerMoveBackward";
-    if (t === "involuntarymove" || t === "movement") return "movement";
+    if (t === "involuntarymove") return "involuntaryMove";
+    if (t === "movement") return "movement";
     if (t === "player") return "player";
     if (t === "battlehp") return "battleHp";
     if (t === "damagebattlehp" || t === "damagehp") return "damageHp";
@@ -1110,6 +1144,9 @@ export type BugType =
     | "playerMoveForward"
     | "playerMoveBackward"
     | "involuntaryMove"
+    | "involuntaryMoveUp"
+    | "involuntaryMoveDown"
+    | "involuntaryMoveConfuse"
     | "buster"
     | "charge"
     | "battleHp"
@@ -2072,6 +2109,42 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
+        involuntaryMoveUp: {
+            title: {
+                en: "Always Move Up",
+                ja: "上移動バグ",
+                zh: "向上走 BUG",
+            },
+            mechanics: {
+                en: "MegaMan involuntarily always moves Up during battle (Movement Bug Lv1).",
+                ja: "戦闘中、勝手に上へ移動し続けます（移動バグLv1）。",
+                zh: "战斗中不受控制地持续向上移动（自动移动 BUG Lv1）。",
+            },
+        },
+        involuntaryMoveDown: {
+            title: {
+                en: "Always Move Down",
+                ja: "下移動バグ",
+                zh: "向下走 BUG",
+            },
+            mechanics: {
+                en: "MegaMan involuntarily always moves Down during battle (Movement Bug Lv2).",
+                ja: "戦闘中、勝手に下へ移動し続けます（移動バグLv2）。",
+                zh: "战斗中不受控制地持续向下移动（自动移动 BUG Lv2）。",
+            },
+        },
+        involuntaryMoveConfuse: {
+            title: {
+                en: "Permanent Confusion",
+                ja: "永続混乱バグ",
+                zh: "战斗混乱 BUG",
+            },
+            mechanics: {
+                en: "MegaMan is permanently Confused during battle (Movement Bug Lv3).",
+                ja: "戦闘中、永続的に混乱状態になります（移動バグLv3）。",
+                zh: "战斗中处于永续混乱状态（自动移动 BUG Lv3）。",
+            },
+        },
         customHp: {
             title: {
                 en: "Custom Screen HP Drain Bug",
@@ -2579,6 +2652,10 @@ export function analyzeSolutionBugs(
             if (effectiveLevel === 1) effectiveBugType = "playerConfuse";
             else if (effectiveLevel === 2) effectiveBugType = "playerMoveForward";
             else effectiveBugType = "playerMoveBackward";
+        } else if (gameId === "bn3" && bugType === "involuntaryMove") {
+            if (effectiveLevel === 1) effectiveBugType = "involuntaryMoveUp";
+            else if (effectiveLevel === 2) effectiveBugType = "involuntaryMoveDown";
+            else effectiveBugType = "involuntaryMoveConfuse";
         }
 
         activeBugs.push({

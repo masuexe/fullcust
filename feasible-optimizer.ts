@@ -170,6 +170,14 @@ export function findFeasibleBuild(
                    (fwd !== "allowed" && fwd !== "allowed_any") ||
                    (bwd !== "allowed" && bwd !== "allowed_any");
         }
+        if (data.gameId === "bn3" && type === "involuntaryMove") {
+            const up = getBugRule(rules, "involuntaryMoveUp");
+            const down = getBugRule(rules, "involuntaryMoveDown");
+            const conf = getBugRule(rules, "involuntaryMoveConfuse");
+            return (up !== "allowed" && up !== "allowed_any") ||
+                   (down !== "allowed" && down !== "allowed_any") ||
+                   (conf !== "allowed" && conf !== "allowed_any");
+        }
         const tolerance = getBugRule(rules, (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type));
         return tolerance !== "allowed" && tolerance !== "allowed_any";
     }));

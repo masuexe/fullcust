@@ -31,6 +31,10 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
                 types.add("playerConfuse");
                 types.add("playerMoveForward");
                 types.add("playerMoveBackward");
+            } else if (data.gameId === "bn3" && type === "involuntaryMove") {
+                types.add("involuntaryMoveUp");
+                types.add("involuntaryMoveDown");
+                types.add("involuntaryMoveConfuse");
             } else {
                 types.add(normalizeBugType(type));
             }

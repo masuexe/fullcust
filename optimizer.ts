@@ -878,6 +878,11 @@ export function requirementsUnderPolicy(
                            getBugRule(rules, "playerMoveForward") === "forbidden" &&
                            getBugRule(rules, "playerMoveBackward") === "forbidden";
                 }
+                if (data.gameId === "bn3" && type === "involuntaryMove") {
+                    return getBugRule(rules, "involuntaryMoveUp") === "forbidden" &&
+                           getBugRule(rules, "involuntaryMoveDown") === "forbidden" &&
+                           getBugRule(rules, "involuntaryMoveConfuse") === "forbidden";
+                }
                 return getBugRule(rules, norm, type) === "forbidden";
             } else if (forbiddenBugs.length > 0) {
                 return forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
