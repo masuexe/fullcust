@@ -41,7 +41,8 @@ export const BN3_CHARGE_BUG_TYPES = [
 ] as const;
 
 export const BN3_BUSTER_BUG_TYPES = [
-    "busterBlank",
+    "busterBlank1",
+    "busterBlank2",
     "busterGuard",
 ] as const;
 
@@ -85,7 +86,8 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
         (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
         ((rul === "involuntarymove" || rul === "movement") && BN3_INVOLUNTARY_MOVE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
         (rul === "charge" && BN3_CHARGE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
-        (rul === "buster" && BN3_BUSTER_BUG_TYPES.some(type => type.toLowerCase() === act));
+        (rul === "buster" && BN3_BUSTER_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        (rul === "busterblank" && (act === "busterblank1" || act === "busterblank2"));
 }
 
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
@@ -94,7 +96,7 @@ export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefi
         (BN4_PLAYER_BUG_TYPES.includes(type as typeof BN4_PLAYER_BUG_TYPES[number]) ? rules?.player : undefined) ??
         (BN3_INVOLUNTARY_MOVE_BUG_TYPES.includes(type as typeof BN3_INVOLUNTARY_MOVE_BUG_TYPES[number]) ? (rules?.involuntaryMove ?? rules?.movement) : undefined) ??
         (BN3_CHARGE_BUG_TYPES.includes(type as typeof BN3_CHARGE_BUG_TYPES[number]) ? rules?.charge : undefined) ??
-        (BN3_BUSTER_BUG_TYPES.includes(type as typeof BN3_BUSTER_BUG_TYPES[number]) ? rules?.buster : undefined) ??
+        (BN3_BUSTER_BUG_TYPES.includes(type as typeof BN3_BUSTER_BUG_TYPES[number]) ? (rules?.busterBlank ?? rules?.buster) : undefined) ??
         "forbidden";
 }
 

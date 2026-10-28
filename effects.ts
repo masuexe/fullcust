@@ -988,13 +988,23 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能发射空包弹或误暴特集气射击；具体效果因作品和来源而异" },
     },
     {
-        id: "busterBlank",
+        id: "busterBlank1",
         games: ["bn3"],
-        name: { en: "Buster Blank", ja: "Bボタン空撃ち", zh: "B键空包弹 BUG" },
+        name: { en: "Buster Blank Lv1 (25%)", ja: "Bボタン空撃ちLv1 (25%)", zh: "B键空包弹 Lv1 (25%)" },
         desc: {
-            en: "Normal and charge shots have a 25% (Lv1) or 50% (Lv2) chance of blanking",
-            ja: "バスター射撃が1/4（Lv1）または1/2（Lv2）の確率で空撃ちになります",
-            zh: "普通射击与集气射击有 25%（Lv1）或 50%（Lv2）几率卡壳发射空包弹",
+            en: "Normal and charge shots have a 25% chance of blanking (B-Button Lv1)",
+            ja: "バスター射撃が1/4（25%）の確率で空撃ちになります（BボタンバグLv1）",
+            zh: "普通射击与集气射击有 1/4（25%）几率卡壳发射空包弹（B键 BUG Lv1）",
+        },
+    },
+    {
+        id: "busterBlank2",
+        games: ["bn3"],
+        name: { en: "Buster Blank Lv2 (50%)", ja: "Bボタン空撃ちLv2 (50%)", zh: "B键空包弹 Lv2 (50%)" },
+        desc: {
+            en: "Normal and charge shots have a 50% chance of blanking (B-Button Lv2)",
+            ja: "バスター射撃が1/2（50%）の確率で空撃ちになります（BボタンバグLv2）",
+            zh: "普通射击与集气射击有 1/2（50%）几率卡壳发射空包弹（B键 BUG Lv2）",
         },
     },
     {
@@ -1166,7 +1176,9 @@ export function normalizeBugType(type: string): string {
     if (t === "chargecube") return "chargeCube";
     if (t === "chargewater") return "chargeWater";
     if (t === "chargeflower") return "chargeFlower";
-    if (t === "busterblank") return "busterBlank";
+    if (t === "busterblank1" || t === "busterblank25") return "busterBlank1";
+    if (t === "busterblank2" || t === "busterblank50") return "busterBlank2";
+    if (t === "busterblank") return "busterBlank1";
     if (t === "busterguard") return "busterGuard";
     if (t === "buster") return "buster";
     if (t === "emotion") return "emotion";
@@ -1199,6 +1211,8 @@ export type BugType =
     | "involuntaryMoveConfuse"
     | "buster"
     | "busterBlank"
+    | "busterBlank1"
+    | "busterBlank2"
     | "busterGuard"
     | "charge"
     | "chargeCube"
@@ -2282,28 +2296,28 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
-        busterBlank: {
+        busterBlank1: {
             title: {
-                en: "Buster Blank",
-                ja: "Bボタン空撃ち",
-                zh: "B键空包弹 BUG",
+                en: "Buster Blank Lv1 (25%)",
+                ja: "Bボタン空撃ちLv1 (25%)",
+                zh: "B键空包弹 Lv1 (25%)",
             },
             mechanics: {
-                en: "Normal and charge shots have a chance of blanking (25% at Lv1, 50% at Lv2).",
-                ja: "バスターが空撃ちになります（Lv1で25%、Lv2で50%）。",
-                zh: "普通射击与集气射击有几率卡壳发射空包弹（Lv1 为 25%，Lv2 为 50%）。",
+                en: "Normal and charge shots have a 25% chance of blanking.",
+                ja: "通常射撃およびチャージ射撃が1/4（25%）の確率で空撃ちになります（BボタンバグLv1）。",
+                zh: "普通射击与集气射击均有 1/4（25%）几率卡壳发射空包弹（B键 BUG Lv1）。",
             },
-            levels: {
-                1: {
-                    en: "1/4 (25%) chance of firing blanks for normal shot and charge shot.",
-                    ja: "通常射撃およびチャージ射撃が1/4の確率で空撃ちになります。",
-                    zh: "普通射击与集气射击均有 1/4 几率卡壳（空包弹）。",
-                },
-                2: {
-                    en: "1/2 (50%) chance of firing blanks.",
-                    ja: "射撃が1/2の確率で空撃ちになります。",
-                    zh: "射击有 1/2 几率卡壳（空包弹）。",
-                },
+        },
+        busterBlank2: {
+            title: {
+                en: "Buster Blank Lv2 (50%)",
+                ja: "Bボタン空撃ちLv2 (50%)",
+                zh: "B键空包弹 Lv2 (50%)",
+            },
+            mechanics: {
+                en: "Normal and charge shots have a 50% chance of blanking.",
+                ja: "通常射撃およびチャージ射撃が1/2（50%）の確率で空撃ちになります（BボタンバグLv2）。",
+                zh: "普通射击与集气射击均有 1/2（50%）几率卡壳发射空包弹（B键 BUG Lv2）。",
             },
         },
         busterGuard: {
@@ -2776,8 +2790,9 @@ export function analyzeSolutionBugs(
             else if (effectiveLevel === 2) effectiveBugType = "chargeWater";
             else effectiveBugType = "chargeFlower";
         } else if (gameId === "bn3" && bugType === "buster") {
-            if (effectiveLevel >= 3) effectiveBugType = "busterGuard";
-            else effectiveBugType = "busterBlank";
+            if (effectiveLevel === 1) effectiveBugType = "busterBlank1";
+            else if (effectiveLevel === 2) effectiveBugType = "busterBlank2";
+            else effectiveBugType = "busterGuard";
         }
 
         activeBugs.push({

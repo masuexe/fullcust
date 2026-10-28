@@ -40,7 +40,8 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
                 types.add("chargeWater");
                 types.add("chargeFlower");
             } else if (data.gameId === "bn3" && type === "buster") {
-                types.add("busterBlank");
+                types.add("busterBlank1");
+                types.add("busterBlank2");
                 types.add("busterGuard");
             } else {
                 types.add(normalizeBugType(type));

@@ -56,7 +56,8 @@ test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain 
     assert.ok(bn3.includes("chargeCube"));
     assert.ok(bn3.includes("chargeWater"));
     assert.ok(bn3.includes("chargeFlower"));
-    assert.ok(bn3.includes("busterBlank"));
+    assert.ok(bn3.includes("busterBlank1"));
+    assert.ok(bn3.includes("busterBlank2"));
     assert.ok(bn3.includes("busterGuard"));
 
     const bn4 = ids(getOptimizerBugOptions(dataFor("bn4"), false));

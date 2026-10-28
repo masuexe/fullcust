@@ -318,19 +318,19 @@ test("BN3 bug level scaling: charge shot and buster bugs map to discrete effecti
     assert.equal(a3.activeBugs[0].bugType, "chargeFlower");
     assert.equal(a3.activeBugs[0].level, 3);
 
-    // Atk+1 on command line -> Lv1 busterBlank
+    // Atk+1 on command line -> Lv1 busterBlank1
     const cellsB1 = new Array(25).fill(null);
     cellsB1[2 * 5 + 0] = 0; // row 2 (command line)
     const aB1 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 2 }], cellsB1, gridSettings, "zh");
-    assert.equal(aB1.activeBugs[0].bugType, "busterBlank");
+    assert.equal(aB1.activeBugs[0].bugType, "busterBlank1");
     assert.equal(aB1.activeBugs[0].level, 1);
 
-    // Atk+1 and Speed+1 on command line (not touching) -> Lv2 busterBlank
+    // Atk+1 and Speed+1 on command line (not touching) -> Lv2 busterBlank2
     const cellsB2 = new Array(25).fill(null);
     cellsB2[2 * 5 + 0] = 0; // (0, 2)
     cellsB2[2 * 5 + 2] = 1; // (2, 2) not adjacent to (0, 2)
     const aB2 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 2 }, { partIndex: 3 }], cellsB2, gridSettings, "zh");
-    assert.equal(aB2.activeBugs[0].bugType, "busterBlank");
+    assert.equal(aB2.activeBugs[0].bugType, "busterBlank2");
     assert.equal(aB2.activeBugs[0].level, 2);
 
     // Atk+1, Speed+1, and Charge+1 on command line -> Lv3 busterGuard
