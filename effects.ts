@@ -983,8 +983,29 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
     },
     {
         id: "buster",
+        games: ["bn4", "bn5", "bn6"],
         name: { en: "Buster Blank / Accidental ChargeShot", ja: "空撃ち・チャージ暴発", zh: "空包弹 BUG" },
         desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能发射空包弹或误暴特集气射击；具体效果因作品和来源而异" },
+    },
+    {
+        id: "busterBlank",
+        games: ["bn3"],
+        name: { en: "Buster Blank", ja: "Bボタン空撃ち", zh: "B键空包弹 BUG" },
+        desc: {
+            en: "Normal and charge shots have a 25% (Lv1) or 50% (Lv2) chance of blanking",
+            ja: "バスター射撃が1/4（Lv1）または1/2（Lv2）の確率で空撃ちになります",
+            zh: "普通射击与集气射击有 25%（Lv1）或 50%（Lv2）几率卡壳发射空包弹",
+        },
+    },
+    {
+        id: "busterGuard",
+        games: ["bn3"],
+        name: { en: "Buster: MetGuard", ja: "Bボタンガード", zh: "B键防护罩 BUG" },
+        desc: {
+            en: "First 15 normal shots in battle become MetGuard (B-Button Lv3)",
+            ja: "戦闘開始から最初の15発、通常バスターがメットガードになります（BボタンバグLv3）",
+            zh: "战斗开始前 15 发普通射击直接变为防护罩 MetGuard（B键 BUG Lv3）",
+        },
     },
     {
         id: "customHp",
@@ -1026,10 +1047,34 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         desc: { en: "Taking damage triggers blindness", ja: "被ダメージで盲目が発生", zh: "受到伤害触发盲目" },
     },
     {
-        id: "charge",
+        id: "chargeCube",
         games: ["bn3"],
-        name: { en: "Modified Charged Shot", ja: "ため撃ち変化バグ", zh: "集气射击异常 BUG" },
-        desc: { en: "Changes the charged attack into an unintended object or attack", ja: "ため撃ちが別の物体・攻撃に変化", zh: "集气射击变成其他物体或攻击" },
+        name: { en: "Charge: Rock Cube", ja: "ため撃ち：キューブ", zh: "集气石块 BUG" },
+        desc: {
+            en: "Charged attack summons a Rock Cube one panel ahead (B-Charge Lv1)",
+            ja: "チャージ射撃が目の前にストーンキューブを生成（ため撃ちバグLv1）",
+            zh: "集气射击变为在正前方生成石块（B集气 BUG Lv1）",
+        },
+    },
+    {
+        id: "chargeWater",
+        games: ["bn3"],
+        name: { en: "Charge: Water Gun", ja: "ため撃ち：水鉄砲", zh: "集气水枪 BUG" },
+        desc: {
+            en: "Charged attack shoots a water gun one panel ahead for 100 damage (B-Charge Lv2)",
+            ja: "チャージ射撃が目の前1マスの水鉄砲100ダメージ（ため撃ちバグLv2）",
+            zh: "集气射击变为正前方 1 格的水枪，造成 100 伤害（B集气 BUG Lv2）",
+        },
+    },
+    {
+        id: "chargeFlower",
+        games: ["bn3"],
+        name: { en: "Charge: Magic Flower", ja: "ため撃ち：花束", zh: "集气花束 BUG" },
+        desc: {
+            en: "Charged attack produces a harmless magic flower (B-Charge Lv3)",
+            ja: "チャージ射撃が効果のない花束に変化（ため撃ちバグLv3）",
+            zh: "集气射击变为魔术花束，无伤害无效果（B集气 BUG Lv3）",
+        },
     },
     {
         id: "encounter",
@@ -1118,6 +1163,11 @@ export function normalizeBugType(type: string): string {
     if (t === "panelpoison") return "panelPoison";
     if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
     if (t === "customscreenminus" || t === "custom") return "custom";
+    if (t === "chargecube") return "chargeCube";
+    if (t === "chargewater") return "chargeWater";
+    if (t === "chargeflower") return "chargeFlower";
+    if (t === "busterblank") return "busterBlank";
+    if (t === "busterguard") return "busterGuard";
     if (t === "buster") return "buster";
     if (t === "emotion") return "emotion";
     return type;
@@ -1148,7 +1198,12 @@ export type BugType =
     | "involuntaryMoveDown"
     | "involuntaryMoveConfuse"
     | "buster"
+    | "busterBlank"
+    | "busterGuard"
     | "charge"
+    | "chargeCube"
+    | "chargeWater"
+    | "chargeFlower"
     | "battleHp"
     | "damageHp"
     | "customDamage"
@@ -2200,9 +2255,9 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
         },
         buster: {
             title: {
-                en: "Weakened Buster Bug",
-                ja: "バスター異常バグ",
-                zh: "射击异常 BUG",
+                en: "B Button Buster Bug",
+                ja: "Bボタン異常バグ",
+                zh: "B键射击 BUG",
             },
             mechanics: {
                 en: "Firing blanks affects both normal and charge shots, or turns into Guard.",
@@ -2227,11 +2282,47 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
+        busterBlank: {
+            title: {
+                en: "Buster Blank",
+                ja: "Bボタン空撃ち",
+                zh: "B键空包弹 BUG",
+            },
+            mechanics: {
+                en: "Normal and charge shots have a chance of blanking (25% at Lv1, 50% at Lv2).",
+                ja: "バスターが空撃ちになります（Lv1で25%、Lv2で50%）。",
+                zh: "普通射击与集气射击有几率卡壳发射空包弹（Lv1 为 25%，Lv2 为 50%）。",
+            },
+            levels: {
+                1: {
+                    en: "1/4 (25%) chance of firing blanks for normal shot and charge shot.",
+                    ja: "通常射撃およびチャージ射撃が1/4の確率で空撃ちになります。",
+                    zh: "普通射击与集气射击均有 1/4 几率卡壳（空包弹）。",
+                },
+                2: {
+                    en: "1/2 (50%) chance of firing blanks.",
+                    ja: "射撃が1/2の確率で空撃ちになります。",
+                    zh: "射击有 1/2 几率卡壳（空包弹）。",
+                },
+            },
+        },
+        busterGuard: {
+            title: {
+                en: "Buster: MetGuard",
+                ja: "Bボタンガード",
+                zh: "B键防护罩 BUG",
+            },
+            mechanics: {
+                en: "For the first 15 shots in battle, normal buster shot becomes Guard (MetGuard).",
+                ja: "戦闘開始から最初の15発、通常バスターがメットガードになります（BボタンバグLv3）。",
+                zh: "战斗开始前 15 发普通射击直接变为防护罩 MetGuard（B键 BUG Lv3）。",
+            },
+        },
         charge: {
             title: {
-                en: "Modified Shot Bug",
+                en: "B Charge Shot Bug",
                 ja: "ため撃ち異常バグ",
-                zh: "集气射击异常 BUG",
+                zh: "B集气射击 BUG",
             },
             mechanics: {
                 en: "B Button charge attack changes into a different object.",
@@ -2254,6 +2345,42 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                     ja: "チャージ射撃が花束（効果なし）に変化します。",
                     zh: "集气射击变为魔术花束（无伤害无效果）。",
                 },
+            },
+        },
+        chargeCube: {
+            title: {
+                en: "Charge: Rock Cube",
+                ja: "ため撃ち：キューブ",
+                zh: "集气石块 BUG",
+            },
+            mechanics: {
+                en: "Charge shot summons a Rock Cube one panel ahead.",
+                ja: "チャージ射撃が目の前にストーンキューブを生成する技に変化します（ため撃ちバグLv1）。",
+                zh: "集气射击变为在正前方生成石块（B集气 BUG Lv1）。",
+            },
+        },
+        chargeWater: {
+            title: {
+                en: "Charge: Water Gun",
+                ja: "ため撃ち：水鉄砲",
+                zh: "集气水枪 BUG",
+            },
+            mechanics: {
+                en: "Charge shot shoots a Water Gun one panel ahead (100 damage).",
+                ja: "チャージ射撃が目の前1マスの水鉄砲（100ダメージ）に変化します（ため撃ちバグLv2）。",
+                zh: "集气射击变为正前方 1 格的水枪，造成 100 伤害（B集气 BUG Lv2）。",
+            },
+        },
+        chargeFlower: {
+            title: {
+                en: "Charge: Magic Flower",
+                ja: "ため撃ち：花束",
+                zh: "集气花束 BUG",
+            },
+            mechanics: {
+                en: "Charge shot produces a Magic Flower (does nothing).",
+                ja: "チャージ射撃が花束（効果なし）に変化します（ため撃ちバグLv3）。",
+                zh: "集气射击变为魔术花束，无伤害无效果（B集气 BUG Lv3）。",
             },
         },
         battleHp: {
@@ -2644,6 +2771,13 @@ export function analyzeSolutionBugs(
             if (effectiveLevel === 1) effectiveBugType = "involuntaryMoveUp";
             else if (effectiveLevel === 2) effectiveBugType = "involuntaryMoveDown";
             else effectiveBugType = "involuntaryMoveConfuse";
+        } else if (gameId === "bn3" && bugType === "charge") {
+            if (effectiveLevel === 1) effectiveBugType = "chargeCube";
+            else if (effectiveLevel === 2) effectiveBugType = "chargeWater";
+            else effectiveBugType = "chargeFlower";
+        } else if (gameId === "bn3" && bugType === "buster") {
+            if (effectiveLevel >= 3) effectiveBugType = "busterGuard";
+            else effectiveBugType = "busterBlank";
         }
 
         activeBugs.push({

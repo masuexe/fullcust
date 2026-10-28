@@ -4,7 +4,7 @@ const { test } = require("node:test");
 const { BUG_SPEC_OPTIONS, GAME_PART_BUG_TYPES, getPartBugTypes, normalizeBugType,
     analyzeSolutionBugs, computeBuildStats, isSolutionAcceptable, getEffectiveInBattleBugs } = require("../effects.ts");
 const { getModCards, getModCard, computeDeckStats, repairsBugType } = require("../modcards.ts");
-const { BN4_PLAYER_BUG_TYPES, BN3_INVOLUNTARY_MOVE_BUG_TYPES } = require("../panel-effects.ts");
+const { BN4_PLAYER_BUG_TYPES, BN3_INVOLUNTARY_MOVE_BUG_TYPES, BN3_CHARGE_BUG_TYPES, BN3_BUSTER_BUG_TYPES } = require("../panel-effects.ts");
 const { doesBuildSatisfyConstraints } = require("../optimizer.ts");
 const manifest = require("./fixtures/modcard-bug-audit.json");
 const grid = { width: 5, height: 5, commandLineRow: 2, hasOob: false };
@@ -23,6 +23,10 @@ for (const game of ["bn3", "bn4", "bn5", "bn6"]) {
                 for (const pt of BN4_PLAYER_BUG_TYPES) assert.ok(keys.includes(pt), `Hidden ${game} bug: ${pt}`);
             } else if (game === "bn3" && type === "involuntaryMove") {
                 for (const pt of BN3_INVOLUNTARY_MOVE_BUG_TYPES) assert.ok(keys.includes(pt), `Hidden ${game} bug: ${pt}`);
+            } else if (game === "bn3" && type === "charge") {
+                for (const pt of BN3_CHARGE_BUG_TYPES) assert.ok(keys.includes(pt), `Hidden ${game} bug: ${pt}`);
+            } else if (game === "bn3" && type === "buster") {
+                for (const pt of BN3_BUSTER_BUG_TYPES) assert.ok(keys.includes(pt), `Hidden ${game} bug: ${pt}`);
             } else {
                 assert.ok(keys.includes(normalizeBugType(type)), `Hidden ${game} bug: ${type}`);
             }
@@ -208,7 +212,15 @@ test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugSto
     assert.ok(!bn3Options.some(o => o.id === "emotion"));
     assert.ok(!bn3Options.some(o => o.id === "movement"));
     assert.ok(!bn3Options.some(o => o.id === "custom"));
+    assert.ok(!bn3Options.some(o => o.id === "buster"));
+    assert.ok(!bn3Options.some(o => o.id === "charge"));
     for (const pt of BN3_INVOLUNTARY_MOVE_BUG_TYPES) {
+        assert.ok(bn3Options.some(o => o.id === pt));
+    }
+    for (const pt of BN3_CHARGE_BUG_TYPES) {
+        assert.ok(bn3Options.some(o => o.id === pt));
+    }
+    for (const pt of BN3_BUSTER_BUG_TYPES) {
         assert.ok(bn3Options.some(o => o.id === pt));
     }
     assert.deepEqual(getPartBugTypes("bn3", 44), ["involuntaryMove"]);

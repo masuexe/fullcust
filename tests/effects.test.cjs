@@ -285,6 +285,64 @@ test("analyzeSolutionBugs uses game-specific bug types and BugStop across all ga
     assert.equal(bn3BugStopAnalysis.bugs[0].bugMechanics, "战斗中不受控制地持续向上移动（会向上走）。");
 });
 
+test("BN3 bug level scaling: charge shot and buster bugs map to discrete effective bug types", () => {
+    const gridSettings = { width: 5, height: 5, hasOob: false, commandLineRow: 2 };
+    const metas = [
+        { id: 3, name: "BrakChrg", isSolid: true, color: 4 },
+        { id: 35, name: "WeapLV+1", isSolid: false, color: 1 },
+        { id: 41, name: "Atk+1", isSolid: false, color: 1 },
+        { id: 42, name: "Speed+1", isSolid: false, color: 1 },
+        { id: 43, name: "Charge+1", isSolid: false, color: 1 },
+    ];
+    // BrakChrg off line -> Lv1 chargeCube
+    const cells1 = new Array(25).fill(null);
+    cells1[0] = 0; // row 0 != commandLineRow 2
+    const a1 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 0 }], cells1, gridSettings, "zh");
+    assert.equal(a1.activeBugs[0].bugType, "chargeCube");
+    assert.equal(a1.activeBugs[0].level, 1);
+
+    // BrakChrg off line (1) + WeapLV+1 on line (1) -> Lv2 chargeWater
+    const cells2 = new Array(25).fill(null);
+    cells2[0] = 0; // row 0 != commandLineRow 2
+    cells2[2 * 5 + 0] = 1; // row 2 (command line)
+    const a2 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 0 }, { partIndex: 1 }], cells2, gridSettings, "zh");
+    assert.equal(a2.activeBugs[0].bugType, "chargeWater");
+    assert.equal(a2.activeBugs[0].level, 2);
+
+    // BrakChrg off line (1) + 2 WeapLV+1 on line (2) -> Lv3 chargeFlower
+    const cells3 = new Array(25).fill(null);
+    cells3[0] = 0; // row 0 != commandLineRow 2
+    cells3[2 * 5 + 0] = 1; // row 2 (command line)
+    cells3[2 * 5 + 1] = 2; // row 2 (command line)
+    const a3 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 0 }, { partIndex: 1 }, { partIndex: 1 }], cells3, gridSettings, "zh");
+    assert.equal(a3.activeBugs[0].bugType, "chargeFlower");
+    assert.equal(a3.activeBugs[0].level, 3);
+
+    // Atk+1 on command line -> Lv1 busterBlank
+    const cellsB1 = new Array(25).fill(null);
+    cellsB1[2 * 5 + 0] = 0; // row 2 (command line)
+    const aB1 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 2 }], cellsB1, gridSettings, "zh");
+    assert.equal(aB1.activeBugs[0].bugType, "busterBlank");
+    assert.equal(aB1.activeBugs[0].level, 1);
+
+    // Atk+1 and Speed+1 on command line (not touching) -> Lv2 busterBlank
+    const cellsB2 = new Array(25).fill(null);
+    cellsB2[2 * 5 + 0] = 0; // (0, 2)
+    cellsB2[2 * 5 + 2] = 1; // (2, 2) not adjacent to (0, 2)
+    const aB2 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 2 }, { partIndex: 3 }], cellsB2, gridSettings, "zh");
+    assert.equal(aB2.activeBugs[0].bugType, "busterBlank");
+    assert.equal(aB2.activeBugs[0].level, 2);
+
+    // Atk+1, Speed+1, and Charge+1 on command line -> Lv3 busterGuard
+    const cellsB3 = new Array(25).fill(null);
+    cellsB3[2 * 5 + 0] = 0;
+    cellsB3[2 * 5 + 1] = 1;
+    cellsB3[2 * 5 + 2] = 2;
+    const aB3 = analyzeSolutionBugs("bn3", metas, [{ partIndex: 2 }, { partIndex: 3 }, { partIndex: 4 }], cellsB3, gridSettings, "zh");
+    assert.equal(aB3.activeBugs[0].bugType, "busterGuard");
+    assert.equal(aB3.activeBugs[0].level, 3);
+});
+
 test("BN5 bug level scaling: adjacent same-color parts count distinct neighbors, not cells (Lv2 panel bug)", () => {
     // 5x5 grid, row 2 is command line, no oob
     const gridSettings = { width: 5, height: 5, hasOob: false, commandLineRow: 2 };

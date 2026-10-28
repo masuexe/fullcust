@@ -46,12 +46,18 @@ test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain 
     assert.ok(!bn5.includes("panelGrass"));
     const bn3 = ids(getOptimizerBugOptions(dataFor("bn3"), false));
     assert.ok(bn3.includes("customHp"));
-    assert.ok(bn3.includes("charge"));
+    assert.ok(!bn3.includes("charge"));
+    assert.ok(!bn3.includes("buster"));
     assert.ok(!bn3.includes("movement"));
     assert.ok(!bn3.includes("custom"));
     assert.ok(bn3.includes("involuntaryMoveUp"));
     assert.ok(bn3.includes("involuntaryMoveDown"));
     assert.ok(bn3.includes("involuntaryMoveConfuse"));
+    assert.ok(bn3.includes("chargeCube"));
+    assert.ok(bn3.includes("chargeWater"));
+    assert.ok(bn3.includes("chargeFlower"));
+    assert.ok(bn3.includes("busterBlank"));
+    assert.ok(bn3.includes("busterGuard"));
 
     const bn4 = ids(getOptimizerBugOptions(dataFor("bn4"), false));
     assert.ok(!bn4.includes("movement"));

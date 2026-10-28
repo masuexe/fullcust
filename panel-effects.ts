@@ -34,6 +34,17 @@ export const BN3_INVOLUNTARY_MOVE_BUG_TYPES = [
     "involuntaryMoveConfuse",
 ] as const;
 
+export const BN3_CHARGE_BUG_TYPES = [
+    "chargeCube",
+    "chargeWater",
+    "chargeFlower",
+] as const;
+
+export const BN3_BUSTER_BUG_TYPES = [
+    "busterBlank",
+    "busterGuard",
+] as const;
+
 /** Preserve the raw source category; classify card effects for final policy checks. */
 export function getCardBugType(cardId: string, type: string, movePanel?: string, level?: number | null): string {
     if (cardId.startsWith("134-") && type === "player") {
@@ -72,7 +83,9 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
     return act === rul ||
         (rul === "panel" && PANEL_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
         (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
-        ((rul === "involuntarymove" || rul === "movement") && BN3_INVOLUNTARY_MOVE_BUG_TYPES.some(type => type.toLowerCase() === act));
+        ((rul === "involuntarymove" || rul === "movement") && BN3_INVOLUNTARY_MOVE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        (rul === "charge" && BN3_CHARGE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        (rul === "buster" && BN3_BUSTER_BUG_TYPES.some(type => type.toLowerCase() === act));
 }
 
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
@@ -80,6 +93,8 @@ export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefi
         (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
         (BN4_PLAYER_BUG_TYPES.includes(type as typeof BN4_PLAYER_BUG_TYPES[number]) ? rules?.player : undefined) ??
         (BN3_INVOLUNTARY_MOVE_BUG_TYPES.includes(type as typeof BN3_INVOLUNTARY_MOVE_BUG_TYPES[number]) ? (rules?.involuntaryMove ?? rules?.movement) : undefined) ??
+        (BN3_CHARGE_BUG_TYPES.includes(type as typeof BN3_CHARGE_BUG_TYPES[number]) ? rules?.charge : undefined) ??
+        (BN3_BUSTER_BUG_TYPES.includes(type as typeof BN3_BUSTER_BUG_TYPES[number]) ? rules?.buster : undefined) ??
         "forbidden";
 }
 

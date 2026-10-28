@@ -35,6 +35,13 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
                 types.add("involuntaryMoveUp");
                 types.add("involuntaryMoveDown");
                 types.add("involuntaryMoveConfuse");
+            } else if (data.gameId === "bn3" && type === "charge") {
+                types.add("chargeCube");
+                types.add("chargeWater");
+                types.add("chargeFlower");
+            } else if (data.gameId === "bn3" && type === "buster") {
+                types.add("busterBlank");
+                types.add("busterGuard");
             } else {
                 types.add(normalizeBugType(type));
             }
