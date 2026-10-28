@@ -936,6 +936,21 @@ export const translations = {
         ja: "移動時に発生する足元のパネル変化効果・ヒビ割れ確率を選択します。未選択の効果は除外されます。",
         zh: "选择允许的走地效果与地面碎裂等级。未勾选的效果将被排除。",
     },
+    allowedMovePanelsHelperAny: {
+        en: "No terrain selected: any panel change is allowed.",
+        ja: "未選択：すべてのパネル変化を許可します。",
+        zh: "未选择：允许出现任意变地效果。",
+    },
+    allowedMovePanelsHelperRestricted: {
+        en: "Only selected panel changes (or absorbed by BugStop) are allowed.",
+        ja: "選択されたパネル変化（またはバグストッパーによる無効化）のみを許可します。",
+        zh: "仅允许出现已勾选的地面（或被 BUG停止器 消除）。",
+    },
+    clearToAllowAny: {
+        en: "Clear (Allow Any)",
+        ja: "クリア（すべて許可）",
+        zh: "清空（允许任意）",
+    },
     reqBodyTitle: {
         en: "Body Element",
         ja: "ボディ属性",

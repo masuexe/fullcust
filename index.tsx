@@ -1184,8 +1184,22 @@ function AutoOptimizerPanel({
 
     const cardsEnabled = hasModCards && modCardMode !== "none";
     const abilityOptions = getOptimizerAbilityOptions(data, cardsEnabled);
-    const bugOptions = [...getOptimizerBugOptions(data, cardsEnabled),
-        ...(data.gameId === "bn6" && bugRules.panel === "required" ? BUG_SPEC_OPTIONS.filter(option => option.id === "panel") : [])];
+    const panelOption = React.useMemo(() => BUG_SPEC_OPTIONS.find(option => option.id === "panel")!, []);
+    const bugOptions = React.useMemo(() => {
+        const raw = getOptimizerBugOptions(data, cardsEnabled);
+        const hasMovePanel = getMovePanelOptions(data.gameId).length > 0;
+        if (!hasMovePanel) return raw;
+        const withoutPanels = raw.filter(opt => !PANEL_BUG_TYPES.includes(opt.id as any) && opt.id !== "panel");
+        const statusIdx = withoutPanels.findIndex(opt => opt.id === "status");
+        if (statusIdx >= 0) {
+            return [
+                ...withoutPanels.slice(0, statusIdx + 1),
+                panelOption,
+                ...withoutPanels.slice(statusIdx + 1),
+            ];
+        }
+        return [panelOption, ...withoutPanels];
+    }, [data, cardsEnabled, panelOption]);
     const customValues = getOptimizerCustomValues(data.gameId, cardsEnabled);
     const customOptions: { value: number; label: string }[] = [
         { value: 0, label: t("anyOption", lang) },
@@ -1207,6 +1221,15 @@ function AutoOptimizerPanel({
         customOptions.push({ value: minCustom, label: `≥ ${minCustom}` });
         customOptions.sort((a, b) => a.value - b.value);
     }
+    const panelTolerance: BugTolerance = React.useMemo(() => {
+        if (bugRules.panel) return bugRules.panel;
+        if (data.gameId === "bn6") {
+            if (bugRules.panelGrass === "allowed" || bugRules.panelCrack === "allowed" || bugRules.panelIce === "allowed") {
+                return "allowed";
+            }
+        }
+        return getBugRule(bugRules, "panel");
+    }, [bugRules, data.gameId]);
     const constraints = getOptimizerModeConstraints(data, {
         ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
         ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
@@ -1217,7 +1240,7 @@ function AutoOptimizerPanel({
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
         ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
         ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
-        ...(allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
+        ...(panelTolerance !== "forbidden" && allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length && data.gameId !== "bn3" && data.gameId !== "bn4" ? { allowedBodies } : {}),
         ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
@@ -1278,18 +1301,32 @@ function AutoOptimizerPanel({
     };
 
     const handleSetBugTolerance = (bugId: string, tol: BugTolerance) => {
-        setBugRules(prev => ({
-            ...prev,
-            [bugId]: tol,
-        }));
+        setBugRules(prev => {
+            if (bugId === "panel") {
+                const next: Record<string, BugTolerance> = { ...prev, panel: tol };
+                for (const t of PANEL_BUG_TYPES) {
+                    if (next[t]) next[t] = tol;
+                }
+                return next;
+            }
+            return {
+                ...prev,
+                [bugId]: tol,
+            };
+        });
+        if (bugId === "panel" && tol === "forbidden") {
+            setAllowedMovePanels([]);
+        }
     };
 
     const handleResetAllBugs = () => {
         setBugRules(Object.fromEntries(bugOptions.map(opt => [opt.id, "forbidden"])));
+        setAllowedMovePanels([]);
     };
 
     const handleResetDefaultBugs = () => {
         setBugRules(getDefaultBugRules(data.gameId));
+        setAllowedMovePanels([]);
     };
 
     const numRequiredBugs = Object.values(effectiveBugRules).filter(v => v === "required").length;
@@ -1705,21 +1742,6 @@ function AutoOptimizerPanel({
                                                     />
                                                 </div>
                                             </div>
-
-                                            {/* Row 4: Move Panel Effect */}
-                                            <div className="row g-2 mb-2">
-                                                <div className="col-12 col-md-6">
-                                                    <label className="form-label small fw-semibold mb-1">
-                                                        {t("reqMovePanelTitle", lang)}:
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        options={getMovePanelOptions(data.gameId)}
-                                                        selected={allowedMovePanels}
-                                                        onChange={setAllowedMovePanels}
-                                                        lang={lang}
-                                                    />
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
 
@@ -1795,49 +1817,84 @@ function AutoOptimizerPanel({
 
                                         <div className="d-flex flex-column gap-1">
                                             {bugOptions.map(opt => {
+                                                const isPanelBug = opt.id === "panel" && getMovePanelOptions(data.gameId).length > 0;
                                                 const inherited = getBugRule(bugRules, opt.id);
-                                                const currentTol: BugTolerance = bugRules[opt.id] ?? (inherited === "required" ? "allowed_any" : inherited);
+                                                const currentTol: BugTolerance = isPanelBug
+                                                    ? panelTolerance
+                                                    : (bugRules[opt.id] ?? (inherited === "required" ? "allowed_any" : inherited));
                                                 return (
                                                     <div
                                                         key={opt.id}
-                                                        className="d-flex align-items-center justify-content-between py-1 px-1 rounded bg-body"
+                                                        className="d-flex flex-column py-1 px-1 rounded bg-body"
                                                         style={{ fontSize: "0.78rem" }}
                                                     >
-                                                        <div className="d-flex flex-column" style={{ maxWidth: "58%" }}>
-                                                            <span className="fw-semibold text-truncate">{opt.name[lang] || opt.name.en}</span>
-                                                            <span className="text-muted text-truncate" style={{ fontSize: "0.70rem" }}>
-                                                                {opt.desc[lang] || opt.desc.en}
-                                                            </span>
+                                                        <div className="d-flex align-items-center justify-content-between">
+                                                            <div className="d-flex flex-column" style={{ maxWidth: "58%" }}>
+                                                                <span className="fw-semibold text-truncate">{opt.name[lang] || opt.name.en}</span>
+                                                                <span className="text-muted text-truncate" style={{ fontSize: "0.70rem" }}>
+                                                                    {opt.desc[lang] || opt.desc.en}
+                                                                </span>
+                                                            </div>
+                                                            <div className="btn-group btn-group-sm" role="group">
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn py-0 px-2 ${currentTol === "forbidden" ? "btn-danger text-light" : "btn-outline-secondary"}`}
+                                                                    style={{ fontSize: "0.72rem" }}
+                                                                    onClick={() => handleSetBugTolerance(opt.id, "forbidden")}
+                                                                    title={t("bugRuleForbidden", lang)}
+                                                                >
+                                                                    {t("bugRuleForbidden", lang)}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn py-0 px-2 ${currentTol === "allowed" || currentTol === "allowed_any" ? "btn-warning text-dark" : "btn-outline-secondary"}`}
+                                                                    style={{ fontSize: "0.72rem" }}
+                                                                    onClick={() => handleSetBugTolerance(opt.id, "allowed")}
+                                                                    title={t("bugRuleAllowed", lang)}
+                                                                >
+                                                                    {t("bugRuleAllowed", lang)}
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className={`btn py-0 px-2 ${currentTol === "required" ? "btn-primary text-light" : "btn-outline-secondary"}`}
+                                                                    style={{ fontSize: "0.72rem" }}
+                                                                    onClick={() => handleSetBugTolerance(opt.id, "required")}
+                                                                    title={t("bugRuleRequired", lang)}
+                                                                >
+                                                                    {t("bugRuleRequired", lang)}
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div className="btn-group btn-group-sm" role="group">
-                                                            <button
-                                                                type="button"
-                                                                className={`btn py-0 px-2 ${currentTol === "forbidden" ? "btn-danger text-light" : "btn-outline-secondary"}`}
-                                                                style={{ fontSize: "0.72rem" }}
-                                                                onClick={() => handleSetBugTolerance(opt.id, "forbidden")}
-                                                                title={t("bugRuleForbidden", lang)}
-                                                            >
-                                                                {t("bugRuleForbidden", lang)}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className={`btn py-0 px-2 ${currentTol === "allowed" || currentTol === "allowed_any" ? "btn-warning text-dark" : "btn-outline-secondary"}`}
-                                                                style={{ fontSize: "0.72rem" }}
-                                                                onClick={() => handleSetBugTolerance(opt.id, "allowed")}
-                                                                title={t("bugRuleAllowed", lang)}
-                                                            >
-                                                                {t("bugRuleAllowed", lang)}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className={`btn py-0 px-2 ${currentTol === "required" ? "btn-primary text-light" : "btn-outline-secondary"}`}
-                                                                style={{ fontSize: "0.72rem" }}
-                                                                onClick={() => handleSetBugTolerance(opt.id, "required")}
-                                                                title={t("bugRuleRequired", lang)}
-                                                            >
-                                                                {t("bugRuleRequired", lang)}
-                                                            </button>
-                                                        </div>
+                                                        {isPanelBug && currentTol !== "forbidden" && (
+                                                            <div className="mt-2 p-2 rounded bg-body-tertiary border" style={{ fontSize: "0.75rem" }}>
+                                                                <div className="d-flex align-items-center justify-content-between mb-1">
+                                                                    <label className="form-label small fw-semibold mb-0" style={{ fontSize: "0.74rem" }}>
+                                                                        {t("reqMovePanelTitle", lang)}:
+                                                                    </label>
+                                                                    {allowedMovePanels.length > 0 && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-sm btn-link p-0 text-decoration-none text-muted"
+                                                                            style={{ fontSize: "0.70rem" }}
+                                                                            onClick={() => setAllowedMovePanels([])}
+                                                                        >
+                                                                            {t("clearToAllowAny", lang)}
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <MultiSelectDropdown
+                                                                    options={getMovePanelOptions(data.gameId)}
+                                                                    selected={allowedMovePanels}
+                                                                    onChange={setAllowedMovePanels}
+                                                                    lang={lang}
+                                                                />
+                                                                <div className="text-muted mt-1" style={{ fontSize: "0.68rem" }}>
+                                                                    {allowedMovePanels.length === 0
+                                                                        ? t("allowedMovePanelsHelperAny", lang)
+                                                                        : t("allowedMovePanelsHelperRestricted", lang)}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 );
                                             })}
