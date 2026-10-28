@@ -39,7 +39,7 @@ import {
     GaugeValue,
     GaugeOption,
 } from "./problem";
-import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } from "./optimizer-options";
+import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
@@ -192,7 +192,7 @@ function BuildStatsView({
         (problem.modCards !== undefined && problem.modCards.length > 0) ||
         stats.hp !== 0 || stats.hpPercent !== 0 ||
         stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
-        stats.custom > 5 || stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
+        stats.custom !== 5 || stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
         stats.abilities.length > 0;
     if (!hasAnyStats && problem.requirements.length === 0) return null;
 
@@ -234,8 +234,8 @@ function BuildStatsView({
                 <span className={`badge ${stats.chargeMax ? "bg-warning text-dark fw-bold" : "bg-primary"} py-1 px-2`}>
                     {t("statCharge", lang)}: {stats.charge}{stats.chargeMax ? " (MAX)" : ""}
                 </span>
-                {stats.custom > 5 ? (
-                    <span className="badge bg-info text-dark py-1 px-2">
+                {stats.custom !== 5 ? (
+                    <span className={`badge ${stats.custom < 5 ? "bg-warning text-dark" : "bg-info text-dark"} py-1 px-2`}>
                         {t("statCustom", lang)}: {stats.custom}
                     </span>
                 ) : null}
@@ -1093,6 +1093,27 @@ function AutoOptimizerPanel({
     const abilityOptions = getOptimizerAbilityOptions(data, cardsEnabled);
     const bugOptions = [...getOptimizerBugOptions(data, cardsEnabled),
         ...(data.gameId === "bn6" && bugRules.panel === "required" ? BUG_SPEC_OPTIONS.filter(option => option.id === "panel") : [])];
+    const customValues = getOptimizerCustomValues(data.gameId, cardsEnabled);
+    const customOptions: { value: number; label: string }[] = [
+        { value: 0, label: t("anyOption", lang) },
+        ...customValues.map(value => {
+            let label = `≥ ${value}`;
+            if (value === 5 && cardsEnabled) {
+                label = `≥ 5 (${t("minCustomStandardBaseline", lang)})`;
+            } else if (value === 10) {
+                if (data.gameId === "bn6" && !cardsEnabled) {
+                    label = `10 (${t("minCustomNumberOpen", lang)})`;
+                } else if (cardsEnabled) {
+                    label = `10 (${t("minCustomMaxOpen", lang)})`;
+                }
+            }
+            return { value, label };
+        }),
+    ];
+    if (minCustom > 0 && !customOptions.some(opt => opt.value === minCustom)) {
+        customOptions.push({ value: minCustom, label: `≥ ${minCustom}` });
+        customOptions.sort((a, b) => a.value - b.value);
+    }
     const constraints = getOptimizerModeConstraints(data, {
         ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
         ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
@@ -1389,9 +1410,8 @@ function AutoOptimizerPanel({
                                         </label>
                                         <select id="optimizer-custom-min" className="form-select form-select-sm"
                                             value={minCustom} onChange={event => setMinCustom(Number(event.target.value))}>
-                                            <option value={0}>{t("anyOption", lang)}</option>
-                                            {[5, 6, 7, 8, 9, 10].map(value => (
-                                                <option key={value} value={value}>≥ {value}</option>
+                                            {customOptions.map(option => (
+                                                <option key={option.value} value={option.value}>{option.label}</option>
                                             ))}
                                         </select>
                                         <div className="small text-muted mt-1">{t("minCustomDesc", lang)}</div>

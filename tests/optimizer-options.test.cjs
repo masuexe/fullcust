@@ -4,7 +4,7 @@ const { test } = require("node:test");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
-const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerModeConstraints } = require("../optimizer-options.ts");
+const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const dataFor = game => parseGameData(require(`../data/${game}.json`), games.find(g => g.id === game));
 const ids = options => options.map(option => option.id);
@@ -100,3 +100,17 @@ for (const game of ["bn5", "bn6"]) {
         assert.deepEqual(getOptimizerModeConstraints(data, constraints, false), {});
     });
 }
+
+test("BN6 custom values: pure NC omits 9 and starts from 6; cards enabled includes negative-safe values 3, 4, baseline 5", () => {
+    assert.deepEqual(getOptimizerCustomValues("bn6", false), [6, 7, 8, 10]);
+    assert.deepEqual(getOptimizerCustomValues("bn6", true), [3, 4, 5, 6, 7, 8, 9, 10]);
+});
+
+test("BN5, BN4, BN3 custom values adapt to NC and mod card availability", () => {
+    assert.deepEqual(getOptimizerCustomValues("bn5", false), [6, 7, 8, 9, 10]);
+    assert.deepEqual(getOptimizerCustomValues("bn5", true), [3, 4, 5, 6, 7, 8, 9, 10]);
+    assert.deepEqual(getOptimizerCustomValues("bn4", false), [6, 7, 8, 9]);
+    assert.deepEqual(getOptimizerCustomValues("bn4", true), [4, 5, 6, 7, 8, 9, 10]);
+    assert.deepEqual(getOptimizerCustomValues("bn3", false), [6, 7, 8]);
+    assert.deepEqual(getOptimizerCustomValues("bn3", true), [6, 7, 8]);
+});

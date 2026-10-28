@@ -882,6 +882,15 @@ export const translations = {
         ja: "基本は5枚です。ナビカス・改造カードの加減算後の構成値で判定します。戦闘中のカスタムバグはバグ条件で別途指定します。",
         zh: "基础选卡数为 5，按部件与改造卡加减后的构筑数值判断。战斗中减少选卡数的 Custom BUG 可在 Bug 规则中另行禁止。",
     },
+    minCustomStandardBaseline: {
+        en: "Standard Baseline", ja: "標準ベースライン", zh: "标准保底",
+    },
+    minCustomNumberOpen: {
+        en: "NumberOpen", ja: "ナンバーオープン", zh: "数字开启",
+    },
+    minCustomMaxOpen: {
+        en: "Max Open", ja: "全開", zh: "全开",
+    },
     minChipRecoveryDesc: {
         en: "The final active recovery amount must meet this minimum, including after later improvements.",
         ja: "最終的に有効な回復量の下限です。以降の改善でもこの条件を維持します。",

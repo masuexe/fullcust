@@ -27,6 +27,36 @@ export function getOptimizerBugOptions(data: Data, cardsEnabled: boolean) {
     return options.filter(option => types.has(option.id));
 }
 
+/**
+ * Available values for minimum Custom constraint based on game ID and whether Mod Cards are active.
+ *
+ * In pure NC mode:
+ * - BN6: NC programs are Custom1 (+1), Custom2 (+2), and NumberOpen (10). 9 is physically unreachable.
+ *   Default baseline is 5, so values start from 6 up to 10 (omitting 9).
+ * - BN5: NC programs can reach 6..10.
+ * - BN4: NC programs can reach 6..9.
+ * - BN3: NC programs can reach 6..8.
+ *
+ * In Mod Card mode:
+ * - Cards can include negative Custom penalties (e.g. BN6 DiveMan -2, GroundMan -1; BN5 Proto -3).
+ *   Megaman's Custom can drop to 2, 3, or 4. Setting >= 5 is a common protection constraint against hand penalties.
+ */
+export function getOptimizerCustomValues(gameId: string, cardsEnabled: boolean): number[] {
+    if (!cardsEnabled) {
+        if (gameId === "bn6") return [6, 7, 8, 10];
+        if (gameId === "bn5") return [6, 7, 8, 9, 10];
+        if (gameId === "bn4") return [6, 7, 8, 9];
+        return [6, 7, 8];
+    }
+    if (gameId === "bn6" || gameId === "bn5") {
+        return [3, 4, 5, 6, 7, 8, 9, 10];
+    }
+    if (gameId === "bn4") {
+        return [4, 5, 6, 7, 8, 9, 10];
+    }
+    return [6, 7, 8];
+}
+
 /** UI-only mode projection. Saved drafts can be restored when cards are re-enabled;
  * hidden settings must not enter the worker request, result, or constraint counts.
  */
