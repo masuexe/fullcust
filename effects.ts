@@ -863,7 +863,7 @@ export function getChargeAdditionOptions(gameId: string): ConstraintOption[] {
     return [];
 }
 
-export const BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
+export const BN6_BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "none", name: { en: "Standard (No Buster Addition)", ja: "通常（連射付加なし）", zh: "标准连射 (禁用连射附加)" } },
     { id: "1 square knock back", name: { en: "Knockback 1 Square (BomBoy)", ja: "1マスノックバック（ボムボーイ）", zh: "击退 1 格 (1 square knock back / 炸弹小弟)" } },
     { id: "Knock back all the way", name: { en: "Knockback to Edge (AirMan)", ja: "端までノックバック（エアーマン）", zh: "击退到底 (Knock back all / 气力人)" } },
@@ -872,6 +872,32 @@ export const BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "Ice Panel", name: { en: "Ice Panel (FreezeMn)", ja: "氷パネル（フリーズマン）", zh: "冰地面 (Ice Panel / 冷冻人)" } },
     { id: "Swamp Panel", name: { en: "Swamp Panel (MistMan / DarkMega)", ja: "沼パネル（ミストマン / ダークロックマン）", zh: "毒沼面 (Swamp Panel / 雾人 / 黑暗洛克人)" } },
 ];
+
+export const BN5_BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Buster Addition)", ja: "通常（連射付加なし）", zh: "标准连射 (禁用连射附加)" } },
+    { id: "Cracked Panel", name: { en: "Cracked Panel (Flashy)", ja: "ヒビパネル（ガイアント）", zh: "裂地面 (Cracked Panel / 闪光怪)" } },
+    { id: "Grass Panel", name: { en: "Grass Panel (Curling)", ja: "草むらパネル（ウェザース）", zh: "草地面 (Grass Panel / 天气怪)" } },
+    { id: "Sea Panel", name: { en: "Sea Panel (ElecMan)", ja: "海パネル（ウズリム）", zh: "海面 (Sea Panel / 涡流怪)" } },
+    { id: "Poison Panel", name: { en: "Poison Panel (Lark)", ja: "毒沼パネル（フデロー）", zh: "毒沼面 (Poison Panel / 笔刷鸟)" } },
+];
+
+export const BN4_BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No Buster Addition)", ja: "通常（連射付加なし）", zh: "标准连射 (禁用连射附加)" } },
+    { id: "Blind", name: { en: "Blind (134-012)", ja: "盲目（134-012）", zh: "致盲 (Blind / 134-012)" } },
+    { id: "Grass Panel", name: { en: "Grass Panel (134-013)", ja: "草むらパネル（134-013）", zh: "草地面 (Grass Panel / 134-013)" } },
+    { id: "CrackOut", name: { en: "CrackOut (134-043)", ja: "ヒビパネル（134-043）", zh: "裂地面 (CrackOut / 134-043)" } },
+    { id: "Poison", name: { en: "Poison (134-044)", ja: "毒素（134-044）", zh: "中毒 (Poison / 134-044)" } },
+    { id: "Ice Panel", name: { en: "Ice Panel (134-102)", ja: "氷パネル（134-102）", zh: "冰地面 (Ice Panel / 134-102)" } },
+];
+
+export const BUSTER_ADDITION_OPTIONS = BN6_BUSTER_ADDITION_OPTIONS;
+
+export function getBusterAdditionOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn4") return BN4_BUSTER_ADDITION_OPTIONS;
+    if (gameId === "bn5") return BN5_BUSTER_ADDITION_OPTIONS;
+    if (gameId === "bn6") return BN6_BUSTER_ADDITION_OPTIONS;
+    return [];
+}
 
 export const BODY_OPTIONS: ConstraintOption[] = [
     { id: "Normal", name: { en: "Normal Body", ja: "ノーマルボディ", zh: "一般躯体 (Normal)" } },

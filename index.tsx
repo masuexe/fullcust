@@ -60,6 +60,7 @@ import {
     BBUTTON_OPTIONS,
     CHARGE_ADDITION_OPTIONS,
     BUSTER_ADDITION_OPTIONS,
+    getBusterAdditionOptions,
     BODY_OPTIONS,
     getSpecialCsOptions,
     getBLeftOptions,
@@ -1766,42 +1767,44 @@ function AutoOptimizerPanel({
                                                 </div>
                                             </div>
 
-                                            {/* Row 3: CS Addition & Buster Addition */}
+                                            {/* Row 3: CS Addition (if supported) & Buster Addition */}
                                             <div className="row g-2 mb-2">
-                                                <div className="col-12 col-md-6">
-                                                    <label className="form-label small fw-semibold mb-1">
-                                                        {t("reqChargeAdditionTitle", lang)}:
-                                                    </label>
-                                                    <MultiSelectDropdown
-                                                        options={getChargeAdditionOptions(data.gameId)}
-                                                        selected={allowedChargeAdditions}
-                                                        onChange={setAllowedChargeAdditions}
-                                                        lang={lang}
-                                                    />
-                                                    {(data.gameId === "bn5" || data.gameId === "bn6") && (
-                                                        <div className="form-check mt-1">
-                                                            <input
-                                                                className="form-check-input"
-                                                                type="checkbox"
-                                                                id="optimizer-glitch-100-cs"
-                                                                checked={requireGlitch100ChargeAddition}
-                                                                onChange={e => setRequireGlitch100ChargeAddition(e.target.checked)}
-                                                            />
-                                                            <label className="form-check-label small" htmlFor="optimizer-glitch-100-cs">
-                                                                <span className="fw-semibold text-warning-emphasis">{t("glitch100ChargeAdditionTitle", lang)}</span>
-                                                                <span className="text-muted d-block" style={{ fontSize: "0.72rem" }}>
-                                                                    {t("glitch100ChargeAdditionDesc", lang)}
-                                                                </span>
-                                                            </label>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                {getChargeAdditionOptions(data.gameId).length > 0 && (
+                                                    <div className="col-12 col-md-6">
+                                                        <label className="form-label small fw-semibold mb-1">
+                                                            {t("reqChargeAdditionTitle", lang)}:
+                                                        </label>
+                                                        <MultiSelectDropdown
+                                                            options={getChargeAdditionOptions(data.gameId)}
+                                                            selected={allowedChargeAdditions}
+                                                            onChange={setAllowedChargeAdditions}
+                                                            lang={lang}
+                                                        />
+                                                        {(data.gameId === "bn5" || data.gameId === "bn6") && (
+                                                            <div className="form-check mt-1">
+                                                                <input
+                                                                    className="form-check-input"
+                                                                    type="checkbox"
+                                                                    id="optimizer-glitch-100-cs"
+                                                                    checked={requireGlitch100ChargeAddition}
+                                                                    onChange={e => setRequireGlitch100ChargeAddition(e.target.checked)}
+                                                                />
+                                                                <label className="form-check-label small" htmlFor="optimizer-glitch-100-cs">
+                                                                    <span className="fw-semibold text-warning-emphasis">{t("glitch100ChargeAdditionTitle", lang)}</span>
+                                                                    <span className="text-muted d-block" style={{ fontSize: "0.72rem" }}>
+                                                                        {t("glitch100ChargeAdditionDesc", lang)}
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <div className="col-12 col-md-6">
                                                     <label className="form-label small fw-semibold mb-1">
                                                         {t("reqBusterAdditionTitle", lang)}:
                                                     </label>
                                                     <MultiSelectDropdown
-                                                        options={BUSTER_ADDITION_OPTIONS}
+                                                        options={getBusterAdditionOptions(data.gameId)}
                                                         selected={allowedBusterAdditions}
                                                         onChange={setAllowedBusterAdditions}
                                                         lang={lang}

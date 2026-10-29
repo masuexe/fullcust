@@ -4,6 +4,7 @@ const { test } = require("node:test");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
+const { getChargeAdditionOptions, getBusterAdditionOptions } = require("../effects.ts");
 const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const dataFor = game => parseGameData(require(`../data/${game}.json`), games.find(g => g.id === game));
@@ -146,4 +147,33 @@ test("BN5, BN4, BN3 custom values adapt to NC and mod card availability", () => 
 test("Chip Recovery options adapt to game: BN6 has 10,20,30,40 while BN5 has 20,30,40,50,60,100", () => {
     assert.deepEqual(getOptimizerChipRecoveryValues("bn6"), [10, 20, 30, 40]);
     assert.deepEqual(getOptimizerChipRecoveryValues("bn5"), [20, 30, 40, 50, 60, 100]);
+});
+
+test("BN4 has no ChargeShot Addition mod cards; options are empty and mode constraints strip it", () => {
+    assert.equal(getChargeAdditionOptions("bn4").length, 0);
+    assert.equal(getChargeAdditionOptions("bn3").length, 0);
+    assert.ok(getChargeAdditionOptions("bn5").length > 0);
+    assert.ok(getChargeAdditionOptions("bn6").length > 0);
+
+    const bn4Data = dataFor("bn4");
+    const constraintsWithCA = { allowedChargeAdditions: ["Paralyze"], requireGlitch100ChargeAddition: true, minCustom: 6 };
+    const cleaned = getOptimizerModeConstraints(bn4Data, constraintsWithCA, true);
+    assert.equal(cleaned.allowedChargeAdditions, undefined);
+    assert.equal(cleaned.requireGlitch100ChargeAddition, undefined);
+    assert.equal(cleaned.minCustom, 6);
+});
+
+test("Buster Addition options adapt to game across BN4, BN5, and BN6", () => {
+    const bn4Options = getBusterAdditionOptions("bn4").map(o => o.id);
+    assert.ok(bn4Options.includes("Blind"));
+    assert.ok(bn4Options.includes("CrackOut"));
+    assert.ok(bn4Options.includes("Poison"));
+
+    const bn5Options = getBusterAdditionOptions("bn5").map(o => o.id);
+    assert.ok(bn5Options.includes("Poison Panel"));
+    assert.ok(bn5Options.includes("Sea Panel"));
+
+    const bn6Options = getBusterAdditionOptions("bn6").map(o => o.id);
+    assert.ok(bn6Options.includes("1 square knock back"));
+    assert.ok(bn6Options.includes("Knock back all the way"));
 });

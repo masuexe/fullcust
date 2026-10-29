@@ -93,7 +93,14 @@ export function getOptimizerChipRecoveryValues(gameId: string): ChipRecoveryMini
  */
 export function getOptimizerModeConstraints(data: Data, constraints: BuildConstraints, cardsEnabled: boolean): BuildConstraints {
     if (data.gameId === "bn3" || data.gameId === "bn4") {
-        const { allowedBodies: _ab, requiredBody: _rb, ...restNoBody } = constraints;
+        const {
+            allowedBodies: _ab,
+            requiredBody: _rb,
+            allowedChargeAdditions: _aca,
+            requiredChargeAddition: _rca,
+            requireGlitch100ChargeAddition: _rgc,
+            ...restNoBody
+        } = constraints;
         constraints = restNoBody;
     }
     if (usesCards(data, cardsEnabled)) return constraints;
