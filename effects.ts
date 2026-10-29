@@ -1,7 +1,7 @@
 import { bugMatchesRule, getBugRule, getCardBugType } from "./panel-effects";
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug, repairsBugType } from "./modcards";
-import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY } from "./problem";
+import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY, ChipRecoveryMinimum } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -846,6 +846,14 @@ export const BN6_CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "Chip Destruction", name: { en: "CS: Chip Destruction (LarkMan)", ja: "CS: チップ破壊（スワローマン）", zh: "CS: 芯片破坏 (LarkMan / 飞燕人)" } },
     { id: "Instant Delete", name: { en: "CS: Instant Delete (EraseMan)", ja: "CS: 即死（キラーマン）", zh: "CS: 即死/扣血 (EraseMan / 杀手人)" } },
 ];
+
+export const BN6_CHIP_RECOVERY_OPTIONS: readonly ChipRecoveryMinimum[] = [10, 20, 30, 40] as const;
+export const BN5_CHIP_RECOVERY_OPTIONS: readonly ChipRecoveryMinimum[] = [20, 30, 40, 50, 60, 100] as const;
+
+export function getChipRecoveryOptions(gameId: string): readonly ChipRecoveryMinimum[] {
+    if (gameId === "bn5") return BN5_CHIP_RECOVERY_OPTIONS;
+    return BN6_CHIP_RECOVERY_OPTIONS;
+}
 
 export const CHARGE_ADDITION_OPTIONS = BN6_CHARGE_ADDITION_OPTIONS;
 

@@ -4,7 +4,7 @@ const { test } = require("node:test");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
-const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
+const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const dataFor = game => parseGameData(require(`../data/${game}.json`), games.find(g => g.id === game));
 const ids = options => options.map(option => option.id);
@@ -141,4 +141,9 @@ test("BN5, BN4, BN3 custom values adapt to NC and mod card availability", () => 
     assert.deepEqual(getOptimizerCustomValues("bn4", true), [4, 5, 6, 7, 8, 9, 10]);
     assert.deepEqual(getOptimizerCustomValues("bn3", false), [6, 7, 8]);
     assert.deepEqual(getOptimizerCustomValues("bn3", true), [6, 7, 8]);
+});
+
+test("Chip Recovery options adapt to game: BN6 has 10,20,30,40 while BN5 has 20,30,40,50,60,100", () => {
+    assert.deepEqual(getOptimizerChipRecoveryValues("bn6"), [10, 20, 30, 40]);
+    assert.deepEqual(getOptimizerChipRecoveryValues("bn5"), [20, 30, 40, 50, 60, 100]);
 });

@@ -448,6 +448,15 @@ test("Chip Recovery is a required ability and respects enable/disable loading or
     assert.equal(stats.modChipRecovery, 40);
 });
 
+test("BN5 Chip Recovery cards have correct tiers 20, 30, 40, 50, 60, 100", () => {
+    assert.equal(computeDeckStats(["136-B009"], "bn5").chipRecovery, 20); // Trumpy / Chikurit
+    assert.equal(computeDeckStats(["136-B007"], "bn5").chipRecovery, 30); // KillPlant / Minogoromon
+    assert.equal(computeDeckStats(["136-A038"], "bn5").chipRecovery, 40); // Dark MegaMan / FlameMan
+    assert.equal(computeDeckStats(["136-A044"], "bn5").chipRecovery, 50); // Meddy
+    assert.equal(computeDeckStats(["136-B021"], "bn5").chipRecovery, 60); // Eellect / Protobug
+    assert.equal(computeDeckStats(["136-C003"], "bn5").chipRecovery, 100); // Serenade (Rare)
+});
+
 test("BN5 and BN6 100% ChargeShot Addition Glitch triggers regardless of card order", () => {
     // BN6: Beetle (137-A009: bPwrAtk: ChargeShot) + ToadMan (137-A037: chargeAddition: Paralyze)
     const bn6Combo1 = computeDeckStats(["137-A009", "137-A037"], "bn6");

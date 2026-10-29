@@ -39,7 +39,7 @@ import {
     GaugeValue,
     GaugeOption,
 } from "./problem";
-import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerModeConstraints } from "./optimizer-options";
+import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
@@ -1145,9 +1145,11 @@ function AutoOptimizerPanel({
         ...(problem.constraints?.requiredAbilities ?? []),
         ...(problem.constraints?.minChipRecovery ? ["chipRecovery"] : []),
     ])]);
+    const chipRecoveryValues = getOptimizerChipRecoveryValues(data.gameId);
     const [minChipRecovery, setMinChipRecovery] = React.useState<ChipRecoveryMinimum>(
-        problem.constraints?.minChipRecovery ?? 10
+        problem.constraints?.minChipRecovery ?? chipRecoveryValues[0]
     );
+    const effectiveMinChipRecovery = chipRecoveryValues.includes(minChipRecovery) ? minChipRecovery : chipRecoveryValues[0];
     const [minBusterStats, setMinBusterStats] = React.useState<Partial<Record<BusterStat, number>>>(
         () => getBusterMinimums(problem.constraints)
     );
@@ -1258,7 +1260,7 @@ function AutoOptimizerPanel({
     }, [bugRules, data.gameId]);
     const constraints = getOptimizerModeConstraints(data, {
         ...(reqAbilities.length > 0 ? { requiredAbilities: reqAbilities } : {}),
-        ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery } : {}),
+        ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery: effectiveMinChipRecovery } : {}),
         ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
         ...(minCustom > 0 ? { minCustom } : {}),
         ...(allowedSpecialMoves.length > 0 ? { allowedSpecialMoves } : {}),
@@ -1656,9 +1658,9 @@ function AutoOptimizerPanel({
                                                     {t("minChipRecoveryTitle", lang)}
                                                 </label>
                                                 <select id="optimizer-chip-recovery-min" className="form-select form-select-sm"
-                                                    value={minChipRecovery}
+                                                    value={effectiveMinChipRecovery}
                                                     onChange={event => setMinChipRecovery(Number(event.target.value) as ChipRecoveryMinimum)}>
-                                                    {([10, 20, 30, 40] as const).map(value => (
+                                                    {chipRecoveryValues.map(value => (
                                                         <option key={value} value={value}>≥ {value} HP</option>
                                                     ))}
                                                 </select>

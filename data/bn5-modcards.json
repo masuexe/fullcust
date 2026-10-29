@@ -1103,7 +1103,7 @@
     "abilities": [],
     "disabledAbilities": [],
     "body": "Fire",
-    "chipRecovery": 20,
+    "chipRecovery": 40,
     "repairs": [],
     "bugs": []
   },
@@ -1276,7 +1276,7 @@
       "tango"
     ],
     "disabledAbilities": [],
-    "chipRecovery": 20,
+    "chipRecovery": 50,
     "repairs": [
       "Damage Bug"
     ],
@@ -1620,7 +1620,7 @@
     "abilities": [],
     "disabledAbilities": [],
     "body": "Wood",
-    "chipRecovery": 20,
+    "chipRecovery": 30,
     "repairs": [],
     "bugs": [
       {
@@ -2039,7 +2039,7 @@
     "stats": {},
     "abilities": [],
     "disabledAbilities": [],
-    "chipRecovery": 20,
+    "chipRecovery": 60,
     "repairs": [],
     "bugs": [
       {
@@ -3044,7 +3044,7 @@
     "abilities": [],
     "disabledAbilities": [],
     "bPwrAtk": "Reflect",
-    "chipRecovery": 20,
+    "chipRecovery": 100,
     "repairs": [],
     "bugs": []
   },

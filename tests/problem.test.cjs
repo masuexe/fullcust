@@ -131,12 +131,12 @@ test("max Buster stat constraints survive shared links and validate attribute na
 test("Chip Recovery minimum tiers round-trip in shared links and reject unsupported values", () => {
     const game = games.find(g => g.id === "bn6");
     const data = parseGameData(require("../data/bn6.json"), game);
-    for (const tier of [10, 20, 30, 40]) {
+    for (const tier of [10, 20, 30, 40, 50, 60, 100]) {
         const problem = { ...emptyProblem(data), constraints: { minChipRecovery: tier } };
         const saved = toHashString(problem, data);
         assert.deepEqual(fromHashString(saved, data).constraints, problem.constraints);
         if (tier === 30) {
-            for (const invalid of [0, -10, 25, 50, "30"]) {
+            for (const invalid of [0, -10, 25, 70, 120, "30"]) {
                 const malformed = JSON.parse(saved);
                 malformed.bc.cr = invalid;
                 assert.throws(() => fromHashString(JSON.stringify(malformed), data));

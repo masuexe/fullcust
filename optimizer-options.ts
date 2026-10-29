@@ -1,7 +1,7 @@
 import { expandPanelBugRules } from "./panel-effects";
 import type { Data } from "./game-data";
 import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType, getMovePanelOptions } from "./effects";
-import { BUSTER_STATS, BuildConstraints } from "./problem";
+import { BUSTER_STATS, BuildConstraints, ChipRecoveryMinimum } from "./problem";
 
 function usesCards(data: Data, enabled: boolean): boolean {
     return enabled && data.gameId !== "bn3";
@@ -81,6 +81,11 @@ export function getOptimizerCustomValues(gameId: string, cardsEnabled: boolean):
         return [4, 5, 6, 7, 8, 9, 10];
     }
     return [6, 7, 8];
+}
+
+export function getOptimizerChipRecoveryValues(gameId: string): ChipRecoveryMinimum[] {
+    if (gameId === "bn5") return [20, 30, 40, 50, 60, 100];
+    return [10, 20, 30, 40];
 }
 
 /** UI-only mode projection. Saved drafts can be restored when cards are re-enabled;

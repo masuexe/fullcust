@@ -7,7 +7,7 @@ export type BugTolerance = "forbidden" | "allowed" | "required" | "allowed_lv1" 
 export type BugPolicyType = "no_bugs" | "benign_allowed" | "custom";
 export const BUSTER_STATS = ["attack", "rapid", "charge"] as const;
 export type BusterStat = typeof BUSTER_STATS[number];
-export type ChipRecoveryMinimum = 10 | 20 | 30 | 40;
+export type ChipRecoveryMinimum = 10 | 20 | 30 | 40 | 50 | 60 | 100;
 export const BODY_ELEMENTS = ["Normal", "Fire", "Aqua", "Elec", "Wood"] as const;
 export type BodyElement = typeof BODY_ELEMENTS[number];
 
@@ -112,7 +112,7 @@ const SavedProblem = z.object({
             rapid: z.number().int().min(1).max(5).optional(),
             charge: z.number().int().min(1).max(5).optional(),
         }).optional(),
-        cr: z.union([z.literal(10), z.literal(20), z.literal(30), z.literal(40)]).optional(),
+        cr: z.union([z.literal(10), z.literal(20), z.literal(30), z.literal(40), z.literal(50), z.literal(60), z.literal(100)]).optional(),
         cm: z.number().int().min(5).max(10).optional(),
         cs: z.string().optional(),
         acs: z.array(z.string()).optional(),
