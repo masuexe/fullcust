@@ -1063,6 +1063,11 @@ export const translations = {
         ja: "各バグの実戦仕様を設定：禁止、容認（ステータス重視で許容）、または必須（固有戦術用）。EXE6では対戦で一般的なバグがデフォルトで容認されます（移動バグ・カスタム減少・移動氷/ヒビ・サポート不発は禁止を維持）。",
         zh: "为各项 BUG 独立设定对战规则：禁止、容许（为高收益属性可承受）、或必须（用于特定战术构筑）。EXE6 默认容许常用对战 BUG（边界移动 BUG、改装视窗减少 BUG、移动碎裂/冰块、支援 BUG 保持禁止）。",
     },
+    bugExclusiveNote: {
+        en: "Only one variant in each bug group can be Required. Selecting another variant changes the previous Required one to Allowed.",
+        ja: "同じバグ系統で「必須」にできるのは1つだけです。別の変種を必須にすると、前の「必須」は「容認」に変わります。",
+        zh: "同一组 BUG 只能有一个「必须」。选择另一个变种时，原先的「必须」会自动改为「允许」。",
+    },
     bugRuleForbidden: {
         en: "✕ Forbidden",
         ja: "✕ 禁止",

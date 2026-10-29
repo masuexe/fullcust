@@ -8,8 +8,8 @@ const { execFileSync } = require("node:child_process");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem, makeGridSettings } = require("../problem.ts");
-const { BN6_BUILD_SEEDS, findKnownBuild } = require("../build-corpus.ts");
-const { readBn6Save } = require("../save-importer.ts");
+const { BN6_BUILD_SEEDS, BUILD_SEEDS_BY_GAME, getBuildSeeds, findKnownBuild } = require("../build-corpus.ts");
+const { readBn6Save, readBatterySave } = require("../save-importer.ts");
 const { buildGbaSave, SAVE_EDITIONS, applySaveMask, computeRawChecksum } = require("../save-exporter.ts");
 const { buildDataToProblem } = require("../build-data.ts");
 const { computeDeckStats } = require("../modcards.ts");
@@ -17,8 +17,23 @@ const { BUG_SPEC_OPTIONS, computePlacedBuildStats, isSolutionAcceptable } = requ
 const { doesBuildSatisfyConstraints } = require("../optimizer.ts");
 const { isSolutionGeometryValid, placeAll } = require("../solver.ts");
 const fixture = require("./fixtures/bn6-gregar-jp-build.json");
-const dataFor = () => parseGameData(require("../data/bn6.json"), games.find(g => g.id === "bn6"));
+
+const dataFor = (gameId = "bn6") => parseGameData(require(`../data/${gameId}.json`), games.find(g => g.id === gameId));
 const allRules = () => Object.fromEntries(BUG_SPEC_OPTIONS.map(b => [b.id, "allowed_any"]));
+
+function seedToProblem(seed, data) {
+    const requirements = seed.parts.map(([id, color]) => ({
+        partIndex: data.partMetas.findIndex(meta => meta.id === id && data.colors[meta.color] === color),
+        constraint: { onCommandLine: null, compressed: null, minBugLevel: 0, maxBugLevel: Infinity },
+    }));
+    const solution = seed.parts.map(([, , x, y, rotation, compressed]) => ({
+        loc: { position: { x, y }, rotation }, compressed,
+    }));
+    const problem = emptyProblem(data);
+    problem.requirements = requirements;
+    problem.modCards = [...seed.cards];
+    return { problem, solution };
+}
 
 for (const edition of SAVE_EDITIONS.filter(e => e.gameId === "bn6")) {
     test(`${edition.id}: battery save import preserves parts, real layout and ordered cards`, () => {
@@ -72,10 +87,10 @@ test("importer appends to an existing corpus and adds no duplicates on reimport"
         const run = (...args) => JSON.parse(execFileSync(process.execPath,
             ["scripts/import-build-corpus.cjs", ...args],
             { cwd: path.join(__dirname, ".."), encoding: "utf8" }));
-        const first = run(path.join(directory, "bn6"), output);
+        const first = run("bn6", path.join(directory, "bn6"), output);
         assert.deepEqual([first.files, first.decoded, first.empty, first.existing, first.added, first.unique],
             [1, 1, 0, 0, 1, 1]);
-        const second = run(path.join(directory, "bn6"), output, output);
+        const second = run("bn6", path.join(directory, "bn6"), output, output);
         assert.deepEqual([second.files, second.decoded, second.existing, second.added, second.unique],
             [1, 1, 1, 0, 1]);
         assert.equal(JSON.parse(fs.readFileSync(output, "utf8")).length, 1);
@@ -85,20 +100,40 @@ test("importer appends to an existing corpus and adds no duplicates on reimport"
 });
 
 test("every corpus seed has known parts, valid geometry and a legal ordered card deck", () => {
-    const data = dataFor();
-    assert.equal(BN6_BUILD_SEEDS.length, 78);
-    for (const seed of BN6_BUILD_SEEDS) {
-        const requirements = seed.parts.map(([id, color]) => ({
-            partIndex: data.partMetas.findIndex(m => m.id === id && data.colors[m.color] === color),
-            constraint: { compressed: null, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity },
-        }));
-        const solution = seed.parts.map(([, , x, y, rotation, compressed]) => ({ loc: { position: { x, y }, rotation }, compressed }));
-        assert.ok(requirements.every(r => r.partIndex >= 0));
-        assert.ok(isSolutionGeometryValid(data.parts, requirements, solution, data.gridSettings));
-        assert.ok(!computeDeckStats(seed.cards, "bn6").isOverCapacity);
-        assert.deepEqual(Object.keys(seed).sort(), ["cards", "parts"]);
+    assert.ok(getBuildSeeds("bn6").length >= 78);
+    for (const gameId of ["bn3", "bn4", "bn5", "bn6"]) {
+        const data = dataFor(gameId);
+        const seeds = getBuildSeeds(gameId);
+        assert.ok(seeds.length > 0, `${gameId} should have a nonempty corpus`);
+        for (const seed of seeds) {
+            const requirements = seed.parts.map(([id, color]) => ({
+                partIndex: data.partMetas.findIndex(m => m.id === id && data.colors[m.color] === color),
+                constraint: { compressed: null, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity },
+            }));
+            const solution = seed.parts.map(([, , x, y, rotation, compressed]) => ({ loc: { position: { x, y }, rotation }, compressed }));
+            assert.ok(requirements.every(r => r.partIndex >= 0));
+            assert.ok(isSolutionGeometryValid(data.parts, requirements, solution, data.gridSettings));
+            assert.ok(!computeDeckStats(seed.cards, gameId).isOverCapacity);
+            assert.deepEqual(Object.keys(seed).sort(), ["cards", "parts"]);
+        }
     }
 });
+
+for (const gameId of ["bn3", "bn4", "bn5"]) {
+    test(`${gameId}: corpus seeds survive an export/import round-trip`, () => {
+        const data = dataFor(gameId);
+        const edition = SAVE_EDITIONS.find(e => e.gameId === gameId);
+        const templateBytes = fs.readFileSync(path.join(__dirname, "../public", edition.rawPath));
+        for (const seed of getBuildSeeds(gameId).slice(0, 12)) {
+            const { problem, solution } = seedToProblem(seed, data);
+            const bytes = buildGbaSave({ edition, data, problem, solution, templateBytes });
+            const decoded = readBatterySave(bytes, data);
+            assert.deepEqual(decoded.problem.requirements.map(r => r.partIndex), problem.requirements.map(r => r.partIndex));
+            assert.deepEqual(decoded.solution, solution);
+            assert.deepEqual(decoded.problem.modCards ?? [], problem.modCards ?? []);
+        }
+    });
+}
 
 test("known builds satisfy current requirements and use the user's current base HP", () => {
     const data = dataFor(), problem = emptyProblem(data);
@@ -129,8 +164,24 @@ test("known-build lookup preserves core constraints and card modes, and safely f
     const matched = findKnownBuild({ data, problem, constraints, modCardMode: "none" });
     assert.ok(matched);
     assert.equal(matched.problem.requirements[0], problem.requirements[0]);
-    problem.modCards = ["137-A001"];
+    // A deck that no seed contains must not match in keep mode.
+    problem.modCards = ["137-UNUSED"];
     assert.equal(findKnownBuild({ data, problem, constraints, modCardMode: "keep" }), null);
     assert.equal(findKnownBuild({ data, problem, constraints: { requiredAbilities: ["notAnAbility"] }, modCardMode: "auto" }), null);
     assert.equal(findKnownBuild({ data, problem, constraints, modCardMode: "auto", shouldStop: () => true }), null);
+    // An empty corpus returns null rather than throwing.
+    assert.equal(findKnownBuild({ data, problem, constraints, modCardMode: "auto" }, []), null);
+});
+
+test("BN4 patch-card addresses match the official six-address table", () => {
+    const { getModCard } = require("../modcards.ts");
+    // These cards were previously stored under wrong addresses.
+    assert.equal(getModCard("134-G002", "bn4").slot, "0B");
+    assert.equal(getModCard("134-105", "bn4").slot, "0A");
+    assert.equal(getModCard("134-094", "bn4").slot, "0B");
+    assert.equal(getModCard("134-097", "bn4").slot, "0D");
+    // A real save used these five cards across addresses 0A-0E.
+    const deck = computeDeckStats(["134-G002", "134-105", "134-078", "134-071", "134-119"], "bn4");
+    assert.equal(deck.hasSlotConflict, false);
+    assert.equal(deck.isOverCapacity, false);
 });

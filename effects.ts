@@ -1120,6 +1120,18 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         desc: { en: "Changes panels after movement or at battle start, including grass, ice, holes, poison, or Holy panels", ja: "移動時や開始時に草・氷・穴・毒・ホーリー等へパネルが変化", zh: "移动后或开局时改变地面，包括草地、冰块、地穴、毒沼或神圣面板" },
     },
     {
+        id: "panelSet",
+        games: ["bn3"],
+        name: { en: "Battle-Start Panel Change", ja: "パネル変化バグ（戦闘開始）", zh: "开局地面变化 BUG" },
+        desc: { en: "When battle starts, all normal panels on the player's side become Cracked (Lv1) or Swamp (Lv2)", ja: "戦闘開始時に自エリアのノーマルパネルがヒビ（Lv1）または毒沼（Lv2）に変化", zh: "战斗开始时己方区域普通地面变为裂地（Lv1）或毒沼（Lv2）" },
+    },
+    {
+        id: "poisonWalk",
+        games: ["bn3"],
+        name: { en: "Poison Step Bug", ja: "毒沼歩行バグ", zh: "毒沼足迹 BUG" },
+        desc: { en: "Every panel MegaMan steps off becomes a Poison panel during battle (GigaFolder1)", ja: "戦闘中、離れたパネルが毒沼に変化（ギガフォルダ1）", zh: "战斗中离开的地面变为毒沼（GIGA文件1）" },
+    },
+    {
         id: "status",
         name: { en: "Status Abnormality", ja: "状態異常バグ", zh: "状态异常 BUG" },
         desc: { en: "Starts combat confused, blind, or flashing", ja: "戦闘開始時に混乱・盲目等の異常", zh: "开局处于混乱、盲目或闪烁等异常" },
@@ -1231,6 +1243,41 @@ BUG_SPEC_OPTIONS.push(
 
 export const FORBIDDEN_BUG_OPTIONS: ConstraintOption[] = BUG_SPEC_OPTIONS;
 
+/**
+ * Keys that describe different levels or variants of one in-game bug state.
+ * A build can only satisfy one of them, so at most one key can be "required".
+ */
+export const EXCLUSIVE_REQUIRED_BUG_GROUPS: readonly { games: readonly string[]; keys: readonly string[] }[] = [
+    // BN3 Modified Shot Bug Lv1-3 (Rock Cube / Water Gun / Magic Flower).
+    { games: ["bn3"], keys: ["chargeCube", "chargeWater", "chargeFlower"] },
+    // BN3 Weakened Buster Bug Lv1-3 (1/4 blank / 1/2 blank / Guard).
+    { games: ["bn3"], keys: ["busterBlank1", "busterBlank2", "busterGuard"] },
+    // BN3 Player Movement Bug Lv1-3 (up / down / confused).
+    { games: ["bn3"], keys: ["involuntaryMoveUp", "involuntaryMoveDown", "involuntaryMoveConfuse"] },
+    // BN4 Player Bug Lv1-3 (confused / forward / backward).
+    { games: ["bn4"], keys: ["playerConfuse", "playerMoveForward", "playerMoveBackward"] },
+];
+
+/** Keep at most one "required" key in each exclusive group. Demoted keys become "allowed". */
+export function enforceExclusiveRequiredBugs(
+    rules: Record<string, BugTolerance>,
+    gameId: string,
+    preferredKey?: string,
+): Record<string, BugTolerance> {
+    let next: Record<string, BugTolerance> | undefined;
+    for (const group of EXCLUSIVE_REQUIRED_BUG_GROUPS) {
+        if (!group.games.includes(gameId)) continue;
+        const required = group.keys.filter(key => rules[key] === "required");
+        if (required.length <= 1) continue;
+        if (!next) next = { ...rules };
+        const keep = preferredKey && required.includes(preferredKey) ? preferredKey : required[0];
+        for (const key of required) {
+            if (key !== keep) next[key] = "allowed";
+        }
+    }
+    return next ?? rules;
+}
+
 export function normalizeBugType(type: string): string {
     const t = type.toLowerCase();
     if (t === "involuntarymoveup" || t === "moveup") return "involuntaryMoveUp";
@@ -1257,7 +1304,9 @@ export function normalizeBugType(type: string): string {
     if (t === "panelhole") return "panelHole";
     if (t === "panelmetal") return "panelMetal";
     if (t === "panelpoison") return "panelPoison";
-    if (t === "panelset" || t === "poisonwalk" || t === "panel") return "panel";
+    if (t === "panelset") return "panelSet";
+    if (t === "poisonwalk") return "poisonWalk";
+    if (t === "panel") return "panel";
     if (t === "customscreenminus" || t === "custom") return "custom";
     if (t === "chargecube") return "chargeCube";
     if (t === "chargewater") return "chargeWater";

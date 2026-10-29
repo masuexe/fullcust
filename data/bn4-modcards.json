@@ -2065,7 +2065,7 @@
   {
     "id": "134-G002",
     "cardNo": 91,
-    "slot": "0E",
+    "slot": "0B",
     "mb": 0,
     "part": "part3",
     "name": "GutsSoul",
@@ -2102,7 +2102,7 @@
   {
     "id": "134-G003",
     "cardNo": 92,
-    "slot": "0E",
+    "slot": "0A",
     "mb": 0,
     "part": "part3",
     "name": "WindSoul",
@@ -2139,7 +2139,7 @@
   {
     "id": "134-G005",
     "cardNo": 93,
-    "slot": "0E",
+    "slot": "0B",
     "mb": 0,
     "part": "part3",
     "name": "FireSoul",
@@ -2176,7 +2176,7 @@
   {
     "id": "134-G007",
     "cardNo": 94,
-    "slot": "0E",
+    "slot": "0A",
     "mb": 0,
     "part": "part3",
     "name": "ProtoSoul",
@@ -2213,7 +2213,7 @@
   {
     "id": "134-G010",
     "cardNo": 95,
-    "slot": "0E",
+    "slot": "0B",
     "mb": 0,
     "part": "part3",
     "name": "JunkSoul",
@@ -2250,7 +2250,7 @@
   {
     "id": "134-G011",
     "cardNo": 96,
-    "slot": "0E",
+    "slot": "0A",
     "mb": 0,
     "part": "part3",
     "name": "AquaSoul",
@@ -2325,7 +2325,7 @@
   {
     "id": "134-092",
     "cardNo": 98,
-    "slot": "0A",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+750)",
@@ -2384,7 +2384,7 @@
   {
     "id": "134-094",
     "cardNo": 100,
-    "slot": "0A",
+    "slot": "0B",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+800)",
@@ -2405,7 +2405,7 @@
   {
     "id": "134-095",
     "cardNo": 101,
-    "slot": "0B",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+800)",
@@ -2464,7 +2464,7 @@
   {
     "id": "134-097",
     "cardNo": 103,
-    "slot": "0B",
+    "slot": "0D",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+850)",
@@ -2523,7 +2523,7 @@
   {
     "id": "134-099",
     "cardNo": 105,
-    "slot": "0B",
+    "slot": "0D",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+900)",
@@ -2561,7 +2561,7 @@
   {
     "id": "134-100",
     "cardNo": 106,
-    "slot": "0B",
+    "slot": "0A",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+950)",
@@ -2599,7 +2599,7 @@
   {
     "id": "134-101",
     "cardNo": 107,
-    "slot": "0E",
+    "slot": "0A",
     "mb": 0,
     "part": "part4",
     "name": "HP Boost (HP+1000)",
@@ -2640,7 +2640,7 @@
   {
     "id": "134-103",
     "cardNo": 109,
-    "slot": "0D",
+    "slot": "0C",
     "mb": 0,
     "part": "part4",
     "name": "Charge FullCustom",
@@ -2661,7 +2661,7 @@
   {
     "id": "134-104",
     "cardNo": 110,
-    "slot": "0E",
+    "slot": "0D",
     "mb": 0,
     "part": "part4",
     "name": "Charge FullCustom",
@@ -2682,7 +2682,7 @@
   {
     "id": "134-105",
     "cardNo": 111,
-    "slot": "0D",
+    "slot": "0A",
     "mb": 0,
     "part": "part4",
     "name": "Holy Panel Walk",
@@ -2733,7 +2733,7 @@
   {
     "id": "134-106",
     "cardNo": 112,
-    "slot": "0A",
+    "slot": "0D",
     "mb": 0,
     "part": "part4",
     "name": "B Button: Reflect",
@@ -2770,7 +2770,7 @@
   {
     "id": "134-107",
     "cardNo": 113,
-    "slot": "0A",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "B Button: Flower",
@@ -2790,7 +2790,7 @@
   {
     "id": "134-108",
     "cardNo": 114,
-    "slot": "0A",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "B Button: WaterGun",
@@ -2810,7 +2810,7 @@
   {
     "id": "134-109",
     "cardNo": 115,
-    "slot": "0C",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "MegaFolder +3",
@@ -2834,7 +2834,7 @@
   {
     "id": "134-110",
     "cardNo": 116,
-    "slot": "0D",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "Custom +3",
@@ -2872,7 +2872,7 @@
   {
     "id": "134-111",
     "cardNo": 117,
-    "slot": "0A",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "GigaFolder +1",
@@ -2893,7 +2893,7 @@
   {
     "id": "134-112",
     "cardNo": 118,
-    "slot": "0D",
+    "slot": "0E",
     "mb": 0,
     "part": "part4",
     "name": "B+Left: TripleCrack",

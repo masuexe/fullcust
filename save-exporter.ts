@@ -298,34 +298,32 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
             : gameId === "bn4" ? 0x4564
             : 0x1300; // bn3
 
-        // Clear 25 slots
+        // Clear 25 slots. BN3 keeps compression flags in a separate bit array; clear it first.
         buf.fill(0, partsOffset, partsOffset + 25 * 8);
+        if (gameId === "bn3") buf.fill(0, 0x008c, 0x008c + 26);
 
         for (let i = 0; i < placements.length && i < 25; i++) {
             const req = requirements[i];
             const meta = data.partMetas[req.partIndex];
             const p = placements[i];
 
-            let rawId: number;
-            if (gameId === "bn3") {
-                rawId = meta.id;
-                if (p.compressed) {
-                    const flagBit = 0x02e0 + rawId;
-                    const byteIdx = flagBit >> 3;
-                    const bitMask = 1 << (flagBit & 7);
-                    if (byteIdx < buf.length) {
-                        buf[byteIdx] |= bitMask;
-                    }
+            // In BN3-6 the raw save id is (template id * 4) + color-variant index.
+            let variantIdx = 0;
+            for (let prev = 0; prev < req.partIndex; prev++) {
+                if (data.partMetas[prev].id === meta.id) {
+                    variantIdx++;
                 }
-            } else {
-                // In BN4, BN5, BN6, rawId = (part.id * 4) + variant_index
-                let variantIdx = 0;
-                for (let prev = 0; prev < req.partIndex; prev++) {
-                    if (data.partMetas[prev].id === meta.id) {
-                        variantIdx++;
-                    }
+            }
+            const rawId = (meta.id * 4) + variantIdx;
+            if (gameId === "bn3" && p.compressed) {
+                // BN3 stores the per-part compression flag in the general flag bit array:
+                // bit (0x02e0 + rawId) of the region that starts at 0x0030, most significant bit first.
+                const flagBit = 0x02e0 + rawId;
+                const byteIdx = 0x0030 + (flagBit >> 3);
+                const bitMask = 0x80 >> (flagBit & 7);
+                if (byteIdx < buf.length) {
+                    buf[byteIdx] |= bitMask;
                 }
-                rawId = (meta.id * 4) + variantIdx;
             }
 
             const slotOffset = partsOffset + i * 8;
@@ -400,6 +398,7 @@ export function buildGbaSave(options: BuildSaveOptions): Uint8Array {
         } else if (gameId === "bn3") {
             buf.fill(0, 0x1d90, 0x1d90 + 25);
             buf.fill(0, 0x1300, 0x1300 + 25 * 8);
+            buf.fill(0, 0x008c, 0x008c + 26); // 204-part compression bit array
         }
     }
 

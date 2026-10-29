@@ -49,8 +49,14 @@ test("BN3 reference masks preserve shape orientation and compression cells", () 
     assert.deepEqual(mask("1:red", true), [".....", "..#..", "..##.", "..#..", "....."]);
     assert.deepEqual(mask("1:red", false), [".....", "..#..", "..##.", "..##.", "....."]);
     assert.deepEqual(mask("10:blue", true), [".....", "...#.", ".###.", ".....", "....."]);
-    assert.deepEqual(mask("41:white", true), [".....", ".....", ".##..", "..#..", "....."]);
-    assert.deepEqual(mask("39:yellow", false), [".....", "#####", "#.###", ".....", "....."]);
+    // The following shapes come from the official ROM part tables. The TREZ wiki
+    // diagrams draw these parts at a different offset inside the 5x5 canvas.
+    assert.deepEqual(mask("12:pink", false), [".....", "..#..", ".##..", ".##..", "....."]);
+    assert.deepEqual(mask("12:pink", true), [".....", ".....", ".##..", ".##..", "....."]);
+    assert.deepEqual(mask("37:pink", false), [".....", ".###.", "..##.", ".....", "....."]);
+    assert.deepEqual(mask("41:white", true), [".....", ".##..", "..#..", ".....", "....."]);
+    assert.deepEqual(mask("39:yellow", false), [".....", ".....", "#####", "#.###", "....."]);
+    assert.deepEqual(mask("46:white", true), [".....", ".....", "..##.", ".....", "....."]);
     for (const part of data.parts) {
         const removed = part.uncompressedMask.filter((v, i) => v && !part.compressedMask[i]).length;
         assert(removed <= 1);

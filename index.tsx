@@ -68,6 +68,8 @@ import {
     getChargeAdditionOptions,
     getMovePanelOptions,
     FORBIDDEN_BUG_OPTIONS,
+    enforceExclusiveRequiredBugs,
+    EXCLUSIVE_REQUIRED_BUG_GROUPS,
 } from "./effects";
 import {
     BN6_MOD_CARDS,
@@ -1205,7 +1207,7 @@ function AutoOptimizerPanel({
     const [bugRules, setBugRules] = React.useState<Record<string, BugTolerance>>(() => {
         const initial = problem.constraints?.bugRules ?? (problem.bugPolicy?.customRules as Record<string, BugTolerance>);
         if (initial && Object.keys(initial).length > 0) {
-            return expandPanelBugRules(data.gameId, initial);
+            return enforceExclusiveRequiredBugs(expandPanelBugRules(data.gameId, initial), data.gameId);
         }
         return getDefaultBugRules(data.gameId);
     });
@@ -1335,17 +1337,17 @@ function AutoOptimizerPanel({
 
     const handleSetBugTolerance = (bugId: string, tol: BugTolerance) => {
         setBugRules(prev => {
+            let next: Record<string, BugTolerance>;
             if (bugId === "panel") {
-                const next: Record<string, BugTolerance> = { ...prev, panel: tol };
+                next = { ...prev, panel: tol };
                 for (const t of PANEL_BUG_TYPES) {
                     if (next[t]) next[t] = tol;
                 }
-                return next;
+            } else {
+                next = { ...prev, [bugId]: tol };
             }
-            return {
-                ...prev,
-                [bugId]: tol,
-            };
+            // Level variants of one bug cannot all be required: keep the clicked one.
+            return tol === "required" ? enforceExclusiveRequiredBugs(next, data.gameId, bugId) : next;
         });
         if (bugId === "panel" && tol === "forbidden") {
             setAllowedMovePanels([]);
@@ -1883,6 +1885,11 @@ function AutoOptimizerPanel({
                                         <div className="text-muted small mb-2" style={{ fontSize: "0.74rem" }}>
                                             {t("bugRulesDesc", lang)}
                                         </div>
+                                        {EXCLUSIVE_REQUIRED_BUG_GROUPS.some(group => group.games.includes(data.gameId)) && (
+                                            <div className="text-muted small mb-2" style={{ fontSize: "0.72rem" }}>
+                                                {t("bugExclusiveNote", lang)}
+                                            </div>
+                                        )}
 
                                         <div className="d-flex flex-column gap-1">
                                             {bugOptions.map(opt => {

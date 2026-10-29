@@ -4,7 +4,8 @@ const { test } = require("node:test");
 const { games } = require("../games.ts");
 const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
-const { getChargeAdditionOptions, getBusterAdditionOptions } = require("../effects.ts");
+const { getChargeAdditionOptions, getBusterAdditionOptions, normalizeBugType } = require("../effects.ts");
+const { bugMatchesRule, getBugRule } = require("../panel-effects.ts");
 const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const dataFor = game => parseGameData(require(`../data/${game}.json`), games.find(g => g.id === game));
@@ -60,6 +61,9 @@ test("NC bug availability is game-specific: BN5 entry damage and BN3 menu drain 
     assert.ok(bn3.includes("busterBlank1"));
     assert.ok(bn3.includes("busterBlank2"));
     assert.ok(bn3.includes("busterGuard"));
+    assert.ok(bn3.includes("panelSet"));
+    assert.ok(bn3.includes("poisonWalk"));
+    assert.ok(!bn3.includes("panel"));
 
     const bn4 = ids(getOptimizerBugOptions(dataFor("bn4"), false));
     assert.ok(!bn4.includes("movement"));
@@ -176,4 +180,59 @@ test("Buster Addition options adapt to game across BN4, BN5, and BN6", () => {
     const bn6Options = getBusterAdditionOptions("bn6").map(o => o.id);
     assert.ok(bn6Options.includes("1 square knock back"));
     assert.ok(bn6Options.includes("Knock back all the way"));
+});
+
+test("BN3 keeps battle-start panel change and poison-step bugs separate", () => {
+    const data = dataFor("bn3");
+    assert.equal(normalizeBugType("panelSet"), "panelSet");
+    assert.equal(normalizeBugType("poisonWalk"), "poisonWalk");
+    // Legacy broad panel rules still match both effects.
+    assert.ok(bugMatchesRule("panelSet", "panel"));
+    assert.ok(bugMatchesRule("poisonWalk", "panel"));
+    assert.equal(getBugRule({ panel: "forbidden" }, "panelSet"), "forbidden");
+    assert.equal(getBugRule({ panel: "forbidden" }, "poisonWalk"), "forbidden");
+    assert.equal(getBugRule({ poiso: undefined, poisonWalk: "required" }, "poisonWalk"), "required");
+
+    // A legacy broad constraint expands to both new keys.
+    const projected = getOptimizerModeConstraints(data, {
+        bugRules: { panel: "allowed" },
+        forbiddenBugs: ["panel"],
+    }, false);
+    assert.equal(projected.bugRules.panelSet, "allowed");
+    assert.equal(projected.bugRules.poisonWalk, "allowed");
+    assert.deepEqual([...projected.forbiddenBugs].sort(), ["panelSet", "poisonWalk"]);
+});
+
+test("exclusive bug variants allow only one Required and keep independent bugs independent", () => {
+    const { enforceExclusiveRequiredBugs } = require("../effects.ts");
+    const demoted = enforceExclusiveRequiredBugs({
+        chargeCube: "required",
+        chargeWater: "required",
+        chargeFlower: "allowed",
+    }, "bn3", "chargeWater");
+    assert.equal(demoted.chargeWater, "required");
+    assert.equal(demoted.chargeCube, "allowed");
+    assert.equal(demoted.chargeFlower, "allowed");
+    // Without a preferred key the first required key wins.
+    const firstWins = enforceExclusiveRequiredBugs({ busterBlank1: "required", busterBlank2: "required" }, "bn3");
+    assert.equal(firstWins.busterBlank1, "required");
+    assert.equal(firstWins.busterBlank2, "allowed");
+    // BN4 player levels behave the same way.
+    const player = enforceExclusiveRequiredBugs({ playerConfuse: "required", playerMoveForward: "required" }, "bn4", "playerMoveForward");
+    assert.equal(player.playerMoveForward, "required");
+    assert.equal(player.playerConfuse, "allowed");
+
+    // Constraints normalize contradictory saved rules before the worker sees them.
+    const projected = getOptimizerModeConstraints(dataFor("bn3"), {
+        bugRules: { chargeCube: "required", chargeWater: "required", chargeFlower: "required" },
+    }, false);
+    const required = Object.entries(projected.bugRules).filter(([, value]) => value === "required").map(([key]) => key);
+    assert.deepEqual(required, ["chargeCube"]);
+
+    // panelSet and poisonWalk are independent, so both may be required.
+    const independent = getOptimizerModeConstraints(dataFor("bn3"), {
+        bugRules: { panelSet: "required", poisonWalk: "required" },
+    }, false);
+    assert.equal(independent.bugRules.panelSet, "required");
+    assert.equal(independent.bugRules.poisonWalk, "required");
 });

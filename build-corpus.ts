@@ -1,4 +1,7 @@
-import seeds from "./data/bn6-build-seeds.json";
+import bn3Seeds from "./data/bn3-build-seeds.json";
+import bn4Seeds from "./data/bn4-build-seeds.json";
+import bn5Seeds from "./data/bn5-build-seeds.json";
+import bn6Seeds from "./data/bn6-build-seeds.json";
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, computePlacedBuildStats, isSolutionAcceptable } from "./effects";
 import { compareBuildStats, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, occupiedBuildCells, removeRedundantAbilityParts } from "./optimizer";
@@ -10,19 +13,33 @@ export interface BuildSeed {
     parts: [number, string, number, number, number, boolean][];
     cards: string[];
 }
-export const BN6_BUILD_SEEDS = seeds as BuildSeed[];
+export const BUILD_SEEDS_BY_GAME: Record<string, BuildSeed[]> = {
+    bn3: bn3Seeds as unknown as BuildSeed[],
+    bn4: bn4Seeds as unknown as BuildSeed[],
+    bn5: bn5Seeds as unknown as BuildSeed[],
+    bn6: bn6Seeds as unknown as BuildSeed[],
+};
+
+/** Legacy alias kept for tests and scripts. */
+export const BN6_BUILD_SEEDS = BUILD_SEEDS_BY_GAME.bn6;
+
+/** Known-build warm-start seeds for a game; empty when the game has no corpus yet. */
+export function getBuildSeeds(gameId: string): BuildSeed[] {
+    return BUILD_SEEDS_BY_GAME[gameId] ?? [];
+}
 
 /** Revalidate every seed against current data, selected core, base HP, policy and constraints. */
 export function findKnownBuild(options: OptimizeOptions & {
     shouldStop?: () => boolean;
     onImprove?: (result: OptimizeResult) => void;
-}, corpus: BuildSeed[] = BN6_BUILD_SEEDS): OptimizeResult | null {
+}, corpus?: BuildSeed[]): OptimizeResult | null {
     const { data, problem, constraints = problem.constraints, modCardMode = "keep",
         policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY, target = "max_hp", shouldStop = () => false } = options;
-    if (data.gameId !== "bn6") return null;
+    const activeCorpus = corpus ?? getBuildSeeds(data.gameId);
+    if (activeCorpus.length === 0) return null;
     const grid = makeGridSettings(data, problem);
     let best: OptimizeResult | null = null;
-    for (const seed of corpus) {
+    for (const seed of activeCorpus) {
         if (shouldStop()) break;
         options.onSearchWork?.("candidate");
         if (modCardMode === "none" && seed.cards.length) continue;

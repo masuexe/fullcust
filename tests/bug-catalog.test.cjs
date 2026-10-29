@@ -45,7 +45,8 @@ test("approved BN5/6 source tables match every audited card's bug and repair cat
             const card = getModCard(record.id, game);
             assert.ok(card);
             assert.deepEqual([...new Set(card.bugs.map(b => b.type))].sort(), record.bugs, `${record.id}: self bugs`);
-            const repairs = BUG_SPEC_OPTIONS.filter(o => card.repairs.some(repair => repairsBugType(repair, o.id)))
+            const repairs = BUG_SPEC_OPTIONS
+                .filter(o => (!o.games || o.games.includes(game)) && card.repairs.some(repair => repairsBugType(repair, o.id)))
                 .map(o => category(o.id));
             assert.deepEqual([...new Set(repairs)].sort(), record.repairs, `${record.id}: repair targets`);
         }

@@ -1,6 +1,6 @@
 import { expandPanelBugRules } from "./panel-effects";
 import type { Data } from "./game-data";
-import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType, getMovePanelOptions } from "./effects";
+import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType, getMovePanelOptions, enforceExclusiveRequiredBugs } from "./effects";
 import { BUSTER_STATS, BuildConstraints, ChipRecoveryMinimum } from "./problem";
 
 function usesCards(data: Data, enabled: boolean): boolean {
@@ -120,9 +120,16 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     const minima = Object.fromEntries(BUSTER_STATS.filter(stat => minBusterStats?.[stat] !== undefined)
         .map(stat => [stat, Math.min(5, minBusterStats![stat]!)]));
     const bugIds = new Set(getOptimizerBugOptions(data, false).map(option => option.id));
-    if ((data.gameId === "bn6" || data.gameId === "bn5") && bugRules?.panel === "required") bugIds.add("panel");
-    const rules = bugRules && Object.fromEntries(Object.entries(expandPanelBugRules(data.gameId, bugRules)).filter(([type]) => bugIds.has(normalizeBugType(type))));
-    const forbidden = forbiddenBugs?.filter(type => bugIds.has(normalizeBugType(type)));
+    if ((data.gameId === "bn6" || data.gameId === "bn5" || data.gameId === "bn3") && bugRules?.panel === "required") bugIds.add("panel");
+    const expandedRules = bugRules && Object.fromEntries(Object.entries(expandPanelBugRules(data.gameId, bugRules)).filter(([type]) => bugIds.has(normalizeBugType(type))));
+    const rules = expandedRules && enforceExclusiveRequiredBugs(expandedRules, data.gameId);
+    const expandForbidden = (type: string): string[] => {
+        const normalized = normalizeBugType(type);
+        // BN3 keeps the battle-start panel bug and the poison-step bug separate.
+        // A legacy broad "panel" rule applies to both.
+        return data.gameId === "bn3" && normalized === "panel" ? ["panelSet", "poisonWalk"] : [normalized];
+    };
+    const forbidden = forbiddenBugs?.flatMap(expandForbidden).filter(type => bugIds.has(type));
     const ncValidPanels = new Set(getMovePanelOptions(data.gameId, false).map(o => o.id));
     const ncMovePanels = allowedMovePanels?.filter(p => ncValidPanels.has(p));
     return {

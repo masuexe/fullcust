@@ -1,33 +1,58 @@
 # Known-build search
 
-The solver first checks a compact library of known BN6 builds, then continues its existing optimization and complete search. This is a deterministic warm start. It does not train a language model or replace constraint validation.
+The solver first checks a compact library of known builds, then continues its existing optimization and complete search. This is a deterministic warm start. It does not train a language model or replace constraint validation.
 
-The user supplied `25年EXE对战构筑包.7z`. Its 209 battery saves span multiple games. The BN6 subset contains 91 saves with recognized JP/US headers and valid checksums. The importer accepted 80: four were empty; after canonicalizing part order and removing duplicates, 70 nonempty layouts remain. Ten saves failed NC record/grid reconstruction and one exceeded 80 MB. Those eleven are excluded; failure here does not establish that a save is invalid in every game modification.
+## Coverage
 
-The later `EXE网战中心特供存档包24版.rar` contains 100 battery saves for several games. It includes 25 BN6 saves. The importer accepted 24 BN6 saves and produced 22 distinct builds. Fourteen builds already existed and eight builds are new.
+The library covers BN6, BN5, BN4 and BN3. The files are `data/bn6-build-seeds.json` (146 builds), `data/bn5-build-seeds.json` (81 builds), `data/bn4-build-seeds.json` (20 builds) and `data/bn3-build-seeds.json` (10 builds).
 
-One save failed NC record/grid reconstruction. The importer rejected that save under the same validation rules. The library now has 78 distinct builds and keeps all 70 original samples.
+The BN3 shapes come from the official ROM part tables, not the TREZ wiki diagrams. The wiki diagrams put 17 variants at a different offset inside the 5x5 canvas. With wiki shapes, 6 otherwise valid saves failed grid reconstruction. With ROM shapes they reconstruct exactly.
 
-The file `data/bn6-build-seeds.json` stores only part IDs, colors, placements, compression and ordered card IDs (about 21 KB). It does not store original save bytes, player data, source filenames or modified base HP. The application recomputes NC abilities from actual command-line contact. It does not trust imported cached combat flags.
+## Sources
 
-Each lookup rechecks the current game's part catalog, selected core parts and placement restrictions, rotation settings, grid, ordered card mode, capacity, bug policy and all requested effects. It uses the user's current base HP. Duplicate core parts are matched as distinct placements. A library miss never proves infeasibility. The scan has a 100 ms scheduling budget, reports valid matches immediately, and does not restrict the subsequent complete search.
+The library was built from the user's save folders. The sources are `25年EXE对战构筑包.7z`, `EXE网战中心特供存档包24版.rar` and the Tango save folder `d:/tango/saves`. The folders contain duplicate copies of the same builds. The importer canonicalizes part order and removes duplicates, so one build appears once.
 
-The initial library covers only BN6 and known layouts. It cannot promise a quick first result for arbitrary new combinations. Future improvements can add small edits around retrieved builds and use measured search outcomes to prioritize branches. Such ranking must leave the complete fallback available.
+A full scan of 517 save files found 212 BN6, 166 BN5, 35 BN4 and 21 BN3 saves. The importer accepted the builds that reproduce the standard part catalog and the stored grid. Many saves were empty story saves or duplicate copies. The remaining 83 files were not detected: they belong to unsupported games (EXE1, EXE2, EXE4.5, BN5DS, Star Force), or they come from ROM hacks with a different part catalog.
 
-To regenerate, first extract the BN6 saves into a temporary directory, then run:
+One save can fail NC record or grid reconstruction. Failure here does not establish that a save is invalid in every game modification.
+
+## Save-format corrections
+
+BN4 patch cards use six addresses 0A to 0F. Address 0F is reserved for PET screen colors. Each address holds one card. The BN4 card dataset had 23 wrong address values. The importer now uses the official address for each card. This correction removed all BN4 import failures.
+
+BN3 stores a part id as (template id * 4) + color-variant index. BN3 also stores the per-part compression flag in the general flag bit array. The exporter wrote the raw template id and the wrong flag location. The exporter now writes the correct id and flag bit. The BN3 reader tries the flag bits first, then searches other compression choices until the records reproduce the stored grid.
+
+The save records use 25 part slots and the grid stores the original slot index plus one. A slot can be empty between two used slots. The reader now compares each occupied cell with its original slot index. The earlier compacted comparison rejected valid saves that had an empty slot.
+
+## Stored data
+
+Each file stores only part IDs, colors, placements, compression and ordered card IDs. The files do not store original save bytes, player data, source filenames or modified base HP. The application recomputes NC abilities from actual command-line contact. It does not trust imported cached combat flags.
+
+Every lookup rechecks the current game's part catalog, selected core parts and placement restrictions, rotation settings, grid, ordered card mode, capacity, bug policy and all requested effects. It uses the user's current base HP. Duplicate core parts are matched as distinct placements. A library miss never proves infeasibility. The scan has a 100 ms scheduling budget, reports valid matches immediately, and does not restrict the subsequent complete search.
+
+## Importing a save folder
+
+Use the batch importer to scan a folder tree. It detects the game from each save and appends unique builds to the matching corpus file:
 
 ```sh
-node scripts/import-build-corpus.cjs /path/to/extracted/bn6 data/bn6-build-seeds.json
+node scripts/import-build-corpus-all.cjs /path/to/saves          # dry run, prints a report
+node scripts/import-build-corpus-all.cjs /path/to/saves --write  # append unique builds
 npm test
-node scripts/benchmark-build-corpus.cjs
 ```
 
-To append another batch and keep the current library, pass the existing corpus as the third argument. The third argument can use the same path as the output. The importer reads that file before it writes the output. A second import of the same batch adds no duplicates:
+To import one game only, use the single-game importer with the game ID:
 
 ```sh
-node scripts/import-build-corpus.cjs /path/to/new/extracted/bn6 data/bn6-build-seeds.json data/bn6-build-seeds.json
+node scripts/import-build-corpus.cjs bn6 /path/to/extracted/bn6 data/bn6-build-seeds.json
+node scripts/import-build-corpus.cjs bn5 /path/to/new/bn5 data/bn5-build-seeds.json data/bn5-build-seeds.json
 ```
 
-The offline reader currently accepts 32/64 KB BN6 GBA battery saves, validates checksum and header, and matches native JP or canonicalized NC records against the stored grid. It is not a UI importer for emulator save states. It validates geometry and card capacity before recording samples.
+To append a batch and keep the current library, pass the existing corpus as the fourth argument. The importer reads that file before it writes the output. A second import of the same batch adds no duplicates.
 
-The benchmark prints library first-match time, whole-library lookup time, independent first-solution-pass time, and HP for three concrete cases. These local measurements exclude Worker startup, rendering and later optimization; they are not predictions for all requests. The library can provide a stronger first result even when the independent first-solution pass is already quick.
+The importers read 32/64 KB GBA battery saves for BN3, BN4, BN5 and BN6. They validate the checksum and header. They match the native JP or canonicalized NC records against the stored grid. They are not a UI importer for emulator save states. They validate geometry and card capacity before they record samples.
+
+The benchmark prints library first-match time, whole-library lookup time, independent first-solution-pass time, and HP. These local measurements exclude Worker startup, rendering and later optimization. They are not predictions for all requests. The library can provide a stronger first result even when the independent first-solution pass is already quick.
+
+```sh
+node scripts/benchmark-build-corpus.cjs bn5
+```

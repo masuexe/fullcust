@@ -22,6 +22,8 @@ export const BN5_PANEL_BUG_TYPES = [
     "panelHole",
 ] as const;
 
+export const BN3_PANEL_BUG_TYPES = ["panelSet", "poisonWalk"] as const;
+
 export const BN4_PLAYER_BUG_TYPES = [
     "playerConfuse",
     "playerMoveForward",
@@ -82,7 +84,8 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
     const act = actual.toLowerCase();
     const rul = rule.toLowerCase();
     return act === rul ||
-        (rul === "panel" && PANEL_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
+        (rul === "panel" && (PANEL_BUG_TYPES.some(type => type.toLowerCase() === act) ||
+            BN3_PANEL_BUG_TYPES.some(type => type.toLowerCase() === act))) ||
         (rul === "player" && BN4_PLAYER_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
         ((rul === "involuntarymove" || rul === "movement") && BN3_INVOLUNTARY_MOVE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
         (rul === "charge" && BN3_CHARGE_BUG_TYPES.some(type => type.toLowerCase() === act)) ||
@@ -93,6 +96,7 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
     return rules?.[type] ?? rules?.[originalType] ??
         (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
+        (BN3_PANEL_BUG_TYPES.includes(type as typeof BN3_PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
         (BN4_PLAYER_BUG_TYPES.includes(type as typeof BN4_PLAYER_BUG_TYPES[number]) ? rules?.player : undefined) ??
         (BN3_INVOLUNTARY_MOVE_BUG_TYPES.includes(type as typeof BN3_INVOLUNTARY_MOVE_BUG_TYPES[number]) ? (rules?.involuntaryMove ?? rules?.movement) : undefined) ??
         (BN3_CHARGE_BUG_TYPES.includes(type as typeof BN3_CHARGE_BUG_TYPES[number]) ? rules?.charge : undefined) ??
@@ -102,6 +106,10 @@ export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefi
 
 /** Old broad defaults become individual controls; retain a broad required rule as an OR. */
 export function expandPanelBugRules(gameId: string, rules: Record<string, BugTolerance>): Record<string, BugTolerance> {
+    if (gameId === "bn3" && rules.panel && rules.panel !== "required") {
+        const { panel, ...rest } = rules;
+        return { ...Object.fromEntries(BN3_PANEL_BUG_TYPES.map(type => [type, panel])), ...rest };
+    }
     if ((gameId !== "bn6" && gameId !== "bn5") || !rules.panel || rules.panel === "required") return rules;
     const panelTypes = gameId === "bn5" ? BN5_PANEL_BUG_TYPES : BN6_PANEL_BUG_TYPES;
     const { panel, ...rest } = rules;
