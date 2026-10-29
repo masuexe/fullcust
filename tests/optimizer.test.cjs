@@ -849,3 +849,40 @@ test("Attack priority never trades Attack for HP, then maximizes HP at equal Att
     assert.ok(compareBuildStats({ ...attack, finalHp: 2 }, attack, "max_attack") > 0);
     assert.equal(compareBuildStats({ ...attack, rapid: 5, charge: 5, custom: 10 }, attack, "max_attack"), 0);
 });
+
+test("optimizer respects requireGlitch100ChargeAddition in BN5 and BN6", () => {
+    const { optimizeModCards } = require("../optimizer.ts");
+    const { computeDeckStats } = require("../modcards.ts");
+
+    // BN6 optimization with 100% glitch requirement and Paralyze
+    const bn6Cards = optimizeModCards({
+        gameId: "bn6",
+        existingCardIds: [],
+        target: "max_hp",
+        policy: { type: "no_bugs" },
+        constraints: {
+            requireGlitch100ChargeAddition: true,
+            requiredChargeAddition: "Paralyze",
+        },
+    });
+    const bn6Deck = computeDeckStats(bn6Cards, "bn6");
+    assert.equal(bn6Deck.chargeAddition, "Paralyze");
+    assert.equal(bn6Deck.bPwrAtk, "ChargeShot");
+    assert.equal(bn6Deck.isGlitch100ChargeAddition, true);
+
+    // BN5 optimization with 100% glitch requirement and Chip Destruction
+    const bn5Cards = optimizeModCards({
+        gameId: "bn5",
+        existingCardIds: [],
+        target: "max_hp",
+        policy: { type: "no_bugs" },
+        constraints: {
+            requireGlitch100ChargeAddition: true,
+            requiredChargeAddition: "Chip Destruction",
+        },
+    });
+    const bn5Deck = computeDeckStats(bn5Cards, "bn5");
+    assert.equal(bn5Deck.chargeAddition, "Chip Destruction");
+    assert.equal(bn5Deck.bPwrAtk, "ChargeShot");
+    assert.equal(bn5Deck.isGlitch100ChargeAddition, true);
+});

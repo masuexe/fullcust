@@ -145,6 +145,7 @@ export interface DeckStats {
     bLeft?: string;
     busterAddition?: string;
     chargeAddition?: string;
+    isGlitch100ChargeAddition?: boolean;
     invalidatedBusterAddition?: string;
     invalidatedChargeAddition?: string;
     movePanel?: string;
@@ -344,6 +345,7 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         bLeft,
         busterAddition,
         chargeAddition,
+        isGlitch100ChargeAddition: (gameId === "bn5" || gameId === "bn6") && Boolean(chargeAddition && bPwrAtk && bPwrAtk.toLowerCase() === "chargeshot"),
         invalidatedBusterAddition,
         invalidatedChargeAddition,
         movePanel: (gameId === "bn6" || gameId === "bn5") ? (() => {

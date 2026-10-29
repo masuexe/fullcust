@@ -447,3 +447,45 @@ test("Chip Recovery is a required ability and respects enable/disable loading or
     assert.ok(stats.abilities.includes("chipRecovery"));
     assert.equal(stats.modChipRecovery, 40);
 });
+
+test("BN5 and BN6 100% ChargeShot Addition Glitch triggers regardless of card order", () => {
+    // BN6: Beetle (137-A009: bPwrAtk: ChargeShot) + ToadMan (137-A037: chargeAddition: Paralyze)
+    const bn6Combo1 = computeDeckStats(["137-A009", "137-A037"], "bn6");
+    assert.equal(bn6Combo1.chargeAddition, "Paralyze");
+    assert.equal(bn6Combo1.bPwrAtk, "ChargeShot");
+    assert.equal(bn6Combo1.isGlitch100ChargeAddition, true);
+
+    // Order reversed still triggers
+    const bn6Combo2 = computeDeckStats(["137-A037", "137-A009"], "bn6");
+    assert.equal(bn6Combo2.chargeAddition, "Paralyze");
+    assert.equal(bn6Combo2.bPwrAtk, "ChargeShot");
+    assert.equal(bn6Combo2.isGlitch100ChargeAddition, true);
+
+    // ElmntMan has both on single card
+    const bn6Elmnt = computeDeckStats(["137-B053"], "bn6");
+    assert.equal(bn6Elmnt.chargeAddition, "Ice Panel");
+    assert.equal(bn6Elmnt.bPwrAtk, "ChargeShot");
+    assert.equal(bn6Elmnt.isGlitch100ChargeAddition, true);
+
+    // Overriding CS weapon breaks the glitch
+    const bn6Overridden = computeDeckStats(["137-A009", "137-A037", "137-A001"], "bn6");
+    assert.equal(bn6Overridden.bPwrAtk, "M-Cannon");
+    assert.equal(bn6Overridden.isGlitch100ChargeAddition, false);
+
+    // BN5: Card 136-B017 (ChargeShot) + Roll (136-A031: Chip Destruction)
+    const bn5RollCombo = computeDeckStats(["136-B017", "136-A031"], "bn5");
+    assert.equal(bn5RollCombo.chargeAddition, "Chip Destruction");
+    assert.equal(bn5RollCombo.bPwrAtk, "ChargeShot");
+    assert.equal(bn5RollCombo.isGlitch100ChargeAddition, true);
+
+    // BN5: Heady (136-B020) has both on a single card
+    const bn5Heady = computeDeckStats(["136-B020"], "bn5");
+    assert.equal(bn5Heady.chargeAddition, "Blind");
+    assert.equal(bn5Heady.bPwrAtk, "ChargeShot");
+    assert.equal(bn5Heady.isGlitch100ChargeAddition, true);
+
+    // Build stats preserves glitch flag
+    const buildStats = computeBuildStats("bn6", [], ["137-A009", "137-A037"]);
+    assert.equal(buildStats.isGlitch100ChargeAddition, true);
+    assert.equal(buildStats.modChargeAddition, "Paralyze");
+});

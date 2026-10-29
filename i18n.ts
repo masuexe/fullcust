@@ -921,6 +921,21 @@ export const translations = {
         ja: "CS付加効果",
         zh: "集气射击附加效果",
     },
+    glitch100ChargeAdditionTitle: {
+        en: "100% Trigger (ChargeShot Addition Glitch)",
+        ja: "100%発動（CS追加効果バグ）",
+        zh: "100% 必定触发（CS附加漏洞）",
+    },
+    glitch100ChargeAdditionDesc: {
+        en: "Requires Default ChargeShot (B PwrAtk: ChargeShot) alongside CS Addition to exploit the game glitch and guarantee 100% proc rate.",
+        ja: "通常チャージショット（BためうちでCS）と併用することで、CS追加効果が100%の確率で発動するゲームの仕様・バグを利用します。",
+        zh: "利用改造卡附带通常蓄力炮（BためうちでCS）时导致蓄力追加效果 100% 必定触发的游戏漏洞。",
+    },
+    glitch100Tag: {
+        en: "100% Glitch",
+        ja: "100%バグ発動",
+        zh: "100% 漏洞触发",
+    },
     reqBusterAdditionTitle: {
         en: "Buster Addition",
         ja: "バスター付加効果",

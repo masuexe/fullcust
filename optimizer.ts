@@ -598,7 +598,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     }
 
     // Lock required Charge Addition if specified
-    const chargeAdditionRestricted = constraints?.allowedChargeAdditions !== undefined || constraints?.requiredChargeAddition;
+    const chargeAdditionRestricted = constraints?.allowedChargeAdditions !== undefined || constraints?.requiredChargeAddition || constraints?.requireGlitch100ChargeAddition;
     if (chargeAdditionRestricted && !isChargeAdditionAllowed(undefined, constraints) && !locked.some(id => isChargeAdditionAllowed(getModCard(id, gameId)?.chargeAddition, constraints))) {
         const matchingCards = allCards.filter(
             c => isChargeAdditionAllowed(c.chargeAddition, constraints) &&
@@ -606,8 +606,35 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
                  isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
         );
         if (matchingCards.length > 0) {
-            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs) - evaluateCardScore(a, target, requiredBugs));
+            matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs, constraints?.requiredAbilities) - evaluateCardScore(a, target, requiredBugs, constraints?.requiredAbilities));
             locked.push(matchingCards[0].id);
+        }
+    }
+
+    // Lock required ChargeShot PwrAtk if 100% glitch is requested
+    if (constraints?.requireGlitch100ChargeAddition && (gameId === "bn5" || gameId === "bn6")) {
+        const currentDeck = computeDeckStats(locked, gameId);
+        if (currentDeck.bPwrAtk?.toLowerCase() !== "chargeshot") {
+            const csCards = allCards.filter(
+                c => c.bPwrAtk && c.bPwrAtk.toLowerCase() === "chargeshot" &&
+                     !c.disabledChargeAddition &&
+                     isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            );
+            if (csCards.length > 0) {
+                csCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs, constraints?.requiredAbilities) - evaluateCardScore(a, target, requiredBugs, constraints?.requiredAbilities));
+                locked.push(csCards[0].id);
+            }
+        }
+        if (!currentDeck.chargeAddition && !locked.some(id => Boolean(getModCard(id, gameId)?.chargeAddition))) {
+            const caCards = allCards.filter(
+                c => c.chargeAddition && isChargeAdditionAllowed(c.chargeAddition, constraints) &&
+                     (!c.bPwrAtk || c.bPwrAtk.toLowerCase() === "chargeshot") &&
+                     isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules)
+            );
+            if (caCards.length > 0) {
+                caCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs, constraints?.requiredAbilities) - evaluateCardScore(a, target, requiredBugs, constraints?.requiredAbilities));
+                locked.push(caCards[0].id);
+            }
         }
     }
 
@@ -687,6 +714,10 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         if (c.bButton && !isBButtonAllowed(c.bButton, constraints)) return false;
         if (c.disabledChargeAddition && !isChargeAdditionAllowed("none", constraints)) return false;
         if (c.chargeAddition && !isChargeAdditionAllowed(c.chargeAddition, constraints)) return false;
+        if (constraints?.requireGlitch100ChargeAddition) {
+            if (c.bPwrAtk && c.bPwrAtk.toLowerCase() !== "chargeshot") return false;
+            if (c.disabledChargeAddition) return false;
+        }
         if (c.disabledBusterAddition && !isBusterAdditionAllowed("none", constraints)) return false;
         if (c.busterAddition && !isBusterAdditionAllowed(c.busterAddition, constraints)) return false;
         if (c.body !== undefined && !isBodyAllowed(c.body, constraints)) return false;
@@ -955,6 +986,7 @@ export function doesBuildSatisfyConstraints(
     if (!isBLeftAllowed(stats.modBLeft, constraints)) return false;
     if (!isBButtonAllowed(stats.modBButton, constraints)) return false;
     if (!isChargeAdditionAllowed(stats.modChargeAddition, constraints)) return false;
+    if (constraints.requireGlitch100ChargeAddition && !stats.isGlitch100ChargeAddition) return false;
     if (!isBusterAdditionAllowed(stats.modBusterAddition, constraints)) return false;
 
     if (!isBodyAllowed(stats.modBody, constraints, gameId)) return false;
@@ -1228,6 +1260,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         if (!isBLeftAllowed(deck.bLeft, constraints)) return null;
         if (!isBButtonAllowed(deck.bButton, constraints)) return null;
         if (!isChargeAdditionAllowed(deck.chargeAddition, constraints)) return null;
+        if (constraints?.requireGlitch100ChargeAddition && !deck.isGlitch100ChargeAddition) return null;
         if (!isBusterAdditionAllowed(deck.busterAddition, constraints)) return null;
         if (!isBodyAllowed(deck.body, constraints)) return null;
         if (!isGaugeAllowed(deck.gauge, constraints)) return null;

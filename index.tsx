@@ -64,6 +64,7 @@ import {
     getSpecialCsOptions,
     getBLeftOptions,
     getBButtonOptions,
+    getChargeAdditionOptions,
     getMovePanelOptions,
     FORBIDDEN_BUG_OPTIONS,
 } from "./effects";
@@ -388,8 +389,8 @@ function BuildStatsView({
                     </span>
                 ) : null}
                 {stats.modChargeAddition ? (
-                    <span className="badge bg-info text-dark py-1 px-2">
-                        [CS附加] {stats.modChargeAddition}
+                    <span className={`badge py-1 px-2 ${stats.isGlitch100ChargeAddition ? "bg-warning text-dark border border-warning" : "bg-info text-dark"}`}>
+                        [CS附加] {stats.modChargeAddition} {stats.isGlitch100ChargeAddition ? `⚡ ${t("glitch100Tag", lang)}` : ""}
                     </span>
                 ) : null}
                 {stats.invalidatedChargeAddition ? (
@@ -867,7 +868,20 @@ function ModCardManager({
                             </div>
                         )}
 
-                        {/* Invalidation Notices */}
+                        {/* Invalidation Notices & Glitch Active Notices */}
+                        {deck.isGlitch100ChargeAddition ? (
+                            <div className="alert alert-success py-1 px-2 mb-2 small d-flex align-items-center gap-2" style={{ fontSize: "0.78rem" }}>
+                                <span>⚡</span>
+                                <div>
+                                    <strong>{t("glitch100ChargeAdditionTitle", lang)}:</strong>{" "}
+                                    {lang === "zh"
+                                        ? `当前卡组满足通常蓄力炮与追加效果共存，CS附加 [${deck.chargeAddition}] 必定 100% 触发！`
+                                        : lang === "ja"
+                                        ? `通常チャージショットとCS追加効果が共存しているため、CS追加効果 [${deck.chargeAddition}] が100%発動します！`
+                                        : `Deck satisfies Default ChargeShot with CS Addition; [${deck.chargeAddition}] procs at 100% rate!`}
+                                </div>
+                            </div>
+                        ) : null}
                         {deck.invalidatedChargeAddition ? (
                             <div className="alert alert-warning py-1 px-2 mb-2 small" style={{ fontSize: "0.78rem" }}>
                                 ⚠️ {lang === "zh"
@@ -1153,6 +1167,9 @@ function AutoOptimizerPanel({
         if (problem.constraints?.requiredChargeAddition) return [problem.constraints.requiredChargeAddition];
         return [];
     });
+    const [requireGlitch100ChargeAddition, setRequireGlitch100ChargeAddition] = React.useState<boolean>(
+        problem.constraints?.requireGlitch100ChargeAddition ?? false
+    );
     const [allowedBusterAdditions, setAllowedBusterAdditions] = React.useState<string[]>(() => {
         if (problem.constraints?.allowedBusterAdditions !== undefined) return problem.constraints.allowedBusterAdditions;
         if (problem.constraints?.requiredBusterAddition) return [problem.constraints.requiredBusterAddition];
@@ -1240,6 +1257,7 @@ function AutoOptimizerPanel({
         ...(allowedBLefts.length > 0 ? { allowedBLefts } : {}),
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
         ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
+        ...(requireGlitch100ChargeAddition && cardsEnabled && (data.gameId === "bn5" || data.gameId === "bn6") ? { requireGlitch100ChargeAddition: true } : {}),
         ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
         ...(panelTolerance !== "forbidden" && allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length && data.gameId !== "bn3" && data.gameId !== "bn4" ? { allowedBodies } : {}),
@@ -1280,6 +1298,7 @@ function AutoOptimizerPanel({
         (constraints.allowedBLefts || constraints.requiredBLeft ? 1 : 0) +
         (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
         (constraints.allowedChargeAdditions || constraints.requiredChargeAddition ? 1 : 0) +
+        (constraints.requireGlitch100ChargeAddition ? 1 : 0) +
         (constraints.allowedBusterAdditions || constraints.requiredBusterAddition ? 1 : 0) +
         (constraints.allowedMovePanels ? 1 : 0) +
         (constraints.allowedBodies && data.gameId !== "bn3" && data.gameId !== "bn4" ? 1 : 0) +
@@ -1725,11 +1744,28 @@ function AutoOptimizerPanel({
                                                         {t("reqChargeAdditionTitle", lang)}:
                                                     </label>
                                                     <MultiSelectDropdown
-                                                        options={CHARGE_ADDITION_OPTIONS}
+                                                        options={getChargeAdditionOptions(data.gameId)}
                                                         selected={allowedChargeAdditions}
                                                         onChange={setAllowedChargeAdditions}
                                                         lang={lang}
                                                     />
+                                                    {(data.gameId === "bn5" || data.gameId === "bn6") && (
+                                                        <div className="form-check mt-1">
+                                                            <input
+                                                                className="form-check-input"
+                                                                type="checkbox"
+                                                                id="optimizer-glitch-100-cs"
+                                                                checked={requireGlitch100ChargeAddition}
+                                                                onChange={e => setRequireGlitch100ChargeAddition(e.target.checked)}
+                                                            />
+                                                            <label className="form-check-label small" htmlFor="optimizer-glitch-100-cs">
+                                                                <span className="fw-semibold text-warning-emphasis">{t("glitch100ChargeAdditionTitle", lang)}</span>
+                                                                <span className="text-muted d-block" style={{ fontSize: "0.72rem" }}>
+                                                                    {t("glitch100ChargeAdditionDesc", lang)}
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="col-12 col-md-6">
                                                     <label className="form-label small fw-semibold mb-1">

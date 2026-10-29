@@ -95,6 +95,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     const {
         requiredSpecialMove, allowedSpecialMoves, requiredBLeft, allowedBLefts,
         requiredBButton, allowedBButtons, requiredChargeAddition, allowedChargeAdditions,
+        requireGlitch100ChargeAddition,
         requiredBusterAddition, allowedBusterAdditions,
         allowedBodies, requiredBody, requiredGauge, allowedGauges, minChipRecovery,
         allowedMovePanels,

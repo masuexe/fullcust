@@ -45,6 +45,7 @@ export interface BuildStats {
     modBLeft?: string;
     modBusterAddition?: string;
     modChargeAddition?: string;
+    isGlitch100ChargeAddition?: boolean;
     invalidatedBusterAddition?: string;
     invalidatedChargeAddition?: string;
     modChipRecovery?: number;
@@ -333,6 +334,7 @@ export function computeBuildStats(
     let modBLeft: string | undefined;
     let modBusterAddition: string | undefined;
     let modChargeAddition: string | undefined;
+    let isGlitch100ChargeAddition: boolean | undefined;
     let invalidatedBusterAddition: string | undefined;
     let invalidatedChargeAddition: string | undefined;
     let modChipRecovery: number | undefined;
@@ -403,6 +405,7 @@ export function computeBuildStats(
         modBLeft = deck.bLeft;
         modBusterAddition = deck.busterAddition;
         modChargeAddition = deck.chargeAddition;
+        isGlitch100ChargeAddition = deck.isGlitch100ChargeAddition;
         invalidatedBusterAddition = deck.invalidatedBusterAddition;
         invalidatedChargeAddition = deck.invalidatedChargeAddition;
         modChipRecovery = deck.chipRecovery;
@@ -465,6 +468,7 @@ export function computeBuildStats(
         modBLeft,
         modBusterAddition,
         modChargeAddition,
+        isGlitch100ChargeAddition,
         invalidatedBusterAddition,
         invalidatedChargeAddition,
         modChipRecovery,
@@ -790,7 +794,22 @@ export function getCoreAbilityOptions(gameId: string): ConstraintOption[] {
 
 export const CORE_ABILITY_OPTIONS = BN6_CORE_ABILITY_OPTIONS;
 
-export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
+export const BN5_CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
+    { id: "none", name: { en: "Standard (No CS Addition)", ja: "通常（CS付加なし）", zh: "标准集气 (禁用CS附加)" } },
+    { id: "Chip Destruction", name: { en: "CS: Chip Destruction (Roll / AirMan)", ja: "CS: チップ破壊（ロール / UFOサニー）", zh: "CS: 芯片破坏 (Roll / 萝露 / 空中飞碟)" } },
+    { id: "Paralyze", name: { en: "CS: Paralyze (KillerEye / FlashMn)", ja: "CS: 麻痺（キラーズアイ / フラッシュマン）", zh: "CS: 麻痹 (KillerEye / 闪光人)" } },
+    { id: "Confusion", name: { en: "CS: Confusion (Cragger)", ja: "CS: 混乱（チャマッシュ）", zh: "CS: 混乱 (Cragger / 岩石魔)" } },
+    { id: "Blind", name: { en: "CS: Blind (Magneakr / Heady)", ja: "CS: 盲目（スパークマン / スパークビー）", zh: "CS: 盲目 (ColdMan / 闪电蜂)" } },
+    { id: "Break", name: { en: "CS: Break (MetalMan)", ja: "CS: ブレイク属性（メタルマン）", zh: "CS: 破防 (MetalMan / 金属人)" } },
+    { id: "Barrier Removal", name: { en: "CS: Barrier Removal (WindMan)", ja: "CS: バリア除去（ウインドマン）", zh: "CS: 消除防护罩 (WindMan / 风人)" } },
+    { id: "Panel Hole", name: { en: "CS: Panel Hole (Spikey / Batty)", ja: "CS: パネル穴（ポワルド / ドゴーン）", zh: "CS: 破洞地面 (Spikey / 尖刺怪 / 蝙蝠怪)" } },
+    { id: "Panel Magma", name: { en: "CS: Magma Panel (FireMan / Weather)", ja: "CS: マグマパネル（ウェザース / ヒートマン）", zh: "CS: 岩浆地面 (Curling / 热量人)" } },
+    { id: "Poison Panel", name: { en: "CS: Poison Panel (Skurg)", ja: "CS: 毒沼パネル（エレンプラ）", zh: "CS: 毒沼地面 (Skurg / 软泥怪)" } },
+    { id: "HP Bug", name: { en: "CS: HP Bug (Bass GS)", ja: "CS: HPバグ（フォルテGS）", zh: "CS: HP BUG (Bass GS / 佛鲁迪GS)" } },
+    { id: "NaviCust Reset", name: { en: "CS: NaviCust Reset (LaserMan)", ja: "CS: ナビカス初期化（レーザーマン）", zh: "CS: 重置领航员客制化 (LaserMan / 激光人)" } },
+];
+
+export const BN6_CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "none", name: { en: "Standard (No CS Addition)", ja: "通常（CS付加なし）", zh: "标准集气 (禁用CS附加)" } },
     { id: "Paralyze", name: { en: "CS: Paralyze (ToadMan)", ja: "CS: 麻痺（トードマン）", zh: "CS: 麻痹 (Paralyze / 青蛙人)" } },
     { id: "Confusion", name: { en: "CS: Confusion (Punk / Skarab)", ja: "CS: 混乱（パンク / スカラビア）", zh: "CS: 混乱 (Confusion / 庞克 / 骷髅比亚)" } },
@@ -806,6 +825,14 @@ export const CHARGE_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "Chip Destruction", name: { en: "CS: Chip Destruction (LarkMan)", ja: "CS: チップ破壊（スワローマン）", zh: "CS: 芯片破坏 (LarkMan / 飞燕人)" } },
     { id: "Instant Delete", name: { en: "CS: Instant Delete (EraseMan)", ja: "CS: 即死（キラーマン）", zh: "CS: 即死/扣血 (EraseMan / 杀手人)" } },
 ];
+
+export const CHARGE_ADDITION_OPTIONS = BN6_CHARGE_ADDITION_OPTIONS;
+
+export function getChargeAdditionOptions(gameId: string): ConstraintOption[] {
+    if (gameId === "bn5") return BN5_CHARGE_ADDITION_OPTIONS;
+    if (gameId === "bn6") return BN6_CHARGE_ADDITION_OPTIONS;
+    return [];
+}
 
 export const BUSTER_ADDITION_OPTIONS: ConstraintOption[] = [
     { id: "none", name: { en: "Standard (No Buster Addition)", ja: "通常（連射付加なし）", zh: "标准连射 (禁用连射附加)" } },
