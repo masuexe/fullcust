@@ -638,6 +638,16 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         }
     }
 
+    // Lock Erball (136-A006) in BN5 if Support Bug glitch is enabled and support abilities are requested
+    if (gameId === "bn5" && constraints?.allowSupportBugGlitch && constraints.requiredAbilities?.some(ab => ab === "rush" || ab === "beat")) {
+        const erballCard = getModCard("136-A006", "bn5");
+        if (erballCard && isCardAcceptableUnderPolicy(erballCard, policy, forbiddenBugs, bugRules)) {
+            if (!locked.includes("136-A006")) {
+                locked.push("136-A006");
+            }
+        }
+    }
+
     // Lock required Buster Addition if specified
     const busterAdditionRestricted = constraints?.allowedBusterAdditions !== undefined || constraints?.requiredBusterAddition;
     if (busterAdditionRestricted && !isBusterAdditionAllowed(undefined, constraints) && !locked.some(id => isBusterAdditionAllowed(getModCard(id, gameId)?.busterAddition, constraints))) {
@@ -995,7 +1005,7 @@ export function doesBuildSatisfyConstraints(
 
     if (!isMovePanelAllowed(analysis, constraints.allowedMovePanels, gameId, stats)) return false;
 
-    const effectiveBugs = getEffectiveInBattleBugs(analysis);
+    const effectiveBugs = getEffectiveInBattleBugs(analysis, constraints.allowSupportBugGlitch);
 
     if (constraints.bugRules && Object.keys(constraints.bugRules).length > 0) {
         for (const b of effectiveBugs) {

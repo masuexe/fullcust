@@ -936,6 +936,21 @@ export const translations = {
         ja: "100%バグ発動",
         zh: "100% 漏洞触发",
     },
+    supportBugGlitchTitle: {
+        en: "Support Bug Exploit (Erball Glitch)",
+        ja: "サポートバグ利用（アーバルボーイバグ）",
+        zh: "利用支援 BUG 漏洞（食人鱼怪双支援）",
+    },
+    supportBugGlitchDesc: {
+        en: "Exploits the BN5 glitch where Erball (10MB, Tango OFF) alongside NC Support Bug forces Rush and Beat to turn ON and activate in battle.",
+        ja: "エグゼ5において、ナビカスのサポートバグ発生中にアーバルボーイ（10MB、タンゴOFF）を読み込むことで、ラッシュとビートが強制的にONになって発動するバグを利用します。",
+        zh: "利用EXE5中NC发生支援BUG时，读取食人鱼怪（10MB，关闭探戈）会导致未关闭的莱西与比特支援强制置为ON并在对战中正常发动的游戏漏洞。",
+    },
+    supportBugGlitchTag: {
+        en: "Support Glitch",
+        ja: "アーバルバグ発動",
+        zh: "支援漏洞生效",
+    },
     reqBusterAdditionTitle: {
         en: "Buster Addition",
         ja: "バスター付加効果",

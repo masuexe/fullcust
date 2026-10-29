@@ -39,6 +39,7 @@ export interface BuildConstraints {
     requiredChargeAddition?: string;
     allowedChargeAdditions?: string[];
     requireGlitch100ChargeAddition?: boolean;
+    allowSupportBugGlitch?: boolean;
     requiredBusterAddition?: string;
     allowedBusterAdditions?: string[];
     allowedMovePanels?: string[];
@@ -122,6 +123,7 @@ const SavedProblem = z.object({
         ca: z.string().optional(),
         aca: z.array(z.string()).optional(),
         gca: z.boolean().optional(),
+        sbg: z.boolean().optional(),
         ba: z.string().optional(),
         aba: z.array(z.string()).optional(),
         amp: z.array(z.string()).optional(),
@@ -218,6 +220,7 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.ca ? { requiredChargeAddition: saved.bc.ca } : {}),
         ...(saved.bc.aca !== undefined ? { allowedChargeAdditions: saved.bc.aca } : {}),
         ...(saved.bc.gca ? { requireGlitch100ChargeAddition: true } : {}),
+        ...(saved.bc.sbg ? { allowSupportBugGlitch: true } : {}),
         ...(saved.bc.ba ? { requiredBusterAddition: saved.bc.ba } : {}),
         ...(saved.bc.aba !== undefined ? { allowedBusterAdditions: saved.bc.aba } : {}),
         ...(saved.bc.amp !== undefined ? { allowedMovePanels: saved.bc.amp } : {}),
@@ -284,6 +287,7 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.requiredChargeAddition ||
             problem.constraints.allowedChargeAdditions?.length ||
             problem.constraints.requireGlitch100ChargeAddition ||
+            problem.constraints.allowSupportBugGlitch ||
             problem.constraints.requiredBusterAddition ||
             problem.constraints.allowedBusterAdditions?.length ||
             problem.constraints.allowedMovePanels?.length ||
@@ -309,6 +313,7 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.requiredChargeAddition ? { ca: problem.constraints.requiredChargeAddition } : {}),
                 ...(problem.constraints.allowedChargeAdditions?.length ? { aca: problem.constraints.allowedChargeAdditions } : {}),
                 ...(problem.constraints.requireGlitch100ChargeAddition ? { gca: true } : {}),
+                ...(problem.constraints.allowSupportBugGlitch ? { sbg: true } : {}),
                 ...(problem.constraints.requiredBusterAddition ? { ba: problem.constraints.requiredBusterAddition } : {}),
                 ...(problem.constraints.allowedBusterAdditions?.length ? { aba: problem.constraints.allowedBusterAdditions } : {}),
                 ...(problem.constraints.allowedMovePanels?.length ? { amp: problem.constraints.allowedMovePanels } : {}),

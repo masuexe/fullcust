@@ -886,3 +886,47 @@ test("optimizer respects requireGlitch100ChargeAddition in BN5 and BN6", () => {
     assert.equal(bn5Deck.bPwrAtk, "ChargeShot");
     assert.equal(bn5Deck.isGlitch100ChargeAddition, true);
 });
+
+test("optimizer and build stats respect allowSupportBugGlitch (Erball glitch) in BN5", () => {
+    const { computeBuildStats, analyzeSolutionBugs, getEffectiveInBattleBugs } = require("../effects.ts");
+
+    // Optimizer picks 136-A006 (Erball, 10MB) when glitch is enabled and dual support is requested
+    const bn5Cards = optimizeModCards({
+        gameId: "bn5",
+        existingCardIds: [],
+        target: "max_hp",
+        policy: { type: "no_bugs" },
+        constraints: {
+            allowSupportBugGlitch: true,
+            requiredAbilities: ["rush", "beat"],
+        },
+    });
+    assert.ok(bn5Cards.includes("136-A006"));
+
+    // Build stats with Erball + Rush (30) + Beat (31)
+    const stats = computeBuildStats("bn5", [30, 31], ["136-A006"], 1000);
+    assert.equal(stats.isSupportBugGlitchActive, true);
+    assert.ok(stats.abilities.includes("rush"));
+    assert.ok(stats.abilities.includes("beat"));
+
+    // Bug analysis recognizes the glitch and cancels the effective support failure bug
+    const data = getGameData("bn5");
+    const rushIdx = data.partMetas.findIndex(p => p.id === 30);
+    const beatIdx = data.partMetas.findIndex(p => p.id === 31);
+    const cells = new Array(data.gridSettings.width * data.gridSettings.height).fill(null);
+    const analysis = analyzeSolutionBugs(
+        "bn5",
+        data.partMetas,
+        [
+            { partIndex: rushIdx, x: 0, y: 0, rotated: false },
+            { partIndex: beatIdx, x: 0, y: 2, rotated: false },
+        ],
+        cells,
+        data.gridSettings,
+        "zh",
+        ["136-A006"]
+    );
+    assert.equal(analysis.isSupportBugGlitchActive, true);
+    const effectiveBugs = getEffectiveInBattleBugs(analysis, true);
+    assert.ok(!effectiveBugs.some(b => b.bugType === "support"));
+});

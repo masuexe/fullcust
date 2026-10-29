@@ -413,6 +413,11 @@ function BuildStatsView({
                         🎴 {stats.modBugCount} {t("modCardBugCount", lang)}
                     </span>
                 ) : null}
+                {stats.isSupportBugGlitchActive ? (
+                    <span className="badge bg-warning text-dark border border-warning py-1 px-2" title={t("supportBugGlitchDesc", lang)}>
+                        ⚡ {t("supportBugGlitchTag", lang)}
+                    </span>
+                ) : null}
             </div>
 
             {stats.abilities.length > 0 ? (
@@ -1170,6 +1175,9 @@ function AutoOptimizerPanel({
     const [requireGlitch100ChargeAddition, setRequireGlitch100ChargeAddition] = React.useState<boolean>(
         problem.constraints?.requireGlitch100ChargeAddition ?? false
     );
+    const [allowSupportBugGlitch, setAllowSupportBugGlitch] = React.useState<boolean>(
+        problem.constraints?.allowSupportBugGlitch ?? false
+    );
     const [allowedBusterAdditions, setAllowedBusterAdditions] = React.useState<string[]>(() => {
         if (problem.constraints?.allowedBusterAdditions !== undefined) return problem.constraints.allowedBusterAdditions;
         if (problem.constraints?.requiredBusterAddition) return [problem.constraints.requiredBusterAddition];
@@ -1258,6 +1266,7 @@ function AutoOptimizerPanel({
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
         ...(allowedChargeAdditions.length > 0 ? { allowedChargeAdditions } : {}),
         ...(requireGlitch100ChargeAddition && cardsEnabled && (data.gameId === "bn5" || data.gameId === "bn6") ? { requireGlitch100ChargeAddition: true } : {}),
+        ...(allowSupportBugGlitch && cardsEnabled && data.gameId === "bn5" ? { allowSupportBugGlitch: true } : {}),
         ...(allowedBusterAdditions.length > 0 ? { allowedBusterAdditions } : {}),
         ...(panelTolerance !== "forbidden" && allowedMovePanels.length > 0 ? { allowedMovePanels } : {}),
         ...(allowedBodies.length !== BODY_ELEMENTS.length && data.gameId !== "bn3" && data.gameId !== "bn4" ? { allowedBodies } : {}),
@@ -1299,6 +1308,7 @@ function AutoOptimizerPanel({
         (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
         (constraints.allowedChargeAdditions || constraints.requiredChargeAddition ? 1 : 0) +
         (constraints.requireGlitch100ChargeAddition ? 1 : 0) +
+        (constraints.allowSupportBugGlitch ? 1 : 0) +
         (constraints.allowedBusterAdditions || constraints.requiredBusterAddition ? 1 : 0) +
         (constraints.allowedMovePanels ? 1 : 0) +
         (constraints.allowedBodies && data.gameId !== "bn3" && data.gameId !== "bn4" ? 1 : 0) +
@@ -1655,6 +1665,23 @@ function AutoOptimizerPanel({
                                                 <div className="small text-muted mt-1">{t("minChipRecoveryDesc", lang)}</div>
                                             </div>
                                         ) : null}
+                                        {cardsEnabled && data.gameId === "bn5" && (
+                                            <div className="form-check mt-2 pt-1 border-top border-secondary-subtle">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id="optimizer-glitch-support-bug"
+                                                    checked={allowSupportBugGlitch}
+                                                    onChange={e => setAllowSupportBugGlitch(e.target.checked)}
+                                                />
+                                                <label className="form-check-label small" htmlFor="optimizer-glitch-support-bug">
+                                                    <span className="fw-semibold text-warning-emphasis">{t("supportBugGlitchTitle", lang)}</span>
+                                                    <span className="text-muted d-block" style={{ fontSize: "0.72rem" }}>
+                                                        {t("supportBugGlitchDesc", lang)}
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Mod Card Specific Battle Specs & Controls */}

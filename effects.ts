@@ -46,6 +46,7 @@ export interface BuildStats {
     modBusterAddition?: string;
     modChargeAddition?: string;
     isGlitch100ChargeAddition?: boolean;
+    isSupportBugGlitchActive?: boolean;
     invalidatedBusterAddition?: string;
     invalidatedChargeAddition?: string;
     modChipRecovery?: number;
@@ -416,6 +417,25 @@ export function computeBuildStats(
         repairedBugs = deck.repairedBugs;
     }
 
+    const hasErball = gameId === "bn5" && Boolean(modCardIds?.includes("136-A006"));
+    const hasRush = partIds.includes(30);
+    const hasBeat = partIds.includes(31);
+    const isSupportBugGlitchActive = hasErball && (hasRush || hasBeat);
+    if (isSupportBugGlitchActive) {
+        if (hasRush) {
+            abilitySet.add("rush");
+            if (disabledAbilitiesFromCards) {
+                disabledAbilitiesFromCards = disabledAbilitiesFromCards.filter(a => a !== "rush");
+            }
+        }
+        if (hasBeat) {
+            abilitySet.add("beat");
+            if (disabledAbilitiesFromCards) {
+                disabledAbilitiesFromCards = disabledAbilitiesFromCards.filter(a => a !== "beat");
+            }
+        }
+    }
+
     if ((gameId === "bn4" || gameId === "bn5" || gameId === "bn6") && modCardIds && modCardIds.length > 0) {
         for (const cid of modCardIds) {
             const card = getModCard(cid, gameId);
@@ -469,6 +489,7 @@ export function computeBuildStats(
         modBusterAddition,
         modChargeAddition,
         isGlitch100ChargeAddition,
+        isSupportBugGlitchActive,
         invalidatedBusterAddition,
         invalidatedChargeAddition,
         modChipRecovery,
@@ -2600,6 +2621,7 @@ export interface AnalyzedBug {
 export interface SolutionBugAnalysis {
     hasBugs: boolean;
     bugStopActive: boolean;
+    isSupportBugGlitchActive?: boolean;
     bugs: AnalyzedBug[];
     activeBugs: ActiveBugEffect[];
     tooManyColors: boolean;
@@ -2878,9 +2900,17 @@ export function analyzeSolutionBugs(
 
     const hasBugs = finalActiveBugs.length > 0 || tooManyColors || (bugs.length > 0 && !bugStopActive);
 
+    const hasErball = gameId === "bn5" && Boolean(modCardIds?.includes("136-A006"));
+    const hasRushOrBeat = gameId === "bn5" && requirements.some(r => {
+        const p = partMetas[r.partIndex];
+        return p && (p.id === 30 || p.id === 31);
+    });
+    const isSupportBugGlitchActive = Boolean(hasErball && hasRushOrBeat);
+
     return {
         hasBugs,
         bugStopActive,
+        isSupportBugGlitchActive,
         bugs,
         activeBugs: finalActiveBugs,
         tooManyColors,
@@ -2912,11 +2942,15 @@ export function isBenignBug(bugType: string, level: number): boolean {
  * If BugStop is active, all NaviCust placement bugs are absorbed and do NOT affect MegaMan in battle.
  * Mod Card bugs are NOT neutralized by BugStop.
  */
-export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis): ActiveBugEffect[] {
+export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis, allowSupportBugGlitch?: boolean): ActiveBugEffect[] {
+    let bugs = analysis.activeBugs || [];
     if (analysis.bugStopActive) {
-        return (analysis.activeBugs || []).filter(b => b.isModCardBug);
+        bugs = bugs.filter(b => b.isModCardBug);
     }
-    return analysis.activeBugs || [];
+    if (allowSupportBugGlitch && analysis.isSupportBugGlitchActive) {
+        bugs = bugs.filter(b => b.bugType !== "support");
+    }
+    return bugs;
 }
 
 /**
