@@ -154,7 +154,14 @@ export function getDefaultBugRules(gameId: string): Record<string, BugTolerance>
         };
     }
     if (gameId === "bn5") {
+        // List every exposed BN5 category explicitly. A missing key used to fall
+        // back to "forbidden" inside getBugRule, which hid four real restrictions
+        // from the settings panel and from saved links.
         return {
+            panelSea: "forbidden",
+            customHp: "forbidden",
+            damageConfusion: "forbidden",
+            damageBlind: "forbidden",
             movement: "forbidden",
             panelCrack: "forbidden",
             panelIce: "forbidden",

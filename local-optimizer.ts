@@ -57,7 +57,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
         const result = removeRedundantAbilityParts(options, candidate);
         const deck = computeDeckStats(result.problem.modCards ?? [], data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict || colorCompatibility(data, result.problem).error ||
-            !isSolutionAcceptable(result.analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
+            !isSolutionAcceptable(result.analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
+                constraints?.allowSupportBugGlitch) ||
             !doesBuildSatisfyConstraints(result.stats, result.analysis, constraints, data.gameId)) return;
         const comparison = compareBuildStats(result.stats, best.stats, target);
         const cells = occupiedBuildCells(data, result);

@@ -1,3 +1,4 @@
+import type { BugTolerance } from "./problem";
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { computeDeckStats, getModCards, ModCard } from "./modcards";
@@ -64,7 +65,8 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
     const initialDeck = initial ? computeDeckStats(initial.problem.modCards ?? [], data.gameId) : null;
     const validInitial = initial && !initialDeck?.isOverCapacity && !initialDeck?.hasSlotConflict &&
         !colorCompatibility(data, initial.problem).error &&
-        isSolutionAcceptable(initial.analysis, policy, forbidden, constraints?.bugRules) &&
+        isSolutionAcceptable(initial.analysis, policy, forbidden, constraints?.bugRules,
+            constraints?.allowSupportBugGlitch) &&
         doesBuildSatisfyConstraints(initial.stats, initial.analysis, constraints, data.gameId);
     const progress: SearchProgress = { checkedBuilds: 0, best: validInitial ? initial : null };
     if (progress.best) onProgress?.({ ...progress });
@@ -113,6 +115,15 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
     const cards = autoCards ? getModCards(data.gameId) : [];
     const maxCards = cards.length === 0 ? 0 : data.gameId === "bn4" ? 5 :
         Math.floor(80 / Math.min(...cards.map(card => card.mb)));
+    // Card bugs of a complete deck are final: a later card has already
+    // overwritten or repaired them, and BugStop never absorbs card bugs. Required
+    // rules become allowed here because added NaviCust programs can still supply
+    // a required bug, and a required key must not fall back to its forbidden
+    // default while the deck check runs.
+    const ruleMap = constraints?.bugRules ?? (policy.customRules as Partial<Record<string, BugTolerance>> | undefined);
+    const deckRules = ruleMap && Object.fromEntries(Object.entries(ruleMap)
+        .map(([key, tolerance]) => [key, tolerance === "required" ? "allowed_any" : tolerance]));
+    const allowSupportBugGlitch = constraints?.allowSupportBugGlitch;
 
     function searchDeck(modCards: string[], additions: number): void {
         if (stopped()) return;
@@ -127,6 +138,15 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             new Array(grid.height * grid.width).fill(null), grid, "en", modCards);
         const deckStats = computeBuildStats(data.gameId, [], modCards, problem.baseHp ?? 1000);
         if (!doesBuildSatisfyConstraints(deckStats, emptyAnalysis, cardConstraints, data.gameId)) return;
+        // Reject decks that already violate a bug rule, before enumerating the
+        // NaviCust program space for them. The support bug is skipped while the
+        // support glitch option can still neutralize it through an added program.
+        if (deckRules !== undefined) {
+            const cardBugs = allowSupportBugGlitch
+                ? { ...emptyAnalysis, activeBugs: emptyAnalysis.activeBugs.filter(bug => bug.bugType !== "support") }
+                : emptyAnalysis;
+            if (!isSolutionAcceptable(cardBugs, policy, forbidden, deckRules, allowSupportBugGlitch)) return;
+        }
 
         const requirements = [...problem.requirements];
         const added: number[] = [];
@@ -156,7 +176,8 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                         placeAll(data.parts, requirements, solution, grid), grid, modCards, problem.baseHp ?? 1000);
                     const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, "en", modCards);
-                    if (!isSolutionAcceptable(analysis, policy, forbidden, constraints?.bugRules) ||
+                    if (!isSolutionAcceptable(analysis, policy, forbidden, constraints?.bugRules,
+                            constraints?.allowSupportBugGlitch) ||
                         !doesBuildSatisfyConstraints(placedStats, analysis, constraints, data.gameId)) continue;
                     const comparison = progress.best ? compareBuildStats(placedStats, progress.best.stats, target) : 1;
                     if (comparison >= 0) {

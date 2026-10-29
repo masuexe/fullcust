@@ -116,4 +116,11 @@ test("BN5 defaults movement, panelCrack, panelIce, panelHole, and support to for
     for (const bug of expectedAllowed) {
         assert.equal(rules[bug], "allowed", `expected ${bug} to be allowed`);
     }
+    // Every category the BN5 settings panel offers must have an explicit rule, so
+    // the panel, saved links and the solver cannot disagree through a silent
+    // getBugRule fallback.
+    const bn5 = parseGameData(require("../data/bn5.json"), games.find(game => game.id === "bn5"));
+    for (const option of getOptimizerBugOptions(bn5, true)) {
+        assert.ok(rules[option.id] !== undefined, `expected an explicit BN5 rule for ${option.id}`);
+    }
 });

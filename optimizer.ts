@@ -91,7 +91,8 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         if (!meetsPlacementBugConstraints(data.parts, requirements, solution, grid)) continue;
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
             placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
-        if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) ||
+        if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
+                constraints?.allowSupportBugGlitch) ||
             !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) continue;
         cleaned = { ...cleaned, problem: { ...cleaned.problem, requirements }, solution, stats, analysis,
             addedPartIndices: requirements.slice(problem.requirements.length).map(req => req.partIndex) };
@@ -1055,7 +1056,8 @@ function runNaviCustBeamSearch(
     startTime: number,
     timeoutMs: number,
     beamWidth: number,
-    onSearchWork?: OptimizeOptions["onSearchWork"]
+    onSearchWork?: OptimizeOptions["onSearchWork"],
+    allowSupportBugGlitch?: boolean
 ): SearchNode | null {
     const shouldStop = () => Date.now() - startTime >= timeoutMs;
     const findPlacement = (requirements: Requirement[]) => {
@@ -1065,7 +1067,7 @@ function runNaviCustBeamSearch(
             if (shouldStop()) break;
             const occ = placeAll(data.parts, requirements, solution, gridSettings);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occ, gridSettings, "en", modCards);
-            if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules)) {
+            if (isSolutionAcceptable(analysis, policy, forbiddenBugs, bugRules, allowSupportBugGlitch)) {
                 return { solution, analysis, stats: computePlacedBuildStats(data.gameId, data.partMetas, requirements,
                     occ, gridSettings, modCards, baseHp) };
             }
@@ -1312,7 +1314,8 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             startTime,
             branchDeadline,
             beamWidth,
-            options.onSearchWork
+            options.onSearchWork,
+            constraints?.allowSupportBugGlitch
         );
 
         if (!node) continue;

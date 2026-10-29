@@ -3043,15 +3043,18 @@ export function isSolutionAcceptable(
     analysis: SolutionBugAnalysis,
     policy: BugPolicy = DEFAULT_BUG_POLICY,
     forbiddenBugs?: string[],
-    bugRules?: Partial<Record<string, BugTolerance>>
+    bugRules?: Partial<Record<string, BugTolerance>>,
+    allowSupportBugGlitch?: boolean
 ): boolean {
     // Color overflow in BN4-6 is a configurable NC status bug, not geometric impossibility.
     if (analysis.tooManyColors && !analysis.activeBugs.some(b => b.bugType === "colorStatus")) {
         return false;
     }
 
-    // 2. Get the bugs that actually affect MegaMan in battle (after BugStop absorption)
-    const effectiveBugs = getEffectiveInBattleBugs(analysis);
+    // 2. Get the bugs that actually affect MegaMan in battle (after BugStop absorption).
+    // The support-bug glitch must be applied here as well, otherwise this gate and
+    // doesBuildSatisfyConstraints disagree and no support tolerance can ever pass.
+    const effectiveBugs = getEffectiveInBattleBugs(analysis, allowSupportBugGlitch);
 
     // 3. If explicit bugRules are specified (or present in policy.customRules), apply tri-state logic
     const activeRules: Partial<Record<string, BugTolerance>> | undefined =
