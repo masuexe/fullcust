@@ -203,17 +203,50 @@ function NumericStepper({
     const canDecrement = validIndex > 0;
     const canIncrement = validIndex < options.length - 1;
 
-    const handleDecrement = (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (canDecrement) {
-            onChange(options[validIndex - 1].value);
+    const [isFocused, setIsFocused] = React.useState(false);
+    const [inputText, setInputText] = React.useState("");
+
+    const commitInput = (text: string) => {
+        const trimmed = text.trim();
+        if (trimmed === "" || trimmed === "0") {
+            onChange(0);
+            return;
+        }
+        const parsed = parseInt(trimmed, 10);
+        if (isNaN(parsed)) {
+            return;
+        }
+        const minVal = options[0]?.value ?? 0;
+        const maxVal = options[options.length - 1]?.value ?? 0;
+        const clamped = Math.max(minVal, Math.min(maxVal, parsed));
+        onChange(clamped);
+    };
+
+    const handleDecrement = (e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+        const baseVal = isFocused && inputText.trim() !== "" && !isNaN(parseInt(inputText, 10))
+            ? parseInt(inputText, 10)
+            : value;
+        const currentIdx = options.findIndex(opt => opt.value === baseVal);
+        const idx = currentIdx >= 0 ? currentIdx : validIndex;
+        if (idx > 0) {
+            const nextVal = options[idx - 1].value;
+            onChange(nextVal);
+            setInputText(nextVal === 0 ? "" : String(nextVal));
         }
     };
 
-    const handleIncrement = (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (canIncrement) {
-            onChange(options[validIndex + 1].value);
+    const handleIncrement = (e?: React.MouseEvent) => {
+        if (e) e.preventDefault();
+        const baseVal = isFocused && inputText.trim() !== "" && !isNaN(parseInt(inputText, 10))
+            ? parseInt(inputText, 10)
+            : value;
+        const currentIdx = options.findIndex(opt => opt.value === baseVal);
+        const idx = currentIdx >= 0 ? currentIdx : validIndex;
+        if (idx < options.length - 1) {
+            const nextVal = options[idx + 1].value;
+            onChange(nextVal);
+            setInputText(String(nextVal));
         }
     };
 
@@ -231,8 +264,10 @@ function NumericStepper({
             >
                 −
             </button>
-            <div
-                className={`form-control form-control-sm text-center px-1 user-select-none d-flex align-items-center justify-content-center ${
+            <input
+                type="text"
+                inputMode="numeric"
+                className={`form-control form-control-sm text-center px-1 ${
                     isActive ? "fw-bold text-primary bg-primary-subtle border-primary-subtle" : "text-muted"
                 }`}
                 style={{
@@ -241,18 +276,49 @@ function NumericStepper({
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
-                    cursor: isActive ? "pointer" : "default",
+                    minWidth: 0,
                 }}
+                value={isFocused ? inputText : currentOption.label}
                 title={
                     currentOption.label +
                     (isActive && resetTooltip ? ` (${resetTooltip})` : "")
                 }
-                onDoubleClick={() => {
-                    if (isActive) onChange(0);
+                onFocus={(e) => {
+                    setIsFocused(true);
+                    setInputText(value === 0 ? "" : String(value));
+                    e.currentTarget.select();
                 }}
-            >
-                {currentOption.label}
-            </div>
+                onChange={(e) => {
+                    setInputText(e.target.value);
+                }}
+                onBlur={() => {
+                    commitInput(inputText);
+                    setIsFocused(false);
+                }}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        commitInput(inputText);
+                        setIsFocused(false);
+                        e.currentTarget.blur();
+                    } else if (e.key === "Escape") {
+                        setIsFocused(false);
+                        e.currentTarget.blur();
+                    } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        handleIncrement();
+                    } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        handleDecrement();
+                    }
+                }}
+                onDoubleClick={() => {
+                    if (isActive) {
+                        onChange(0);
+                        setInputText("");
+                    }
+                }}
+                placeholder={options[0]?.label ?? "0"}
+            />
             <button
                 type="button"
                 className="btn btn-outline-secondary px-2"
@@ -1601,7 +1667,7 @@ function AutoOptimizerPanel({
                                             value={minCustom}
                                             onChange={setMinCustom}
                                             ariaLabel={t("minCustomTitle", lang)}
-                                            resetTooltip={lang === "zh" ? "双击重置为不限" : lang === "ja" ? "ダブルクリックでリセット" : "Double-click to reset"}
+                                            resetTooltip={lang === "zh" ? "支持键盘输入数值，或双击重置为不限" : lang === "ja" ? "直接入力またはダブルクリックでリセット" : "Type a number or double-click to reset"}
                                         />
                                         <div className="small text-muted mt-1">{t("minCustomDesc", lang)}</div>
                                     </div>
@@ -1626,7 +1692,7 @@ function AutoOptimizerPanel({
                                                             });
                                                         }}
                                                         ariaLabel={t(stat === "attack" ? "statAttack" : stat === "rapid" ? "statRapid" : "statCharge", lang)}
-                                                        resetTooltip={lang === "zh" ? "双击重置为不限" : lang === "ja" ? "ダブルクリックでリセット" : "Double-click to reset"}
+                                                        resetTooltip={lang === "zh" ? "支持键盘输入数值，或双击重置为不限" : lang === "ja" ? "直接入力またはダブルクリックでリセット" : "Type a number or double-click to reset"}
                                                     />
                                                 </div>
                                             ))}
