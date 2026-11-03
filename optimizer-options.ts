@@ -89,6 +89,32 @@ export function getOptimizerChipRecoveryValues(gameId: string): ChipRecoveryMini
     return [10, 20, 30, 40];
 }
 
+export function getOptimizerMegaFolderValues(gameId: string, cardsEnabled: boolean): number[] {
+    if (!cardsEnabled) {
+        return [6, 7, 8];
+    }
+    if (gameId === "bn6" || gameId === "bn5") {
+        return [3, 4, 5, 6, 7, 8, 9, 10];
+    }
+    if (gameId === "bn4") {
+        return [5, 6, 7, 8, 9, 10];
+    }
+    return [6, 7, 8];
+}
+
+export function getOptimizerGigaFolderValues(gameId: string, cardsEnabled: boolean): number[] {
+    if (!cardsEnabled) {
+        return [2];
+    }
+    if (gameId === "bn6" || gameId === "bn5") {
+        return [2, 3, 4];
+    }
+    if (gameId === "bn4") {
+        return [2, 3];
+    }
+    return [2];
+}
+
 export function getOptimizerSoulTimeValues(gameId: string, cardsEnabled: boolean): number[] {
     if (gameId !== "bn5") return [];
     if (!cardsEnabled) return [4, 5, 6, 7];

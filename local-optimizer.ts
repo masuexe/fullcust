@@ -53,6 +53,7 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
     const ids = modCardMode === "auto" && data.gameId !== "bn3" ? getModCards(data.gameId).map(card => card.id) : [];
     const minimums = getBusterMinimums(constraints);
     const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined, minSoulTime: undefined,
+        minMegaFolder: undefined, minGigaFolder: undefined,
         bugRules: undefined, forbiddenBugs: undefined, allowedMovePanels: undefined };
     const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
         new Array(grid.height * grid.width).fill(null), grid, "en");
@@ -90,6 +91,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             BUSTER_STATS.filter(stat => minimums[stat] !== undefined).map(stat => stats[stat]),
             constraints?.minCustom !== undefined ? stats.custom : undefined,
             constraints?.minSoulTime !== undefined ? stats.soulTime : undefined,
+            constraints?.minMegaFolder !== undefined ? stats.megaFolder : undefined,
+            constraints?.minGigaFolder !== undefined ? stats.gigaFolder : undefined,
             constraints?.minChipRecovery ? stats.modChipRecovery ?? 0 : undefined,
             deck.activeBugs.map(entry => {
                 const card = getModCard(entry.sourceCardId, data.gameId);

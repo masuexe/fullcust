@@ -914,6 +914,26 @@ export const translations = {
         ja: "通常のソウルユニゾンは基本3ターンです。ナビカスのソウルタイム+1や改造カードの加減算後の最終ターン数で判定します（カオスユニゾンは常に1ターン）。",
         zh: "常规灵魂共鸣基础持续 3 回合，按导航仪改装（灵魂时间+1）与改造卡加减后的最终回合数判断（混沌共鸣固定为 1 回合）。",
     },
+    minFolderCapacityTitle: {
+        en: "Minimum Folder capacity (Mega / Giga)", ja: "フォルダ容量の最低値（メガ / ギガ）", zh: "芯片容量最低值（MEGA / GIGA）",
+    },
+    minFolderCapacityDesc: {
+        en: "Mega chips default to 5, Giga to 1. Ensures the build satisfies your folder requirements after NC parts and card bonuses/penalties.",
+        ja: "標準はメガ5枚・ギガ1枚です。ナビカスや改造カードの増減後の最終容量で判定します。",
+        zh: "标准容量为 MEGA 5 张、GIGA 1 张。按部件与改造卡增减后的最终容量判断，满足卡组携带需求。",
+    },
+    minMegaFolderTitle: {
+        en: "Mega Folder", ja: "MEGAフォルダ", zh: "MEGA 芯片容量",
+    },
+    minGigaFolderTitle: {
+        en: "Giga Folder", ja: "GIGAフォルダ", zh: "GIGA 芯片容量",
+    },
+    minMegaStandardBaseline: {
+        en: "Standard Baseline", ja: "標準ベースライン", zh: "标准保底",
+    },
+    minGigaStandardBaseline: {
+        en: "Standard Baseline", ja: "標準ベースライン", zh: "标准保底",
+    },
     minChipRecoveryDesc: {
         en: "The final active recovery amount must meet this minimum, including after later improvements.",
         ja: "最終的に有効な回復量の下限です。以降の改善でもこの条件を維持します。",

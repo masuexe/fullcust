@@ -1327,6 +1327,8 @@ export function doesBuildSatisfyConstraints(
     if ((stats.modChipRecovery ?? 0) < (constraints.minChipRecovery ?? 0)) return false;
     if (constraints.minCustom !== undefined && stats.custom < constraints.minCustom) return false;
     if (constraints.minSoulTime !== undefined && (gameId === undefined || gameId === "bn5") && (stats.soulTime ?? 3) < constraints.minSoulTime) return false;
+    if (constraints.minMegaFolder !== undefined && stats.megaFolder < constraints.minMegaFolder) return false;
+    if (constraints.minGigaFolder !== undefined && stats.gigaFolder < constraints.minGigaFolder) return false;
 
     if (constraints.requiredAbilities && constraints.requiredAbilities.length > 0) {
         const buildAbilities = new Set(stats.abilities || []);

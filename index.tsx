@@ -48,6 +48,8 @@ import {
     getBugLevelDescription,
     getOptimizerCustomValues,
     getOptimizerChipRecoveryValues,
+    getOptimizerMegaFolderValues,
+    getOptimizerGigaFolderValues,
     getOptimizerSoulTimeValues,
     getOptimizerModeConstraints,
 } from "./optimizer-options";
@@ -1335,6 +1337,8 @@ function AutoOptimizerPanel({
     );
     const [minCustom, setMinCustom] = React.useState(problem.constraints?.minCustom ?? 0);
     const [minSoulTime, setMinSoulTime] = React.useState(problem.constraints?.minSoulTime ?? 0);
+    const [minMegaFolder, setMinMegaFolder] = React.useState(problem.constraints?.minMegaFolder ?? 0);
+    const [minGigaFolder, setMinGigaFolder] = React.useState(problem.constraints?.minGigaFolder ?? 0);
     const [allowedSpecialMoves, setAllowedSpecialMoves] = React.useState<string[]>(() => {
         if (problem.constraints?.allowedSpecialMoves !== undefined) return problem.constraints.allowedSpecialMoves;
         if (problem.constraints?.requiredSpecialMove) return [problem.constraints.requiredSpecialMove];
@@ -1430,6 +1434,36 @@ function AutoOptimizerPanel({
         customOptions.sort((a, b) => a.value - b.value);
     }
     const soulTimeValues = getOptimizerSoulTimeValues(data.gameId, cardsEnabled);
+    const megaFolderValues = getOptimizerMegaFolderValues(data.gameId, cardsEnabled);
+    const megaFolderOptions: StepperOption[] = [
+        { value: 0, label: t("anyOption", lang) },
+        ...megaFolderValues.map(value => {
+            let label = `≥ ${value}`;
+            if (value === 5 && cardsEnabled) {
+                label = `≥ 5 (${t("minMegaStandardBaseline", lang)})`;
+            }
+            return { value, label };
+        }),
+    ];
+    if (minMegaFolder > 0 && !megaFolderOptions.some(opt => opt.value === minMegaFolder)) {
+        megaFolderOptions.push({ value: minMegaFolder, label: `≥ ${minMegaFolder}` });
+        megaFolderOptions.sort((a, b) => a.value - b.value);
+    }
+    const gigaFolderValues = getOptimizerGigaFolderValues(data.gameId, cardsEnabled);
+    const gigaFolderOptions: StepperOption[] = [
+        { value: 0, label: t("anyOption", lang) },
+        ...gigaFolderValues.map(value => {
+            let label = `≥ ${value}`;
+            if (value === 1 && cardsEnabled) {
+                label = `≥ 1 (${t("minGigaStandardBaseline", lang)})`;
+            }
+            return { value, label };
+        }),
+    ];
+    if (minGigaFolder > 0 && !gigaFolderOptions.some(opt => opt.value === minGigaFolder)) {
+        gigaFolderOptions.push({ value: minGigaFolder, label: `≥ ${minGigaFolder}` });
+        gigaFolderOptions.sort((a, b) => a.value - b.value);
+    }
     const panelTolerance: BugTolerance = React.useMemo(() => {
         if (bugRules.panel) return bugRules.panel;
         if (data.gameId === "bn6" || data.gameId === "bn5") {
@@ -1446,6 +1480,8 @@ function AutoOptimizerPanel({
         ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
         ...(minCustom > 0 ? { minCustom } : {}),
         ...(minSoulTime > 0 ? { minSoulTime } : {}),
+        ...(minMegaFolder > 0 ? { minMegaFolder } : {}),
+        ...(minGigaFolder > 0 ? { minGigaFolder } : {}),
         ...(allowedSpecialMoves.length > 0 ? { allowedSpecialMoves } : {}),
         ...(allowedBLefts.length > 0 ? { allowedBLefts } : {}),
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
@@ -1503,6 +1539,8 @@ function AutoOptimizerPanel({
         (constraints.requiredAbilities?.length ?? 0) + Object.values(effectiveMinBusterStats).filter(value => value > 1).length +
         (minCustom > 0 ? 1 : 0) +
         (constraints.minSoulTime ? 1 : 0) +
+        (minMegaFolder > 0 ? 1 : 0) +
+        (minGigaFolder > 0 ? 1 : 0) +
         (constraints.allowedSpecialMoves || constraints.requiredSpecialMove ? 1 : 0) +
         (constraints.allowedBLefts || constraints.requiredBLeft ? 1 : 0) +
         (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
@@ -1817,6 +1855,39 @@ function AutoOptimizerPanel({
                                             <div className="small text-muted mt-1">{t("minSoulTimeDesc", lang)}</div>
                                         </div>
                                     )}
+
+                                    <div className="mb-3">
+                                        <div className="form-label small fw-semibold mb-1">{t("minFolderCapacityTitle", lang)}</div>
+                                        <div className="row g-2">
+                                            <div className="col-6 small">
+                                                <span className="d-block mb-1 text-truncate">
+                                                    {t("minMegaFolderTitle", lang)}
+                                                </span>
+                                                <NumericStepper
+                                                    id="optimizer-mega-min"
+                                                    options={megaFolderOptions}
+                                                    value={minMegaFolder}
+                                                    onChange={setMinMegaFolder}
+                                                    ariaLabel={t("minMegaFolderTitle", lang)}
+                                                    resetTooltip={lang === "zh" ? "支持键盘输入数值，或双击重置为不限" : lang === "ja" ? "直接入力またはダブルクリックでリセット" : "Type a number or double-click to reset"}
+                                                />
+                                            </div>
+                                            <div className="col-6 small">
+                                                <span className="d-block mb-1 text-truncate">
+                                                    {t("minGigaFolderTitle", lang)}
+                                                </span>
+                                                <NumericStepper
+                                                    id="optimizer-giga-min"
+                                                    options={gigaFolderOptions}
+                                                    value={minGigaFolder}
+                                                    onChange={setMinGigaFolder}
+                                                    ariaLabel={t("minGigaFolderTitle", lang)}
+                                                    resetTooltip={lang === "zh" ? "支持键盘输入数值，或双击重置为不限" : lang === "ja" ? "直接入力またはダブルクリックでリセット" : "Type a number or double-click to reset"}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="small text-muted mt-1">{t("minFolderCapacityDesc", lang)}</div>
+                                    </div>
 
                                     <div className="mb-3">
                                         <div className="form-label small fw-semibold mb-1">{t("minBusterStatsTitle", lang)}</div>

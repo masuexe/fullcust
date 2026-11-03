@@ -135,6 +135,8 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             const effect = getPartEffect(data.gameId, data.partMetas[i].id);
             return (constraints?.minCustom !== undefined && ((effect?.custom ?? 0) > 0 || effect?.numberOpen)) ||
                 (constraints?.minSoulTime !== undefined && (effect?.soulTime ?? 0) > 0) ||
+                (constraints?.minMegaFolder !== undefined && (effect?.megaFolder ?? 0) > 0) ||
+                (constraints?.minGigaFolder !== undefined && (effect?.gigaFolder ?? 0) > 0) ||
                 BUSTER_STATS.some(stat => minimums[stat] !== undefined &&
                 ((effect?.[stat] ?? 0) > 0 || effect?.[`${stat}Max`]));
         };
@@ -180,6 +182,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         // NC cannot change card-only properties. Ability and bug constraints are
         // deliberately excluded here because added NC parts can still satisfy them.
         const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined, minSoulTime: undefined,
+            minMegaFolder: undefined, minGigaFolder: undefined,
             bugRules: undefined, forbiddenBugs: undefined, allowedMovePanels: undefined };
         const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
             new Array(grid.height * grid.width).fill(null), grid, "en", modCards);

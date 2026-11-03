@@ -79,6 +79,8 @@ export interface BuildConstraints {
     minBusterStats?: Partial<Record<BusterStat, number>>;
     minCustom?: number;
     minSoulTime?: number;
+    minMegaFolder?: number;
+    minGigaFolder?: number;
     minChipRecovery?: ChipRecoveryMinimum;
     requiredSpecialMove?: string;
     allowedSpecialMoves?: string[];
@@ -165,6 +167,8 @@ const SavedProblem = z.object({
         cr: z.union([z.literal(10), z.literal(20), z.literal(30), z.literal(40), z.literal(50), z.literal(60), z.literal(100)]).optional(),
         cm: z.number().int().min(5).max(10).optional(),
         st: z.number().int().min(2).max(9).optional(),
+        mf: z.number().int().min(0).max(10).optional(),
+        gf: z.number().int().min(0).max(10).optional(),
         cs: z.string().optional(),
         acs: z.array(z.string()).optional(),
         bl: z.string().optional(),
@@ -263,6 +267,8 @@ export function fromHashString(s: string, data: Data): Problem | null {
         ...(saved.bc.cr ? { minChipRecovery: saved.bc.cr } : {}),
         ...(saved.bc.cm !== undefined ? { minCustom: saved.bc.cm } : {}),
         ...(saved.bc.st !== undefined ? { minSoulTime: saved.bc.st } : {}),
+        ...(saved.bc.mf !== undefined ? { minMegaFolder: saved.bc.mf } : {}),
+        ...(saved.bc.gf !== undefined ? { minGigaFolder: saved.bc.gf } : {}),
         ...(saved.bc.cs ? { requiredSpecialMove: saved.bc.cs } : {}),
         ...(saved.bc.acs !== undefined ? { allowedSpecialMoves: saved.bc.acs } : {}),
         ...(saved.bc.bl ? { requiredBLeft: saved.bc.bl } : {}),
@@ -331,6 +337,8 @@ export function toHashString(problem: Problem, data: Data): string {
             problem.constraints.minChipRecovery ||
             problem.constraints.minCustom !== undefined ||
             problem.constraints.minSoulTime !== undefined ||
+            problem.constraints.minMegaFolder !== undefined ||
+            problem.constraints.minGigaFolder !== undefined ||
             problem.constraints.requiredSpecialMove ||
             problem.constraints.allowedSpecialMoves?.length ||
             problem.constraints.requiredBLeft ||
@@ -358,6 +366,8 @@ export function toHashString(problem: Problem, data: Data): string {
                 ...(problem.constraints.minChipRecovery ? { cr: problem.constraints.minChipRecovery } : {}),
                 ...(problem.constraints.minCustom !== undefined ? { cm: problem.constraints.minCustom } : {}),
                 ...(problem.constraints.minSoulTime !== undefined ? { st: problem.constraints.minSoulTime } : {}),
+                ...(problem.constraints.minMegaFolder !== undefined ? { mf: problem.constraints.minMegaFolder } : {}),
+                ...(problem.constraints.minGigaFolder !== undefined ? { gf: problem.constraints.minGigaFolder } : {}),
                 ...(problem.constraints.requiredSpecialMove ? { cs: problem.constraints.requiredSpecialMove } : {}),
                 ...(problem.constraints.allowedSpecialMoves?.length ? { acs: problem.constraints.allowedSpecialMoves } : {}),
                 ...(problem.constraints.requiredBLeft ? { bl: problem.constraints.requiredBLeft } : {}),

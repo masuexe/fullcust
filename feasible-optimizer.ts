@@ -131,10 +131,18 @@ export function findFeasibleBuild(
             (before, after) => (after.stats.soulTime ?? 3) > (before.stats.soulTime ?? 3)
         );
     }
+    if (constraints?.minMegaFolder !== undefined) {
+        addGoal(state => state.stats.megaFolder >= constraints.minMegaFolder!, (before, after) => after.stats.megaFolder > before.stats.megaFolder);
+    }
+    if (constraints?.minGigaFolder !== undefined) {
+        addGoal(state => state.stats.gigaFolder >= constraints.minGigaFolder!, (before, after) => after.stats.gigaFolder > before.stats.gigaFolder);
+    }
     const { requiredAbilities: _abilities, requiredMaxBusterStats: _buster,
         minBusterStats: _minimums,
         minCustom: _minCustom,
         minSoulTime: _minSoulTime,
+        minMegaFolder: _minMegaFolder,
+        minGigaFolder: _minGigaFolder,
         bugRules: _rules, forbiddenBugs: _forbidden,
         allowedMovePanels: _panels,
         ...cardConstraints } = constraints ?? {};
