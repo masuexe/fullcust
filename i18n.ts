@@ -211,6 +211,11 @@ export const translations = {
         ja: "カスタム",
         zh: "芯片选择",
     },
+    statSoulTime: {
+        en: "Soul Time",
+        ja: "ソウルタイム",
+        zh: "灵魂时间",
+    },
     statMega: {
         en: "Mega",
         ja: "メガ",
@@ -890,6 +895,14 @@ export const translations = {
     },
     minCustomMaxOpen: {
         en: "Max Open", ja: "全開", zh: "全开",
+    },
+    minSoulTimeTitle: {
+        en: "Minimum Soul Time (turns)", ja: "ソウルタイムの最低ターン数", zh: "灵魂时间（回合数）最低值",
+    },
+    minSoulTimeDesc: {
+        en: "Base Soul Unison duration is 3 turns. Applies to final build stats after NC SoulT+1 (+1) and Mod Card bonuses/penalties (Chaos Unison is always 1 turn).",
+        ja: "通常のソウルユニゾンは基本3ターンです。ナビカスのソウルタイム+1や改造カードの加減算後の最終ターン数で判定します（カオスユニゾンは常に1ターン）。",
+        zh: "常规灵魂共鸣基础持续 3 回合，按导航仪改装（灵魂时间+1）与改造卡加减后的最终回合数判断（混沌共鸣固定为 1 回合）。",
     },
     minChipRecoveryDesc: {
         en: "The final active recovery amount must meet this minimum, including after later improvements.",

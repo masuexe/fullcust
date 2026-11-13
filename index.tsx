@@ -39,7 +39,7 @@ import {
     GaugeValue,
     GaugeOption,
 } from "./problem";
-import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } from "./optimizer-options";
+import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerSoulTimeValues, getOptimizerModeConstraints } from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
@@ -354,7 +354,9 @@ function BuildStatsView({
         (problem.modCards !== undefined && problem.modCards.length > 0) ||
         stats.hp !== 0 || stats.hpPercent !== 0 ||
         stats.attack > 1 || stats.rapid > 1 || stats.charge > 1 ||
-        stats.custom !== 5 || stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
+        stats.custom !== 5 ||
+        (stats.soulTime !== undefined && stats.soulTime !== 3) ||
+        stats.megaFolder !== 5 || stats.gigaFolder > 1 ||
         stats.abilities.length > 0;
     if (!hasAnyStats && problem.requirements.length === 0) return null;
 
@@ -399,6 +401,11 @@ function BuildStatsView({
                 {stats.custom !== 5 ? (
                     <span className={`badge ${stats.custom < 5 ? "bg-warning text-dark" : "bg-info text-dark"} py-1 px-2`}>
                         {t("statCustom", lang)}: {stats.custom}
+                    </span>
+                ) : null}
+                {stats.soulTime !== undefined && stats.soulTime !== 3 ? (
+                    <span className={`badge ${stats.soulTime < 3 ? "bg-warning text-dark" : "bg-info text-dark"} py-1 px-2`}>
+                        {t("statSoulTime", lang)}: {stats.soulTime}
                     </span>
                 ) : null}
                 {stats.megaFolder > 5 ? (
@@ -1223,6 +1230,7 @@ function AutoOptimizerPanel({
         () => getBusterMinimums(problem.constraints)
     );
     const [minCustom, setMinCustom] = React.useState(problem.constraints?.minCustom ?? 0);
+    const [minSoulTime, setMinSoulTime] = React.useState(problem.constraints?.minSoulTime ?? 0);
     const [allowedSpecialMoves, setAllowedSpecialMoves] = React.useState<string[]>(() => {
         if (problem.constraints?.allowedSpecialMoves !== undefined) return problem.constraints.allowedSpecialMoves;
         if (problem.constraints?.requiredSpecialMove) return [problem.constraints.requiredSpecialMove];
@@ -1317,6 +1325,7 @@ function AutoOptimizerPanel({
         customOptions.push({ value: minCustom, label: `≥ ${minCustom}` });
         customOptions.sort((a, b) => a.value - b.value);
     }
+    const soulTimeValues = getOptimizerSoulTimeValues(data.gameId, cardsEnabled);
     const panelTolerance: BugTolerance = React.useMemo(() => {
         if (bugRules.panel) return bugRules.panel;
         if (data.gameId === "bn6" || data.gameId === "bn5") {
@@ -1332,6 +1341,7 @@ function AutoOptimizerPanel({
         ...(reqAbilities.includes("chipRecovery") ? { minChipRecovery: effectiveMinChipRecovery } : {}),
         ...(Object.keys(minBusterStats).length > 0 ? { minBusterStats } : {}),
         ...(minCustom > 0 ? { minCustom } : {}),
+        ...(minSoulTime > 0 ? { minSoulTime } : {}),
         ...(allowedSpecialMoves.length > 0 ? { allowedSpecialMoves } : {}),
         ...(allowedBLefts.length > 0 ? { allowedBLefts } : {}),
         ...(allowedBButtons.length > 0 ? { allowedBButtons } : {}),
@@ -1344,6 +1354,20 @@ function AutoOptimizerPanel({
         ...(allowedGauges.length !== GAUGE_VALUES.length ? { allowedGauges } : {}),
         ...(Object.keys(bugRules).length > 0 ? { bugRules } : {}),
     }, cardsEnabled);
+    const effectiveMinSoulTime = constraints.minSoulTime ?? 0;
+    const soulTimeOptions: StepperOption[] = [
+        { value: 0, label: t("anyOption", lang) },
+        ...soulTimeValues.map(value => ({
+            value,
+            label: value === 3 && cardsEnabled
+                ? `≥ 3 (${t("minCustomStandardBaseline", lang)})`
+                : `≥ ${value}`,
+        })),
+    ];
+    if (effectiveMinSoulTime > 0 && !soulTimeOptions.some(opt => opt.value === effectiveMinSoulTime)) {
+        soulTimeOptions.push({ value: effectiveMinSoulTime, label: `≥ ${effectiveMinSoulTime}` });
+        soulTimeOptions.sort((a, b) => a.value - b.value);
+    }
     const effectiveBugRules = constraints.bugRules ?? {};
     const effectiveMinBusterStats = constraints.minBusterStats ?? {};
     const busterLimits = cardsEnabled ? getBusterStatLimits(data.gameId) : { attack: 5, rapid: 5, charge: 5 };
@@ -1374,6 +1398,7 @@ function AutoOptimizerPanel({
     const activeConstraintCount =
         (constraints.requiredAbilities?.length ?? 0) + Object.values(effectiveMinBusterStats).filter(value => value > 1).length +
         (minCustom > 0 ? 1 : 0) +
+        (constraints.minSoulTime ? 1 : 0) +
         (constraints.allowedSpecialMoves || constraints.requiredSpecialMove ? 1 : 0) +
         (constraints.allowedBLefts || constraints.requiredBLeft ? 1 : 0) +
         (constraints.allowedBButtons || constraints.requiredBButton ? 1 : 0) +
@@ -1671,6 +1696,23 @@ function AutoOptimizerPanel({
                                         />
                                         <div className="small text-muted mt-1">{t("minCustomDesc", lang)}</div>
                                     </div>
+
+                                    {soulTimeValues.length > 0 && (
+                                        <div className="mb-3">
+                                            <div className="form-label small fw-semibold mb-1">
+                                                {t("minSoulTimeTitle", lang)}
+                                            </div>
+                                            <NumericStepper
+                                                id="optimizer-soul-time-min"
+                                                options={soulTimeOptions}
+                                                value={effectiveMinSoulTime}
+                                                onChange={setMinSoulTime}
+                                                ariaLabel={t("minSoulTimeTitle", lang)}
+                                                resetTooltip={lang === "zh" ? "支持键盘输入数值，或双击重置为不限" : lang === "ja" ? "直接入力またはダブルクリックでリセット" : "Type a number or double-click to reset"}
+                                            />
+                                            <div className="small text-muted mt-1">{t("minSoulTimeDesc", lang)}</div>
+                                        </div>
+                                    )}
 
                                     <div className="mb-3">
                                         <div className="form-label small fw-semibold mb-1">{t("minBusterStatsTitle", lang)}</div>
