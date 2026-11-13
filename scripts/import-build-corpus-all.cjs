@@ -48,12 +48,22 @@ for (const id of GAME_IDS) corpora[id] = { ...loadCorpus(id), detected: 0, empty
 for (const f of files) {
     if (f.size < 0x100) { report.skippedSize++; continue; }
     let bytes; try { bytes = fs.readFileSync(f.p); } catch (e) { continue; }
-    let gameId = null, parsed = null, lastError = null;
+    // A reader that rejects only the header or the file size did not recognize the
+    // save. A reader that reaches the checksum or the NaviCust records did recognize
+    // it, so its error explains why the build is invalid. Report that deeper error.
+    const errors = {};
+    let gameId = null, parsed = null;
     for (const id of GAME_IDS) {
         try { const r = readBatterySave(bytes, DATA[id]); gameId = id; parsed = r; break; }
-        catch (e) { lastError = e.message; }
+        catch (e) { errors[id] = e.message; }
     }
-    if (!gameId) { report.undetected.push({ rel: path.relative(root, f.p), reason: lastError }); continue; }
+    if (!gameId) {
+        const recognized = GAME_IDS.find(id => !/^(Unrecognized|Unsupported)/.test(errors[id] ?? ""));
+        report.undetected.push(recognized
+            ? { rel: path.relative(root, f.p), game: recognized, reason: errors[recognized] }
+            : { rel: path.relative(root, f.p), game: null, reason: "No reader recognizes this save (unsupported game, size or header)" });
+        continue;
+    }
     const c = corpora[gameId]; c.detected++;
     const problem = parsed.problem;
     if (!problem.requirements.length && !(problem.modCards ?? []).length) { c.empty++; continue; }
@@ -75,8 +85,11 @@ for (const id of GAME_IDS) {
         fs.writeFileSync(c.file, "[\n" + seeds.map(s => "  " + JSON.stringify(s)).join(",\n") + "\n]\n");
     }
 }
-report.undetectedByExt = {};
-for (const u of report.undetected) { const e = path.extname(u.rel).toLowerCase() || "(none)"; report.undetectedByExt[e] = (report.undetectedByExt[e] ?? 0) + 1; }
-console.log(JSON.stringify({ mode: write ? "write" : "dry-run", scanned: report.scanned, byGame: report.byGame, undetected: report.undetected.length, undetectedByExt: report.undetectedByExt }, null, 2));
-console.log("undetected sample:");
-for (const u of report.undetected.slice(0, 60)) console.log("  " + u.rel + " :: " + u.reason);
+report.undetectedByReason = {};
+for (const u of report.undetected) {
+    const key = u.game ? `${u.game}: ${u.reason}` : u.reason;
+    report.undetectedByReason[key] = (report.undetectedByReason[key] ?? 0) + 1;
+}
+console.log(JSON.stringify({ mode: write ? "write" : "dry-run", scanned: report.scanned, byGame: report.byGame, undetected: report.undetected.length, undetectedByReason: report.undetectedByReason }, null, 2));
+console.log("undetected files:");
+for (const u of report.undetected) console.log("  " + u.rel + " :: " + (u.game ? u.game + ": " + u.reason : u.reason));

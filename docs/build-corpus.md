@@ -4,15 +4,17 @@ The solver first checks a compact library of known builds, then continues its ex
 
 ## Coverage
 
-The library covers BN6, BN5, BN4 and BN3. The files are `data/bn6-build-seeds.json` (146 builds), `data/bn5-build-seeds.json` (81 builds), `data/bn4-build-seeds.json` (20 builds) and `data/bn3-build-seeds.json` (10 builds).
+The library covers BN6, BN5, BN4 and BN3. The files are `data/bn6-build-seeds.json` (186 builds), `data/bn5-build-seeds.json` (89 builds), `data/bn4-build-seeds.json` (26 builds) and `data/bn3-build-seeds.json` (15 builds).
 
 The BN3 shapes come from the official ROM part tables, not the TREZ wiki diagrams. The wiki diagrams put 17 variants at a different offset inside the 5x5 canvas. With wiki shapes, 6 otherwise valid saves failed grid reconstruction. With ROM shapes they reconstruct exactly.
 
 ## Sources
 
-The library was built from the user's save folders. The sources are `25年EXE对战构筑包.7z`, `EXE网战中心特供存档包24版.rar` and the Tango save folder `d:/tango/saves`. The folders contain duplicate copies of the same builds. The importer canonicalizes part order and removes duplicates, so one build appears once.
+The library was built from the user's save folders. The sources are `25年EXE对战构筑包.7z`, `EXE网战中心特供存档包24版.rar`, the Tango save folder `d:/tango/saves` and the folder `d:/myuserdata/qq/downloads`. The folders contain duplicate copies of the same builds. The importer canonicalizes part order and removes duplicates, so one build appears once.
 
-A full scan of 517 save files found 212 BN6, 166 BN5, 35 BN4 and 21 BN3 saves. The importer accepted the builds that reproduce the standard part catalog and the stored grid. Many saves were empty story saves or duplicate copies. The remaining 83 files were not detected: they belong to unsupported games (EXE1, EXE2, EXE4.5, BN5DS, Star Force), or they come from ROM hacks with a different part catalog.
+A full scan of 517 save files found 212 BN6, 166 BN5, 35 BN4 and 21 BN3 saves. A second scan of 166 save files found 89 BN6, 28 BN5, 10 BN4 and 7 BN3 saves. Together, the two scans examined 683 files. The importer accepted the builds that reproduce the standard part catalog and the stored grid. Many saves were empty story saves or duplicate copies. The second scan added 59 unique builds: 40 BN6, 8 BN5, 6 BN4 and 5 BN3.
+
+The importer did not detect 115 files in total. Thirty-two of these files belong to the second scan. Seventeen files have no recognized game header or size. They come from unsupported games (EXE1, EXE2, EXE4.5, BN2), a modified ROM, or another save format. Fifteen files fail the build validation. Their part records do not reproduce the stored grid, their card decks exceed the game capacity, or their checksum does not match. The importer prints the reason for each file that it does not import.
 
 One save can fail NC record or grid reconstruction. Failure here does not establish that a save is invalid in every game modification.
 
