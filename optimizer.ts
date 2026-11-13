@@ -12,16 +12,19 @@ import {
     isBenignBug,
     isSolutionAcceptable,
     normalizeBugType,
+    BugDefinition,
     BuildStats,
+    GAME_BUG_DEFINITIONS,
     SolutionBugAnalysis,
 } from "./effects";
 import {
     getModCards,
     getModCard,
     computeDeckStats,
+    repairsBugType,
     ModCard,
 } from "./modcards";
-import { BODY_ELEMENTS, GAUGE_VALUES, BUSTER_STATS, getBusterMinimums, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { BODY_ELEMENTS, GAUGE_VALUES, BUSTER_STATS, getBusterMinimums, getMaxAllowedBugLevel, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { meetsPlacementBugConstraints, placeAll, solve, GridSettings, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_attack";
@@ -157,8 +160,7 @@ function isCardAcceptableUnderPolicy(
         for (const b of card.bugs) {
             const norm = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level));
             const rule = getBugRule(activeRules, norm, b.type);
-            if (rule === "forbidden") return false;
-            if (rule === "allowed_lv1" && (b.level ?? 1) > 1) return false;
+            if (rule === "forbidden" || (b.level ?? 1) > getMaxAllowedBugLevel(rule)) return false;
         }
         return true;
     }
@@ -178,7 +180,7 @@ function isCardAcceptableUnderPolicy(
     }
     if (policy.type === "no_bugs") return false;
     if (policy.type === "benign_allowed") {
-        return card.bugs.every(b => isBenignBug(b.type, b.level ?? 1));
+        return card.bugs.every(b => isBenignBug(getCardBugType(card.id, b.type, card.movePanel, b.level), b.level ?? 1));
     }
     return true;
 }
@@ -970,49 +972,119 @@ interface SearchNode {
     addedPartIndices: number[];
 }
 
-/** Push only forbidden placement bugs into the solver; allowed bugs remain searchable. */
+/** Push placement bug level caps into the solver while leaving absorbed, repaired, or overwritten bugs searchable. */
 export function requirementsUnderPolicy(
     data: Data,
     requirements: Requirement[],
     policy: BugPolicy,
     forbiddenBugs: string[],
     bugRules?: Partial<Record<string, BugTolerance>>,
-    modCards: string[] = []
+    modCards: string[] = [],
+    allowSupportBugGlitch?: boolean
 ): Requirement[] {
     // BugStop can absorb other parts' placement bugs. Judge those layouts as a whole.
     if (requirements.some(r => getPartEffect(data.gameId, data.partMetas[r.partIndex].id)?.abilities?.includes("bugStop"))) {
         return requirements;
     }
-    // Card repairs can also neutralize placement bugs; leave their interpretation
-    // to the full analysis instead of assuming every local bug remains active.
-    if (modCards.length > 0 && computeDeckStats(modCards, data.gameId).repairedBugs.length > 0) return requirements;
+
+    const deck = modCards.length > 0 ? computeDeckStats(modCards, data.gameId) : undefined;
+    const isBn5Or6 = data.gameId === "bn5" || data.gameId === "bn6";
+    const cardBugTypes = isBn5Or6 && deck
+        ? deck.activeBugs.map(entry => {
+            const card = getModCard(entry.sourceCardId, data.gameId);
+            return normalizeBugType(getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level));
+        })
+        : [];
+    const cardBattleHpBug = isBn5Or6 && deck
+        ? deck.activeBugs.find(entry => normalizeBugType(entry.bug.type) === "battleHp")
+        : undefined;
+    const cardBattleHpLevel = cardBattleHpBug ? (cardBattleHpBug.bug.level ?? 1) : 0;
+
+    const isOverwrittenByCard = (norm: string): boolean => {
+        if (!isBn5Or6 || cardBugTypes.length === 0) return false;
+        if (norm === "buster") return cardBugTypes.includes("buster") || cardBugTypes.includes("busterCharge");
+        if (norm === "status") return cardBugTypes.includes("status");
+        if (norm === "panelCrack") return cardBugTypes.some(t => t.startsWith("panel"));
+        if (norm === "customDamage") return cardBugTypes.includes("customDamage");
+        if (norm === "emotion") return cardBugTypes.includes("emotion");
+        return false;
+    };
+
+    const gameDefs = GAME_BUG_DEFINITIONS[data.gameId] ?? GAME_BUG_DEFINITIONS["bn6"];
+    const getNcMaxLevel = (rawType: string): number => {
+        const bugDef = (gameDefs[rawType] ?? GAME_BUG_DEFINITIONS["bn6"][rawType]) as (BugDefinition & { ncMaxLevel?: number }) | undefined;
+        if (bugDef?.ncMaxLevel !== undefined) return bugDef.ncMaxLevel;
+        const levels = bugDef?.levels ? Object.keys(bugDef.levels).map(Number) : [];
+        return levels.length > 0 ? Math.max(...levels) : 1;
+    };
+
     const rules = bugRules ?? policy.customRules;
-    return requirements.map(req => {
-        const forbidden = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id).some(type => {
-            const norm = (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type);
-            if (rules !== undefined || policy.type === "custom") {
-                if (data.gameId === "bn4" && type === "player") {
-                    return getBugRule(rules, "playerConfuse") === "forbidden" &&
-                           getBugRule(rules, "playerMoveForward") === "forbidden" &&
-                           getBugRule(rules, "playerMoveBackward") === "forbidden";
+    const getMaxAllowedForPartBug = (type: string, norm: string): number => {
+        if (rules !== undefined || policy.type === "custom") {
+            const group = (data.gameId === "bn4" && type === "player")
+                ? ["playerConfuse", "playerMoveForward", "playerMoveBackward"] as const
+                : (data.gameId === "bn3" && type === "involuntaryMove")
+                    ? ["involuntaryMoveUp", "involuntaryMoveDown", "involuntaryMoveConfuse"] as const
+                    : (data.gameId === "bn3" && type === "charge")
+                        ? ["chargeCube", "chargeWater", "chargeFlower"] as const
+                        : (data.gameId === "bn3" && type === "buster")
+                            ? ["busterBlank1", "busterBlank2", "busterGuard"] as const
+                            : undefined;
+            if (group) {
+                let best = 0;
+                for (let lv = 1; lv <= group.length; lv++) {
+                    if (getMaxAllowedBugLevel(getBugRule(rules, group[lv - 1])) >= lv) {
+                        best = lv;
+                    }
                 }
-                if (data.gameId === "bn3" && type === "involuntaryMove") {
-                    return getBugRule(rules, "involuntaryMoveUp") === "forbidden" &&
-                           getBugRule(rules, "involuntaryMoveDown") === "forbidden" &&
-                           getBugRule(rules, "involuntaryMoveConfuse") === "forbidden";
-                }
-                return getBugRule(rules, norm, type) === "forbidden";
-            } else if (forbiddenBugs.length > 0) {
-                return forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase()) ||
-                    !(["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1));
-            } else {
-                return policy.type === "no_bugs" || !isBenignBug(type, 1);
+                return best;
             }
-        });
-        return forbidden ? {
-            ...req,
-            constraint: { ...req.constraint, maxBugLevel: Math.min(req.constraint.maxBugLevel, 0) },
-        } : req;
+            return getMaxAllowedBugLevel(getBugRule(rules, norm, type));
+        }
+        if (forbiddenBugs.length > 0) {
+            const explicitlyForbidden = forbiddenBugs.some(b => normalizeBugType(b).toLowerCase() === norm.toLowerCase());
+            if (explicitlyForbidden) return 0;
+            if (["buster", "customhp", "emotion"].includes(norm.toLowerCase()) || isBenignBug(type, 1)) {
+                return Infinity;
+            }
+            return 0;
+        }
+        if (policy.type === "no_bugs") return 0;
+        if (policy.type === "benign_allowed") {
+            if (!isBenignBug(type, 1)) return 0;
+            return norm.toLowerCase() === "resultzenny" ? Infinity : 1;
+        }
+        return Infinity;
+    };
+
+    return requirements.map(req => {
+        let cap = Infinity;
+        for (const type of getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id)) {
+            const norm = isBn5Or6 && type === "panel" ? "panelCrack" : normalizeBugType(type);
+            if (allowSupportBugGlitch && norm === "support") continue;
+            if (deck?.repairedBugs.some(rep => repairsBugType(rep, norm))) continue;
+            if (isOverwrittenByCard(norm)) continue;
+
+            const maxAllowed = getMaxAllowedForPartBug(type, norm);
+            const effectiveMaxForNc = (norm === "battleHp" && isBn5Or6 && cardBattleHpLevel > 0)
+                ? (maxAllowed === Infinity ? Infinity : Math.max(0, maxAllowed - cardBattleHpLevel))
+                : maxAllowed;
+            const ncMaxLevel = getNcMaxLevel(type);
+            // Only cap when effectiveMaxForNc < ncMaxLevel because NC violations clamp at ncMaxLevel.
+            if (effectiveMaxForNc < ncMaxLevel) {
+                cap = Math.min(cap, effectiveMaxForNc);
+            }
+        }
+        if (cap < Infinity) {
+            const currentMax = req.constraint.maxBugLevel ?? Infinity;
+            if (cap < currentMax) {
+                return {
+                    ...req,
+                    constraint: { ...req.constraint, maxBugLevel: cap },
+                };
+            }
+        }
+        return req;
     });
 }
 
@@ -1060,8 +1132,7 @@ export function doesBuildSatisfyConstraints(
         for (const b of effectiveBugs) {
             const norm = normalizeBugType(b.bugType);
             const tolerance = getBugRule(constraints.bugRules, norm, b.bugType);
-            if (tolerance === "forbidden") return false;
-            if (tolerance === "allowed_lv1" && b.level > 1) return false;
+            if (tolerance === "forbidden" || b.level > getMaxAllowedBugLevel(tolerance)) return false;
         }
 
         for (const [bugType, tolerance] of Object.entries(constraints.bugRules)) {
@@ -1110,7 +1181,7 @@ function runNaviCustBeamSearch(
     const shouldStop = () => Date.now() - startTime >= timeoutMs;
     const findPlacement = (requirements: Requirement[]) => {
         onSearchWork?.("candidate");
-        const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards);
+        const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards, allowSupportBugGlitch);
         for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined, true)) {
             if (shouldStop()) break;
             const occ = placeAll(data.parts, requirements, solution, gridSettings);

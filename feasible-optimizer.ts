@@ -2,7 +2,7 @@ import { bugMatchesRule, getBugRule, getCardBugType, PANEL_BUG_TYPES } from "./p
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCard, getModCards } from "./modcards";
-import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
+import { BUSTER_STATS, BugTolerance, getBusterMinimums, getMaxAllowedBugLevel, isBugAllowedTolerance, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
 import { cardSpecConstraintsPossible, busterMinimumsPossible, soulTimeMinimumPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
 
@@ -57,7 +57,8 @@ export function findFeasibleBuild(
             const card = getModCard(entry.sourceCardId, data.gameId);
             const type = getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level);
             for (const key of requiredBugKeys) {
-                if (bugMatchesRule(normalizeBugType(type), normalizeBugType(key))) supplied.add(key);
+                const normalized = normalizeBugType(key);
+                if (bugMatchesRule(normalizeBugType(type), normalized)) supplied.add(normalized);
             }
         }
         return supplied;
@@ -159,7 +160,7 @@ export function findFeasibleBuild(
         const missing = goals.filter(goal => !goal.satisfied(state));
         if (missing.length === 0) {
             const reqs = requirementsUnderPolicy(data, state.requirements, policy,
-                constraints?.forbiddenBugs ?? [], constraints?.bugRules, state.cards);
+                constraints?.forbiddenBugs ?? [], constraints?.bugRules, state.cards, constraints?.allowSupportBugGlitch);
             for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
                 if (shouldStop()) return null;
                 const stats = computePlacedBuildStats(data.gameId, data.partMetas, state.requirements,
@@ -237,25 +238,21 @@ export function findFeasibleBuild(
         occupied: problem.requirements.reduce((sum, req) => sum + minimumCells(req), 0),
         stats: statsFor(problem.requirements, cards), bugs: bugsFor(problem.requirements, cards) };
     const requiresBug = Object.values(rules ?? {}).includes("required");
+    const isRestrictedTolerance = (tol?: BugTolerance) =>
+        !isBugAllowedTolerance(tol) || getMaxAllowedBugLevel(tol) < Infinity;
     const restrictsBugs = data.partMetas.some(part => getPartBugTypes(data.gameId, part.id).some(type => {
         if (data.gameId === "bn4" && type === "player") {
-            const conf = getBugRule(rules, "playerConfuse");
-            const fwd = getBugRule(rules, "playerMoveForward");
-            const bwd = getBugRule(rules, "playerMoveBackward");
-            return (conf !== "allowed" && conf !== "allowed_any") ||
-                   (fwd !== "allowed" && fwd !== "allowed_any") ||
-                   (bwd !== "allowed" && bwd !== "allowed_any");
+            return isRestrictedTolerance(getBugRule(rules, "playerConfuse")) ||
+                   isRestrictedTolerance(getBugRule(rules, "playerMoveForward")) ||
+                   isRestrictedTolerance(getBugRule(rules, "playerMoveBackward"));
         }
         if (data.gameId === "bn3" && type === "involuntaryMove") {
-            const up = getBugRule(rules, "involuntaryMoveUp");
-            const down = getBugRule(rules, "involuntaryMoveDown");
-            const conf = getBugRule(rules, "involuntaryMoveConfuse");
-            return (up !== "allowed" && up !== "allowed_any") ||
-                   (down !== "allowed" && down !== "allowed_any") ||
-                   (conf !== "allowed" && conf !== "allowed_any");
+            return isRestrictedTolerance(getBugRule(rules, "involuntaryMoveUp")) ||
+                   isRestrictedTolerance(getBugRule(rules, "involuntaryMoveDown")) ||
+                   isRestrictedTolerance(getBugRule(rules, "involuntaryMoveConfuse"));
         }
         const tolerance = getBugRule(rules, (data.gameId === "bn6" || data.gameId === "bn5") && type === "panel" ? "panelCrack" : normalizeBugType(type));
-        return tolerance !== "allowed" && tolerance !== "allowed_any";
+        return isRestrictedTolerance(tolerance);
     }));
     if (data.gameId === "bn6" && (modCardMode === "auto" || (modCardMode === "keep" && cards.length > 0)) &&
         options.preferBugStop !== false && !options.excludeAutomaticBugStop && !requiresBug && restrictsBugs &&

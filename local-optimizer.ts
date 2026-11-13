@@ -1,8 +1,9 @@
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { findFeasibleBuild } from "./feasible-optimizer";
-import { computeDeckStats, getModCards } from "./modcards";
+import { computeDeckStats, getModCard, getModCards } from "./modcards";
 import { doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
+import { getCardBugType } from "./panel-effects";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll } from "./solver";
 
@@ -84,7 +85,10 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             constraints?.minCustom !== undefined ? stats.custom : undefined,
             constraints?.minSoulTime !== undefined ? stats.soulTime : undefined,
             constraints?.minChipRecovery ? stats.modChipRecovery ?? 0 : undefined,
-            deck.activeBugs.map(b => [b.bug.type, b.bug.level]), deck.repairedBugs,
+            deck.activeBugs.map(entry => {
+                const card = getModCard(entry.sourceCardId, data.gameId);
+                return [getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level), entry.bug.level];
+            }), deck.repairedBugs,
         ]);
     };
     const repacked = new Set<string>();
@@ -141,7 +145,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
                 placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
             const reduced: OptimizeResult = { ...base, problem: { ...base.problem, requirements }, solution, stats, analysis };
-            const valid = isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules) &&
+            const valid = isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
+                constraints?.allowSupportBugGlitch) &&
                 doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId);
             const deadline = Date.now() + 30;
             const removedReq = base.problem.requirements[index];
