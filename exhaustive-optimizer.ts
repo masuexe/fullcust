@@ -10,6 +10,7 @@ import {
     occupiedBuildCells, removeRedundantAbilityParts,
     cardSpecConstraintsPossible,
     busterMinimumsPossible,
+    soulTimeMinimumPossible,
 } from "./optimizer";
 
 export interface SearchProgress {
@@ -97,6 +98,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         const boostsRequiredStat = (i: number) => {
             const effect = getPartEffect(data.gameId, data.partMetas[i].id);
             return (constraints?.minCustom !== undefined && ((effect?.custom ?? 0) > 0 || effect?.numberOpen)) ||
+                (constraints?.minSoulTime !== undefined && (effect?.soulTime ?? 0) > 0) ||
                 BUSTER_STATS.some(stat => minimums[stat] !== undefined &&
                 ((effect?.[stat] ?? 0) > 0 || effect?.[`${stat}Max`]));
         };
@@ -105,7 +107,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         return priority(a) - priority(b) || a - b;
     });
     const coreCells = problem.requirements.reduce((sum, r) => sum + minimumCells(r), 0);
-    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
+    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options) || !soulTimeMinimumPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
         (data.gameId !== "bn3" && new Set(problem.requirements.map(r => data.parts[r.partIndex].color)).size > 6)) {
         return { ...progress, completed: !shouldStop() };
     }
@@ -132,12 +134,13 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         if (deck.isOverCapacity || deck.hasSlotConflict || (data.gameId === "bn4" && modCards.length > 5)) return;
         // NC cannot change card-only properties. Ability and bug constraints are
         // deliberately excluded here because added NC parts can still satisfy them.
-        const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined,
+        const cardConstraints = { ...constraints, requiredAbilities: undefined, requiredMaxBusterStats: undefined, minBusterStats: undefined, minCustom: undefined, minSoulTime: undefined,
             bugRules: undefined, forbiddenBugs: undefined, allowedMovePanels: undefined };
         const emptyAnalysis = analyzeSolutionBugs(data.gameId, data.partMetas, [],
             new Array(grid.height * grid.width).fill(null), grid, "en", modCards);
         const deckStats = computeBuildStats(data.gameId, [], modCards, problem.baseHp ?? 1000);
         if (!doesBuildSatisfyConstraints(deckStats, emptyAnalysis, cardConstraints, data.gameId)) return;
+        if (data.gameId === "bn5" && constraints?.minSoulTime !== undefined && (deckStats.soulTime ?? 3) + 4 < constraints.minSoulTime) return;
         // Reject decks that already violate a bug rule, before enumerating the
         // NaviCust program space for them. The support bug is skipped while the
         // support glitch option can still neutralize it through an added program.

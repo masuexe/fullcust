@@ -4,7 +4,7 @@ import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildS
 import { computeDeckStats, getModCard, getModCards } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
-import { cardSpecConstraintsPossible, busterMinimumsPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
+import { cardSpecConstraintsPossible, busterMinimumsPossible, soulTimeMinimumPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
 
 /** A goal is judged on the final stats plus the bugs the chosen parts and deck
  * can supply. Bug supply is an approximation used for branching only; the
@@ -34,7 +34,7 @@ export function findFeasibleBuild(
         policy = problem.bugPolicy ?? DEFAULT_BUG_POLICY, modCardMode = "keep", shouldStop: isCancelled } = options;
     let preferredDeadline = Infinity;
     const shouldStop = () => isCancelled() || Date.now() >= preferredDeadline;
-    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
+    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options) || !soulTimeMinimumPossible(options)) return null;
     const grid = makeGridSettings(data, problem);
     const capacity = grid.height * grid.width - (grid.hasOob ? 4 : 0);
     const availableCards = data.gameId !== "bn3" && modCardMode === "auto" ? getModCards(data.gameId) : [];
@@ -99,9 +99,16 @@ export function findFeasibleBuild(
     if (constraints?.minCustom !== undefined) {
         addGoal(state => state.stats.custom >= constraints.minCustom!, (before, after) => after.stats.custom > before.stats.custom);
     }
+    if (constraints?.minSoulTime !== undefined && data.gameId === "bn5") {
+        addGoal(
+            state => (state.stats.soulTime ?? 3) >= constraints.minSoulTime!,
+            (before, after) => (after.stats.soulTime ?? 3) > (before.stats.soulTime ?? 3)
+        );
+    }
     const { requiredAbilities: _abilities, requiredMaxBusterStats: _buster,
         minBusterStats: _minimums,
         minCustom: _minCustom,
+        minSoulTime: _minSoulTime,
         bugRules: _rules, forbiddenBugs: _forbidden,
         allowedMovePanels: _panels,
         ...cardConstraints } = constraints ?? {};

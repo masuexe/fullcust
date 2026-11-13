@@ -126,6 +126,22 @@ export function busterMinimumsPossible(options: OptimizeOptions): boolean {
     return BUSTER_STATS.every(stat => (minimums[stat] ?? 1) <= limits[stat]);
 }
 
+/** Safe upper bound for BN5 Soul Time before packing. */
+export function soulTimeMinimumPossible(options: OptimizeOptions): boolean {
+    const { data, problem, constraints = problem.constraints, modCardMode = "keep" } = options;
+    if (data.gameId !== "bn5") return true;
+    const minSoulTime = constraints?.minSoulTime;
+    if (minSoulTime === undefined) return true;
+    if (modCardMode === "auto") {
+        // Max 4 copies of SoulT+1 (2x2) on BN5's 5x5 grid (+4) plus SnakeMan (+2).
+        return minSoulTime <= 9;
+    }
+    const cards = modCardMode === "keep" ? problem.modCards ?? [] : [];
+    const deck = computeDeckStats(cards, "bn5");
+    const maxSoulTime = Math.max(1, 3 + 4 + (deck.stats.soulTime ?? 0));
+    return minSoulTime <= maxSoulTime;
+}
+
 /**
  * Checks whether a mod card's inherent bugs comply with the user's BugPolicy, forbidden bugs, and bug rules.
  */
@@ -170,7 +186,13 @@ function isCardAcceptableUnderPolicy(
 /**
  * Evaluates the fitness score of a mod card based on the target.
  */
-function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBugs?: string[], requiredAbilities?: string[]): number {
+function evaluateCardScore(
+    card: ModCard,
+    target: OptimizationTarget,
+    requiredBugs?: string[],
+    requiredAbilities?: string[],
+    minSoulTime?: number
+): number {
     const hp = (card.stats.hp ?? 0) + (card.stats.hpPercent ? card.stats.hpPercent * 15 : 0);
     const attack = (card.stats.attack ?? 0) + (card.stats.attackMult && card.stats.attackMult > 1 ? 5 : 0);
 
@@ -199,7 +221,16 @@ function evaluateCardScore(card: ModCard, target: OptimizationTarget, requiredBu
         }
     }
 
-    return (target === "max_attack" ? attack * 120 + hp * 0.2 : hp + attack * 10) + abilityBonus;
+    let soulTimeBonus = 0;
+    if (minSoulTime !== undefined && card.stats.soulTime) {
+        if (card.stats.soulTime > 0) {
+            soulTimeBonus += card.stats.soulTime * (minSoulTime > 3 ? 250 : 120);
+        } else if (card.stats.soulTime < 0 && 3 + card.stats.soulTime < minSoulTime) {
+            soulTimeBonus += card.stats.soulTime * 350;
+        }
+    }
+
+    return (target === "max_attack" ? attack * 120 + hp * 0.2 : hp + attack * 10) + abilityBonus + soulTimeBonus;
 }
 
 export function matchSpecialMove(cardBPwrAtk: string | undefined, req: string): boolean {
@@ -561,6 +592,14 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         ? Object.entries(bugRules).filter(([_, tol]) => tol === "required").map(([b]) => b)
         : [];
     const locked = [...existingCardIds, ...lockedCardIds];
+    const minSoulTime = gameId === "bn5" ? constraints?.minSoulTime : undefined;
+
+    if (minSoulTime !== undefined && minSoulTime > 7 && !locked.includes("136-B035")) {
+        const snake = getModCard("136-B035", "bn5");
+        if (snake && isCardAcceptableUnderPolicy(snake, policy, forbiddenBugs, bugRules)) {
+            locked.push("136-B035");
+        }
+    }
 
     // Lock required special move (Charge Shot) if specified and not satisfied by baseline or locked cards
     const specialMoveRestricted = constraints?.allowedSpecialMoves !== undefined || constraints?.requiredSpecialMove;
@@ -716,6 +755,8 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
     }
 
     const lockedSet = new Set(locked);
+    const lockedSoulTime = gameId === "bn5" ? (computeDeckStats(locked, "bn5").stats.soulTime ?? 0) : 0;
+    const lockedMb = gameId === "bn5" ? computeDeckStats(locked, "bn5").totalMb : 0;
 
     const candidateCards = allCards.filter(c => {
         if (lockedSet.has(c.id)) return false;
@@ -733,6 +774,12 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
         if (c.busterAddition && !isBusterAdditionAllowed(c.busterAddition, constraints)) return false;
         if (c.body !== undefined && !isBodyAllowed(c.body, constraints)) return false;
         if (c.gauge && !isGaugeAllowed(c.gauge, constraints)) return false;
+        if (minSoulTime !== undefined && (c.stats.soulTime ?? 0) < 0) {
+            if (3 + 4 + lockedSoulTime + c.stats.soulTime! < minSoulTime) {
+                const canAddSnake = !lockedSet.has("136-B035") && 80 - lockedMb - c.mb >= 44;
+                if (!canAddSnake) return false;
+            }
+        }
         return true;
     });
 
@@ -808,7 +855,7 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
             }
         }
 
-        const baseVal = evaluateCardScore(card, target, requiredBugs);
+        const baseVal = evaluateCardScore(card, target, requiredBugs, undefined, minSoulTime);
         if (baseVal <= 0 && cardMask === 0) continue;
 
         for (let mask = maxMask - 1; mask >= 0; mask--) {
@@ -985,6 +1032,7 @@ export function doesBuildSatisfyConstraints(
     if (BUSTER_STATS.some(stat => stats[stat] < (minimums[stat] ?? 1))) return false;
     if ((stats.modChipRecovery ?? 0) < (constraints.minChipRecovery ?? 0)) return false;
     if (constraints.minCustom !== undefined && stats.custom < constraints.minCustom) return false;
+    if (constraints.minSoulTime !== undefined && (gameId === undefined || gameId === "bn5") && (stats.soulTime ?? 3) < constraints.minSoulTime) return false;
 
     if (constraints.requiredAbilities && constraints.requiredAbilities.length > 0) {
         const buildAbilities = new Set(stats.abilities || []);
@@ -1180,7 +1228,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         constraints = problem.constraints,
     } = options;
 
-    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options)) return null;
+    if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options) || !soulTimeMinimumPossible(options)) return null;
     const startTime = Date.now();
     const gridSettings = makeGridSettings(data, problem);
     const spinnableColors = problem.spinnableColors;
