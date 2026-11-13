@@ -38,8 +38,19 @@ import {
     GAUGE_VALUES,
     GaugeValue,
     GaugeOption,
+    getMaxAllowedBugLevel,
+    isBugAllowedTolerance,
 } from "./problem";
-import { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerSoulTimeValues, getOptimizerModeConstraints } from "./optimizer-options";
+import {
+    getOptimizerAbilityOptions,
+    getOptimizerBugOptions,
+    getOptimizerBugLevels,
+    getBugLevelDescription,
+    getOptimizerCustomValues,
+    getOptimizerChipRecoveryValues,
+    getOptimizerSoulTimeValues,
+    getOptimizerModeConstraints,
+} from "./optimizer-options";
 import type { OptimizationTarget, ModCardMode, OptimizeResult } from "./optimizer";
 import AsyncOptimizer from "./async-optimizer";
 import type { SearchActivity } from "./search-activity";
@@ -50,6 +61,8 @@ import {
     getBusterStatLimits,
     tAbility,
     analyzeSolutionBugs,
+    getEffectiveInBattleBugs,
+    ActiveBugEffect,
     SolutionBugAnalysis,
     tBugCause,
     tBugTitle,
@@ -523,19 +536,46 @@ function BuildStatsView({
     );
 }
 
+function getEffectiveBugLabel(bug: ActiveBugEffect, gameId: string, lang: Lang): string {
+    const defTitle = tBugTitle(bug.bugType, lang, gameId);
+    const specOpt = BUG_SPEC_OPTIONS.find(opt => opt.id === bug.bugType);
+    const baseName = defTitle !== bug.bugType ? defTitle : (specOpt?.name[lang] ?? bug.bugType);
+    const levelDesc = getBugLevelDescription(gameId, bug.bugType, bug.level, lang);
+    if (bug.level > 1 || levelDesc !== undefined) {
+        return `${baseName} (Lv${bug.level})`;
+    }
+    return baseName;
+}
+
+function getEffectiveBugMechanics(bug: ActiveBugEffect, gameId: string, lang: Lang): string {
+    const levelDesc = getBugLevelDescription(gameId, bug.bugType, bug.level, lang);
+    if (levelDesc) return levelDesc;
+    if (bug.isModCardBug && bug.mechanics) return bug.mechanics;
+    const defMech = tBugMechanics(bug.bugType, lang, gameId);
+    if (defMech !== bug.bugType) return defMech;
+    const specOpt = BUG_SPEC_OPTIONS.find(opt => opt.id === bug.bugType);
+    return specOpt?.desc[lang] ?? bug.mechanics;
+}
+
 function SolutionBugStatus({
     analysis,
     lang,
+    gameId,
+    allowSupportBugGlitch,
 }: {
     analysis: SolutionBugAnalysis;
     lang: Lang;
+    gameId?: string;
+    allowSupportBugGlitch?: boolean;
 }) {
     if (!analysis.hasBugs) {
         return <span className="badge bg-success px-2 py-1">✅ {t("noBugs", lang)}</span>;
     }
 
+    const resolvedGameId = gameId ?? (analysis as { gameId?: string }).gameId ?? "bn6";
     const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
     const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    const effectiveBugs = getEffectiveInBattleBugs(analysis, allowSupportBugGlitch);
     const unlistedColorBug = analysis.tooManyColors && !ncActiveBugs.some(b => b.bugType === "colorStatus");
     const ncBugCount = ncActiveBugs.length + (unlistedColorBug ? 1 : 0);
     const modBugCount = modActiveBugs.length;
@@ -543,13 +583,22 @@ function SolutionBugStatus({
     const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), unlistedColorBug ? 4 : 0);
     const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
 
+    const hasCombinedBattleHp =
+        !analysis.bugStopActive &&
+        ncActiveBugs.some(b => b.bugType === "battleHp") &&
+        modActiveBugs.some(b => b.bugType === "battleHp");
+    const effectiveBattleHp = hasCombinedBattleHp
+        ? effectiveBugs.find(b => b.bugType === "battleHp")
+        : undefined;
+    const effectiveSummary = effectiveBugs.map(eb => getEffectiveBugLabel(eb, resolvedGameId, lang)).join(", ");
+
     // When NO mod card bugs are involved, keep clean single badge
     if (modBugCount === 0) {
         if (analysis.bugStopActive && !unlistedColorBug) {
             return <span className="badge bg-info text-dark px-2 py-1">🛡️ {t("bugStopActive", lang)}</span>;
         }
         return (
-            <span className="badge bg-secondary px-2 py-1">
+            <span className="badge bg-secondary px-2 py-1" title={effectiveSummary || undefined}>
                 ⚙️ {ncBugCount} {t("bugsDetected", lang)}{ncLevelLabel}
             </span>
         );
@@ -571,9 +620,20 @@ function SolutionBugStatus({
                     ⚙️ {ncBugCount} {t("ncBugs", lang)}{ncLevelLabel}
                 </span>
             )}
-            <span className="badge bg-secondary px-2 py-1" title={t("modCardBugNotice", lang)}>
+            <span
+                className="badge bg-secondary px-2 py-1"
+                title={effectiveSummary ? `${t("modCardBugNotice", lang)} (${effectiveSummary})` : t("modCardBugNotice", lang)}
+            >
                 🎴 {modBugCount} {t("modCardBugCount", lang)}
             </span>
+            {effectiveBattleHp ? (
+                <span
+                    className="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"
+                    title={getEffectiveBugMechanics(effectiveBattleHp, resolvedGameId, lang)}
+                >
+                    ⚔️ {getEffectiveBugLabel(effectiveBattleHp, resolvedGameId, lang)}
+                </span>
+            ) : null}
         </div>
     );
 }
@@ -581,15 +641,21 @@ function SolutionBugStatus({
 function SolutionBugDetails({
     analysis,
     lang,
+    gameId,
+    allowSupportBugGlitch,
 }: {
     analysis: SolutionBugAnalysis;
     lang: Lang;
+    gameId?: string;
+    allowSupportBugGlitch?: boolean;
 }) {
     const [open, setOpen] = React.useState(false);
     if (!analysis.hasBugs) return null;
 
+    const resolvedGameId = gameId ?? (analysis as { gameId?: string }).gameId ?? "bn6";
     const ncActiveBugs = (analysis.activeBugs || []).filter(b => !b.isModCardBug);
     const modActiveBugs = (analysis.activeBugs || []).filter(b => b.isModCardBug);
+    const effectiveBugs = getEffectiveInBattleBugs(analysis, allowSupportBugGlitch);
     const unlistedColorBug = analysis.tooManyColors && !ncActiveBugs.some(b => b.bugType === "colorStatus");
     const ncBugCount = ncActiveBugs.length + (unlistedColorBug ? 1 : 0);
     const modBugCount = modActiveBugs.length;
@@ -597,12 +663,23 @@ function SolutionBugDetails({
     const ncMaxLevel = Math.max(0, ...ncActiveBugs.map(b => b.level), unlistedColorBug ? 4 : 0);
     const ncLevelLabel = ncBugCount === 1 && ncMaxLevel > 1 ? ` (Lv${ncMaxLevel})` : "";
 
+    const hasCombinedBattleHp =
+        !analysis.bugStopActive &&
+        ncActiveBugs.some(b => b.bugType === "battleHp") &&
+        modActiveBugs.some(b => b.bugType === "battleHp");
+    const effectiveBattleHp = hasCombinedBattleHp
+        ? effectiveBugs.find(b => b.bugType === "battleHp")
+        : undefined;
+    const showEffectiveSection = modBugCount > 0 || (Boolean(allowSupportBugGlitch) && Boolean(analysis.isSupportBugGlitchActive));
+
     const buttonSummary = (() => {
         if (modBugCount > 0) {
-            if (ncBugCount === 0) {
-                return `🎴 ${modBugCount} ${t("modCardBugCount", lang)} (${t("ncNoBugs", lang)})`;
-            }
-            return `⚙️ ${ncBugCount} ${t("ncBugs", lang)} + 🎴 ${modBugCount} ${t("modCardBugCount", lang)}`;
+            const base = ncBugCount === 0
+                ? `🎴 ${modBugCount} ${t("modCardBugCount", lang)} (${t("ncNoBugs", lang)})`
+                : `⚙️ ${ncBugCount} ${t("ncBugs", lang)} + 🎴 ${modBugCount} ${t("modCardBugCount", lang)}`;
+            return effectiveBattleHp
+                ? `${base} · ⚔️ ${getEffectiveBugLabel(effectiveBattleHp, resolvedGameId, lang)}`
+                : base;
         }
         return `⚙️ ${ncBugCount} ${t("bugsDetected", lang)}${ncLevelLabel}${analysis.bugStopActive ? ` (${t("bugStopActive", lang)})` : ""}`;
     })();
@@ -693,7 +770,33 @@ function SolutionBugDetails({
                         </div>
                     ) : null}
 
-                    {/* Section 3: Mod Card Repairs (if any) */}
+                    {/* Section 3: Effective In-Battle Bugs (when Mod Cards or Support Glitch alter raw NC/card bugs) */}
+                    {showEffectiveSection ? (
+                        <div className="pt-2 border-top mb-1">
+                            <div className="fw-bold d-flex align-items-center gap-1 mb-1">
+                                <span>⚔️</span>
+                                <span>{t("effectiveBattleBugsHeader", lang)}</span>
+                            </div>
+                            {effectiveBugs.length === 0 ? (
+                                <div className="text-success small">
+                                    ✅ {t("effectiveNoBugsNotice", lang)}
+                                </div>
+                            ) : (
+                                effectiveBugs.map((eb, idx) => (
+                                    <div key={`${eb.bugType}-${idx}`} className={idx < effectiveBugs.length - 1 ? "mb-2 pb-1 border-bottom" : ""}>
+                                        <div className="fw-semibold text-warning-emphasis">
+                                            ⚔️ {getEffectiveBugLabel(eb, resolvedGameId, lang)}
+                                        </div>
+                                        <div className="mt-1">
+                                            {t("bugMechanics", lang)}: <span className="fw-semibold text-body">{getEffectiveBugMechanics(eb, resolvedGameId, lang)}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    ) : null}
+
+                    {/* Section 4: Mod Card Repairs (if any) */}
                     {analysis.repairedBugsNotice && analysis.repairedBugsNotice.length > 0 ? (
                         <div className="pt-2 border-top mt-1">
                             <div className="alert alert-success py-1 px-2 mb-0 small">
@@ -1330,7 +1433,7 @@ function AutoOptimizerPanel({
         if (bugRules.panel) return bugRules.panel;
         if (data.gameId === "bn6" || data.gameId === "bn5") {
             const types = data.gameId === "bn5" ? BN5_PANEL_BUG_TYPES : BN6_PANEL_BUG_TYPES;
-            if (types.some(t => bugRules[t] === "allowed" || bugRules[t] === "allowed_any" || bugRules[t] === "allowed_lv1")) {
+            if (types.some(t => isBugAllowedTolerance(bugRules[t]))) {
                 return "allowed";
             }
         }
@@ -1456,7 +1559,7 @@ function AutoOptimizerPanel({
     };
 
     const numRequiredBugs = Object.values(effectiveBugRules).filter(v => v === "required").length;
-    const numAllowedBugs = Object.values(effectiveBugRules).filter(v => v === "allowed" || v === "allowed_any" || v === "allowed_lv1").length;
+    const numAllowedBugs = Object.values(effectiveBugRules).filter(v => isBugAllowedTolerance(v)).length;
 
     const optimizerRef = React.useRef<AsyncOptimizer | null>(null);
     const bestRef = React.useRef<OptimizeResult | null>(null);
@@ -2002,10 +2105,13 @@ function AutoOptimizerPanel({
                                         <div className="d-flex flex-column gap-1">
                                             {bugOptions.map(opt => {
                                                 const isPanelBug = opt.id === "panel" && getMovePanelOptions(data.gameId, cardsEnabled).length > 0;
-                                                const inherited = getBugRule(bugRules, opt.id);
+                                                const inherited = getBugRule(effectiveBugRules, opt.id);
                                                 const currentTol: BugTolerance = isPanelBug
                                                     ? panelTolerance
-                                                    : (bugRules[opt.id] ?? (inherited === "required" ? "allowed_any" : inherited));
+                                                    : (effectiveBugRules[opt.id] ?? (inherited === "required" ? "allowed_any" : inherited));
+                                                const isAllowed = isBugAllowedTolerance(currentTol);
+                                                const maxAllowedLevel = getMaxAllowedBugLevel(currentTol);
+                                                const levels: number[] = !isPanelBug ? getOptimizerBugLevels(data, cardsEnabled, opt.id) : [];
                                                 return (
                                                     <div
                                                         key={opt.id}
@@ -2031,12 +2137,13 @@ function AutoOptimizerPanel({
                                                                 </button>
                                                                 <button
                                                                     type="button"
-                                                                    className={`btn py-0 px-2 ${currentTol === "allowed" || currentTol === "allowed_any" ? "btn-warning text-dark" : "btn-outline-secondary"}`}
+                                                                    className={`btn py-0 px-2 ${isAllowed ? "btn-warning text-dark" : "btn-outline-secondary"}`}
                                                                     style={{ fontSize: "0.72rem" }}
                                                                     onClick={() => handleSetBugTolerance(opt.id, "allowed")}
                                                                     title={t("bugRuleAllowed", lang)}
                                                                 >
                                                                     {t("bugRuleAllowed", lang)}
+                                                                    {isAllowed && maxAllowedLevel < Infinity ? ` ≤Lv${maxAllowedLevel}` : ""}
                                                                 </button>
                                                                 <button
                                                                     type="button"
@@ -2049,6 +2156,46 @@ function AutoOptimizerPanel({
                                                                 </button>
                                                             </div>
                                                         </div>
+                                                        {!isPanelBug && isAllowed && levels.length > 1 && (
+                                                            <div className="mt-2 pt-2 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                                                <span className="text-muted" style={{ fontSize: "0.70rem" }}>
+                                                                    {t("bugMaxLevelLabel", lang)}:
+                                                                </span>
+                                                                <div className="btn-group btn-group-sm" role="group">
+                                                                    {levels.slice(0, -1).map(lv => {
+                                                                        const lvTol = `allowed_lv${lv}` as BugTolerance;
+                                                                        const active = currentTol === lvTol;
+                                                                        return (
+                                                                            <button
+                                                                                key={lv}
+                                                                                type="button"
+                                                                                className={`btn py-0 px-2 ${active ? "btn-warning text-dark fw-bold" : "btn-outline-secondary"}`}
+                                                                                style={{ fontSize: "0.70rem" }}
+                                                                                onClick={() => handleSetBugTolerance(opt.id, lvTol)}
+                                                                                title={getBugLevelDescription(data.gameId, opt.id, lv, lang)}
+                                                                            >
+                                                                                {`≤ Lv${lv}`}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                    {(() => {
+                                                                        const maxLv = levels[levels.length - 1];
+                                                                        const active = currentTol === "allowed" || currentTol === "allowed_any";
+                                                                        return (
+                                                                            <button
+                                                                                type="button"
+                                                                                className={`btn py-0 px-2 ${active ? "btn-warning text-dark fw-bold" : "btn-outline-secondary"}`}
+                                                                                style={{ fontSize: "0.70rem" }}
+                                                                                onClick={() => handleSetBugTolerance(opt.id, "allowed")}
+                                                                                title={getBugLevelDescription(data.gameId, opt.id, maxLv, lang)}
+                                                                            >
+                                                                                {`${t("bugLevelUnlimited", lang)} (Lv${maxLv})`}
+                                                                            </button>
+                                                                        );
+                                                                    })()}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         {isPanelBug && currentTol !== "forbidden" && (
                                                             <div className="mt-2 p-2 rounded bg-body-tertiary border" style={{ fontSize: "0.75rem" }}>
                                                                 <div className="d-flex align-items-center justify-content-between mb-1">
@@ -2137,7 +2284,12 @@ function AutoOptimizerPanel({
                                         cells={placeAll(data.parts, preview.problem.requirements, preview.solution, makeGridSettings(data, preview.problem))}
                                     />
                                 </div>
-                                <SolutionBugStatus analysis={preview.analysis} lang={lang} />
+                                <SolutionBugStatus
+                                    analysis={preview.analysis}
+                                    lang={lang}
+                                    gameId={data.gameId}
+                                    allowSupportBugGlitch={constraints.allowSupportBugGlitch}
+                                />
                                 {preview.problem.modCards && preview.problem.modCards.length > 0 ? (
                                     <div className="small text-muted mt-2">
                                         {t("optAddedModCards", lang)}: {preview.problem.modCards.map(id => {
@@ -3185,7 +3337,12 @@ function Results({
                                         {t("solution", lang)} #{i + 1}
                                     </span>
                                     <div className="d-flex align-items-center gap-2">
-                                        <SolutionBugStatus analysis={analysis} lang={lang} />
+                                        <SolutionBugStatus
+                                            analysis={analysis}
+                                            lang={lang}
+                                            gameId={data.gameId}
+                                            allowSupportBugGlitch={problem.constraints?.allowSupportBugGlitch}
+                                        />
                                         {onExportSav ? (
                                             <button
                                                 type="button"
@@ -3209,7 +3366,12 @@ function Results({
                                     />
                                 </div>
                                 <BuildStatsView data={data} problem={problem} solution={solution} />
-                                <SolutionBugDetails analysis={analysis} lang={lang} />
+                                <SolutionBugDetails
+                                    analysis={analysis}
+                                    lang={lang}
+                                    gameId={data.gameId}
+                                    allowSupportBugGlitch={problem.constraints?.allowSupportBugGlitch}
+                                />
                             </div>
                         );
                     })

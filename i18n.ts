@@ -511,6 +511,16 @@ export const translations = {
         ja: "改造カード修復",
         zh: "改造卡修复",
     },
+    effectiveBattleBugsHeader: {
+        en: "Effective In-Battle Bugs",
+        ja: "実戦で発動するバグ",
+        zh: "实战生效 Bug",
+    },
+    effectiveNoBugsNotice: {
+        en: "No bugs take effect in battle.",
+        ja: "実戦で発動するバグはありません。",
+        zh: "实战中无生效的 Bug。",
+    },
     baseHp: {
         en: "Initial HP",
         ja: "初期HP",
@@ -1115,6 +1125,16 @@ export const translations = {
         en: "Custom Bug Rules",
         ja: "カスタムバグ設定",
         zh: "自定义 Bug 规则",
+    },
+    bugMaxLevelLabel: {
+        en: "Max",
+        ja: "上限",
+        zh: "上限",
+    },
+    bugLevelUnlimited: {
+        en: "Any",
+        ja: "上限なし",
+        zh: "不限",
     },
     anyOption: {
         en: "None / Any",

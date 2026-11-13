@@ -41,7 +41,7 @@ The UI also exposes previously modeled NC categories that had no tolerance row: 
 | `137-B045` | Moving off panels may create ice (1/8) |
 | `137-B043` | Normal B may unexpectedly fire a charge shot (1/8), despite repairing blank shots |
 
-Terrain changes retain their existing `movePanel` field and now also participate in `panel` bug rules. The Buster option and card explanation cover both blanks and accidental charge shots. TopMan's repair applies before its replacement effect is recorded, so the latter is not silently erased by the same card.
+Terrain changes retain their existing `movePanel` field and now also participate in `panel` bug rules. TopMan (`137-B043`) repairs earlier Buster Blank (`buster`) bugs before recording its own `busterCharge` effect, so its 12.5% accidental ChargeShot (0% blanks) is preserved and configurable independently of blank-shot `buster` bugs.
 
 BWiki lists Custom HP Lv3 for Number (`137-A014`), JapanMan (`137-A042`), Totem (`137-B017`), and Gregar (`137-C009`), and Lv1 for NapalmMan (`137-B038`). The Lv3 records are retained, and NapalmMan is corrected to Lv1. Unverified frame intervals or BN5 damage amounts are not inferred from other sources.
 
@@ -85,3 +85,15 @@ In BN4–6, five and six colors produce configurable NC `colorStatus` levels 1 a
 ## Result Bug (Collect / Millions)
 
 In BN4–6, improper placement of Collect and Millions programs produces the Result Bug (`resultZenny`), where battle rewards drop only Zenny instead of chips. Because this bug carries no in-combat debuff during NetBattles, it is treated as a benign non-combat bug and defaults to allowed in the BN5 and BN6 optimizer configurations.
+
+## Per-bug level caps and NC + Mod Card combination
+
+When a bug is set to **Allowed** and has more than one reachable level in the current game and card mode, the optimizer supports per-bug maximum level caps (`allowed_lv1` through `allowed_lv6`, rendered as `≤ Lv1`–`≤ Lv6`) as well as uncapped `allowed` / `allowed_any` (`Any`). Capped tolerances are persisted in shared links and normalized to `allowed` or the highest reachable cap when switching to NC-only mode.
+
+In GBA ROM combat semantics for BN5 and BN6 when BugStop is inactive, NaviCust and Mod Card bugs combine differently depending on the register:
+
+- **Additive (`battleHp`)**: NC `battleHp` (clamped at NC Lv3) and Mod Card `battleHp` levels add together up to Lv7 (`Math.min(7, ncLevel + cardLevel)`). Solution validity, level caps, and effective in-battle displays evaluate this combined level.
+- **Mod Card overwrite**: Mod Card bugs in single-register slots overwrite the corresponding NC bug in battle: `buster` overwrites NC `buster`, any `panel*` bug overwrites NC `panelCrack`, `status` overwrites NC `status` and `colorStatus`, `customDamage` overwrites NC `customDamage`, and `emotion` overwrites NC `emotion`.
+- **BugStop active**: Effective BugStop absorbs all NC bugs (including `colorStatus`) before combination or overwriting, leaving only Mod Card bugs active in battle.
+
+In BN6, TopMan (`137-B043`) uses the dedicated `busterCharge` rule key rather than `buster`. TopMan's Buster Blank repair clears NC or earlier-card `buster` blank bugs while keeping its own `busterCharge` (12.5% accidental ChargeShot, 0% blanks). Normal Buster Blank repair cards clear both `buster` and `busterCharge`, and later `buster` / `busterCharge` cards overwrite each other on the Mod Card buster slot.
