@@ -2,6 +2,7 @@ import bn6Cards from "./data/bn6-modcards.json";
 import bn5Cards from "./data/bn5-modcards.json";
 import bn4Cards from "./data/bn4-modcards.json";
 import { Lang } from "./i18n";
+import { getCardBugType } from "./panel-effects";
 
 export interface ModCardStats {
     hp?: number;
@@ -86,7 +87,10 @@ export function repairsBugType(repair: string, type: string): boolean {
     if (name === "damage hp bug") return bug === "damagehp";
     if (name === "damage bug") return ["damagehp", "damagebattlehp", "damageconfusion", "damageblind"].includes(bug);
     if (name.includes("movement")) return ["movement", "involuntarymove"].includes(bug);
-    if (name.includes("buster blank")) return bug === "buster";
+    if (name.includes("buster blank")) {
+        if (bug === "bustercharge") return !name.includes("chargeshot");
+        return bug === "buster";
+    }
     if (name.includes("panel")) return ["panel", "panelset", "poisonwalk", "panelgrass", "panelice", "panelcrack"].includes(bug);
     if (name.includes("status")) return bug === "status";
     if (name.includes("emotion")) return bug === "emotion";
@@ -278,7 +282,11 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
         if (card.repairs) {
             for (const rep of card.repairs) {
                 repairedBugsSet.add(rep);
-                deckBugs = deckBugs.filter(entry => !repairsBugType(rep, entry.bug.type));
+                deckBugs = deckBugs.filter(entry => {
+                    const entryCard = getModCard(entry.sourceCardId, gameId);
+                    const entryType = getCardBugType(entry.sourceCardId, entry.bug.type, entryCard?.movePanel, entry.bug.level);
+                    return !repairsBugType(rep, entryType);
+                });
             }
         }
 
@@ -288,7 +296,16 @@ export function computeDeckStats(cardIds: string[], gameId: string = "bn6"): Dec
                 // BN5/6 write the later card's value for the same bug category.
                 // BN4 uses a different stacking scheme and keeps its existing path.
                 if (gameId === "bn5" || gameId === "bn6") {
-                    deckBugs = deckBugs.filter(entry => entry.bug.type !== b.type);
+                    const incomingType = getCardBugType(card.id, b.type, card.movePanel, b.level);
+                    const isBusterSlot = incomingType === "buster" || incomingType === "busterCharge";
+                    deckBugs = deckBugs.filter(entry => {
+                        if (isBusterSlot) {
+                            const entryCard = getModCard(entry.sourceCardId, gameId);
+                            const entryType = getCardBugType(entry.sourceCardId, entry.bug.type, entryCard?.movePanel, entry.bug.level);
+                            return entryType !== "buster" && entryType !== "busterCharge";
+                        }
+                        return entry.bug.type !== b.type;
+                    });
                 }
                 deckBugs.push({
                     sourceCardId: card.id,

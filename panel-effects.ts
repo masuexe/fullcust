@@ -50,6 +50,9 @@ export const BN3_BUSTER_BUG_TYPES = [
 
 /** Preserve the raw source category; classify card effects for final policy checks. */
 export function getCardBugType(cardId: string, type: string, movePanel?: string, level?: number | null): string {
+    if (cardId === "137-B043" && type.toLowerCase() === "buster") {
+        return "busterCharge";
+    }
     if (cardId.startsWith("134-") && type === "player") {
         if (level === 1) return "playerConfuse";
         if (level === 3) return "playerMoveBackward";
@@ -94,6 +97,9 @@ export function bugMatchesRule(actual: string, rule: string): boolean {
 }
 
 export function getBugRule(rules: Partial<Record<string, BugTolerance>> | undefined, type: string, originalType: string = type): BugTolerance {
+    if (type === "busterCharge" || type.toLowerCase() === "bustercharge") {
+        return rules?.busterCharge ?? "forbidden";
+    }
     return rules?.[type] ?? rules?.[originalType] ??
         (PANEL_BUG_TYPES.includes(type as typeof PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
         (BN3_PANEL_BUG_TYPES.includes(type as typeof BN3_PANEL_BUG_TYPES[number]) ? rules?.panel : undefined) ??
@@ -143,6 +149,7 @@ export function getDefaultBugRules(gameId: string): Record<string, BugTolerance>
             battleHp: "allowed",
             damageHp: "allowed",
             buster: "allowed",
+            busterCharge: "allowed",
             customHp: "allowed",
             panelGrass: "allowed",
             status: "allowed",

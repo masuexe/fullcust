@@ -1,7 +1,7 @@
 import { bugMatchesRule, getBugRule, getCardBugType } from "./panel-effects";
 import { getPartName, Lang } from "./i18n";
 import { computeDeckStats, getCardDisplayName, getModCard, ModCardBug, repairsBugType } from "./modcards";
-import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY, ChipRecoveryMinimum } from "./problem";
+import { BusterStat, BugPolicy, BugTolerance, DEFAULT_BUG_POLICY, ChipRecoveryMinimum, getMaxAllowedBugLevel } from "./problem";
 import type { GridSettings, Requirement } from "./solver";
 
 export interface PartEffect {
@@ -1088,6 +1088,16 @@ export const BUG_SPEC_OPTIONS: BugSpecOption[] = [
         desc: { en: "Buster shots may blank or unexpectedly fire a charge shot; details depend on game and source", ja: "作品・原因により空撃ちやチャージ暴発が発生", zh: "普通射击可能发射空包弹或误暴特集气射击；具体效果因作品和来源而异" },
     },
     {
+        id: "busterCharge",
+        games: ["bn6"],
+        name: { en: "Accidental ChargeShot (No Blanks)", ja: "BボタンCS暴発（空撃ちなし）", zh: "暴发集气射击（无空包弹）" },
+        desc: {
+            en: "Normal B shots have a 1/8 chance to fire an accidental ChargeShot, with 0% blanks (TopMan)",
+            ja: "通常B射撃が1/8の確率でチャージショットに暴発し、空撃ちは発生しません（タップマン）",
+            zh: "普通B射击有 1/8 几率暴发集气射击，无空包弹（0%卡壳，陀螺人）",
+        },
+    },
+    {
         id: "busterBlank1",
         games: ["bn3"],
         name: { en: "Buster Blank Lv1 (25%)", ja: "Bボタン空撃ちLv1 (25%)", zh: "B键空包弹 Lv1 (25%)" },
@@ -1323,6 +1333,7 @@ export function normalizeBugType(type: string): string {
     if (t === "busterblank2" || t === "busterblank50") return "busterBlank2";
     if (t === "busterblank") return "busterBlank1";
     if (t === "busterguard") return "busterGuard";
+    if (t === "bustercharge") return "busterCharge";
     if (t === "buster") return "buster";
     if (t === "emotion") return "emotion";
     return type;
@@ -1353,6 +1364,7 @@ export type BugType =
     | "involuntaryMoveDown"
     | "involuntaryMoveConfuse"
     | "buster"
+    | "busterCharge"
     | "busterBlank"
     | "busterBlank1"
     | "busterBlank2"
@@ -1392,6 +1404,7 @@ export interface BugDefinition {
     title: { en: string; ja: string; zh: string };
     mechanics: { en: string; ja: string; zh: string };
     levels?: Record<number, { en: string; ja: string; zh: string }>;
+    ncMaxLevel?: number;
 }
 
 export const BN3_PART_BUG_TYPES: Record<number, BugType> = {
@@ -1653,6 +1666,25 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 },
             },
         },
+        busterCharge: {
+            title: {
+                en: "Accidental ChargeShot (No Blanks)",
+                ja: "BボタンCS暴発（空撃ちなし）",
+                zh: "暴发集气射击（无空包弹）",
+            },
+            mechanics: {
+                en: "Normal B shots have a 1/8 chance to fire an accidental ChargeShot, with 0% blanks (TopMan).",
+                ja: "通常B射撃が1/8の確率でチャージショットに暴発し、空撃ちは発生しません（タップマン）。",
+                zh: "普通B射击有 1/8 几率暴发集气射击，无空包弹（0%卡壳，陀螺人）。",
+            },
+            levels: {
+                1: {
+                    en: "Normal B shots: 1/8 (12.5%) accidental ChargeShot, 0% blanks, 7/8 Normal Shot.",
+                    ja: "通常B射撃：1/8（12.5%）チャージ暴発、空撃ちなし（0%）、7/8 通常弾。",
+                    zh: "普通B射击：1/8（12.5%）误暴发集气射击，无空包弹（0%），7/8 正常射击。",
+                },
+            },
+        },
         battleHp: {
             title: {
                 en: "Battle HP Bug (HP Leak)",
@@ -1664,6 +1696,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "戦闘中にHPが一定フレームごとに減少し続けます（被ダメージ硬直時に加速）。",
                 zh: "战斗中 HP 持续流失扣减（受到硬直伤害时扣血加速）。",
             },
+            ncMaxLevel: 3,
             levels: {
                 1: {
                     en: "Drops 1 HP every 40 frames in battle (accelerates when flinching).",
@@ -1679,6 +1712,50 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                     en: "Drops 1 HP every 30 frames in battle.",
                     ja: "戦闘中、30フレーム毎にHPが1減少します。",
                     zh: "战斗中每 30 帧流失 1 HP。",
+                },
+                4: {
+                    en: "Drops 1 HP every 25 frames in battle.",
+                    ja: "戦闘中、25フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 25 帧流失 1 HP。",
+                },
+                5: {
+                    en: "Drops 1 HP every 20 frames in battle.",
+                    ja: "戦闘中、20フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 20 帧流失 1 HP。",
+                },
+                6: {
+                    en: "Drops 1 HP every 15 frames in battle.",
+                    ja: "戦闘中、15フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 15 帧流失 1 HP。",
+                },
+                7: {
+                    en: "Drops 1 HP every 10 frames in battle.",
+                    ja: "戦闘中、10フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 10 帧流失 1 HP。",
+                },
+            },
+        },
+        customHp: {
+            title: {
+                en: "Custom Screen HP Drain",
+                ja: "カスタム画面HP減少バグ",
+                zh: "改装 HP BUG",
+            },
+            mechanics: {
+                en: "MegaMan's HP steadily drops while on the Custom Screen selecting chips.",
+                ja: "カスタム画面でチップ選択中、HPが継続して減少し続けます。",
+                zh: "打开自定义视窗选芯片时，HP 持续流失。",
+            },
+            levels: {
+                1: {
+                    en: "HP drains while the Custom Screen is open (Lv1).",
+                    ja: "カスタム画面でチップ選択中、HPが徐々に減少します（Lv1）。",
+                    zh: "在改装界面选卡时持续少量扣减 HP（Lv1）。",
+                },
+                3: {
+                    en: "Drains 1 HP every 10 frames while in the Custom Screen.",
+                    ja: "カスタム画面でチップ選択中、10フレーム毎にHPが1減少します。",
+                    zh: "在改装界面选卡时每 10 帧流失 1 HP。",
                 },
             },
         },
@@ -1784,6 +1861,30 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 zh: "通信对战时支援程序无法触发。",
             },
         },
+        status: {
+            title: {
+                en: "Status Abnormality",
+                ja: "状態異常バグ",
+                zh: "状态异常 BUG",
+            },
+            mechanics: {
+                en: "Starts battle with random brief status condition(s) (Confused, Blind, Invisible, or Invincible).",
+                ja: "戦闘開始時にランダムな短時間の状態異常が付与されます。",
+                zh: "战斗开始时随机陷入短暂的异常状态（混乱、目盲、隐身或无敌）。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battles with random brief status for 5 seconds (or 1 random status from Mod Card).",
+                    ja: "戦闘開始時に5秒間ランダムな状態異常が付与されます（改造カード時は1種）。",
+                    zh: "战斗开始时陷入短暂异常状态持续 5 秒（或由改造卡触发随机 1 种异常）。",
+                },
+                2: {
+                    en: "Starts battles with random brief status for 10 seconds (or 2 random statuses from Mod Card).",
+                    ja: "戦闘開始時に10秒間ランダムな状態異常が付与されます（改造カード時は2種）。",
+                    zh: "战斗开始时陷入短暂异常状态持续 10 秒（或由改造卡触发随机 2 种异常）。",
+                },
+            },
+        },
         colorStatus: {
             title: {
                 en: "Color Overflow Bug",
@@ -1857,6 +1958,7 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 ja: "戦闘中にHPが減少し続けます。",
                 zh: "战斗中 HP 持续流失。",
             },
+            ncMaxLevel: 3,
             levels: {
                 1: {
                     en: "Drops 1 HP every 40 frames in battle.",
@@ -1872,6 +1974,11 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                     en: "Drops 1 HP every 30 frames in battle.",
                     ja: "戦闘中、30フレーム毎にHPが1減少します。",
                     zh: "战斗中每 30 帧流失 1 HP。",
+                },
+                4: {
+                    en: "Drops 1 HP every 25 frames in battle.",
+                    ja: "戦闘中、25フレーム毎にHPが1減少します。",
+                    zh: "战斗中每 25 帧流失 1 HP。",
                 },
             },
         },
@@ -1967,6 +2074,30 @@ export const GAME_BUG_DEFINITIONS: Record<string, Record<string, BugDefinition>>
                 en: "Support programs fail to activate in battle.",
                 ja: "サポートプログラムが発動しません。",
                 zh: "支援程序在战斗中无法正常触发。",
+            },
+        },
+        status: {
+            title: {
+                en: "Status Abnormality",
+                ja: "状態異常バグ",
+                zh: "状态异常 BUG",
+            },
+            mechanics: {
+                en: "Starts battles with random brief status disorder or confusion.",
+                ja: "戦闘開始時にランダムな状態異常や混乱が発生します。",
+                zh: "战斗开始时触发短暂的状态异常或混乱。",
+            },
+            levels: {
+                1: {
+                    en: "Starts battles with random brief status for 5 seconds (or Mod Card confusion/status disorder).",
+                    ja: "戦闘開始時に5秒間ランダムな状態異常が付与されます（改造カード時は混乱・状態異常）。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 5 秒（或由改造卡触发开局混乱/状态异常）。",
+                },
+                2: {
+                    en: "Starts battles with random brief status for 10 seconds.",
+                    ja: "戦闘開始時に10秒間ランダムな状態異常が付与されます。",
+                    zh: "战斗开始瞬间随机陷入短暂异常状态持续 10 秒。",
+                },
             },
         },
         colorStatus: {
@@ -2710,6 +2841,8 @@ export interface AnalyzedBug {
 }
 
 export interface SolutionBugAnalysis {
+    gameId?: string;
+    lang?: Lang;
     hasBugs: boolean;
     bugStopActive: boolean;
     isSupportBugGlitchActive?: boolean;
@@ -2885,7 +3018,8 @@ export function analyzeSolutionBugs(
         const maxDefinedLevel = bugDef?.levels
             ? Math.max(...Object.keys(bugDef.levels).map(Number))
             : 1;
-        const effectiveLevel = Math.min(level, maxDefinedLevel);
+        const maxNcLevel = bugDef?.ncMaxLevel ?? maxDefinedLevel;
+        const effectiveLevel = Math.min(level, maxNcLevel);
 
         const levelMechanics =
             bugDef?.levels?.[effectiveLevel]?.[lang] ??
@@ -2999,6 +3133,8 @@ export function analyzeSolutionBugs(
     const isSupportBugGlitchActive = Boolean(hasErball && hasRushOrBeat);
 
     return {
+        gameId,
+        lang,
         hasBugs,
         bugStopActive,
         isSupportBugGlitchActive,
@@ -3037,6 +3173,47 @@ export function getEffectiveInBattleBugs(analysis: SolutionBugAnalysis, allowSup
     let bugs = analysis.activeBugs || [];
     if (analysis.bugStopActive) {
         bugs = bugs.filter(b => b.isModCardBug);
+    } else if (analysis.gameId === "bn5" || analysis.gameId === "bn6" || !analysis.gameId) {
+        const ncBugs = bugs.filter(b => !b.isModCardBug);
+        const cardBugs = bugs.filter(b => b.isModCardBug);
+        if (ncBugs.length > 0 && cardBugs.length > 0) {
+            const cardBattleHp = cardBugs.find(b => b.bugType === "battleHp");
+            const ncBattleHp = ncBugs.find(b => b.bugType === "battleHp");
+            const hasCardBuster = cardBugs.some(b => b.bugType === "buster" || b.bugType === "busterCharge");
+            const hasCardStatus = cardBugs.some(b => b.bugType === "status");
+            const hasCardPanel = cardBugs.some(b => b.bugType.startsWith("panel"));
+            const hasCardCustomDamage = cardBugs.some(b => b.bugType === "customDamage");
+            const hasCardEmotion = cardBugs.some(b => b.bugType === "emotion");
+
+            const combinedBugs: ActiveBugEffect[] = [];
+            for (const b of bugs) {
+                if (!b.isModCardBug) {
+                    if (b.bugType === "battleHp" && cardBattleHp) {
+                        const combinedLevel = Math.min(7, b.level + cardBattleHp.level);
+                        const gameId = analysis.gameId ?? "bn6";
+                        const lang = analysis.lang ?? "en";
+                        const battleHpDef = GAME_BUG_DEFINITIONS[gameId]?.battleHp ?? GAME_BUG_DEFINITIONS.bn6.battleHp;
+                        combinedBugs.push({
+                            ...b,
+                            level: combinedLevel,
+                            title: `${battleHpDef.title[lang]} (Lv${combinedLevel})`,
+                            mechanics: battleHpDef.levels?.[combinedLevel]?.[lang] ?? b.mechanics,
+                            sourceCardName: cardBattleHp.sourceCardName,
+                        });
+                        continue;
+                    }
+                    if (hasCardBuster && b.bugType === "buster") continue;
+                    if (hasCardStatus && (b.bugType === "status" || b.bugType === "colorStatus")) continue;
+                    if (hasCardPanel && (b.bugType === "panelCrack" || b.bugType === "panel")) continue;
+                    if (hasCardCustomDamage && b.bugType === "customDamage") continue;
+                    if (hasCardEmotion && b.bugType === "emotion") continue;
+                } else {
+                    if (b.bugType === "battleHp" && ncBattleHp) continue;
+                }
+                combinedBugs.push(b);
+            }
+            bugs = combinedBugs;
+        }
     }
     if (allowSupportBugGlitch && analysis.isSupportBugGlitchActive) {
         bugs = bugs.filter(b => b.bugType !== "support");
@@ -3070,12 +3247,11 @@ export function isSolutionAcceptable(
 
     if (activeRules !== undefined || policy.type === "custom") {
         const rules = activeRules || {};
-        // Every bug in effectiveBugs must not be forbidden
+        // Every bug in effectiveBugs must satisfy its level cap
         for (const bug of effectiveBugs) {
             const norm = normalizeBugType(bug.bugType);
             const rule = getBugRule(rules, norm, bug.bugType);
-            if (rule === "forbidden") return false;
-            if (rule === "allowed_lv1" && bug.level > 1) return false;
+            if (rule === "forbidden" || bug.level > getMaxAllowedBugLevel(rule)) return false;
         }
 
         // Every required bug must be present in effectiveBugs with level >= 1

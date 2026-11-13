@@ -1,7 +1,8 @@
-import { expandPanelBugRules } from "./panel-effects";
+import { expandPanelBugRules, getCardBugType } from "./panel-effects";
 import type { Data } from "./game-data";
 import { BUG_SPEC_OPTIONS, GAME_BUG_DEFINITIONS, getCoreAbilityOptions, getPartBugTypes, getPartEffect, normalizeBugType, getMovePanelOptions, enforceExclusiveRequiredBugs } from "./effects";
-import { BUSTER_STATS, BuildConstraints, ChipRecoveryMinimum } from "./problem";
+import { getModCards } from "./modcards";
+import { BUSTER_STATS, BugTolerance, BuildConstraints, ChipRecoveryMinimum, getMaxAllowedBugLevel } from "./problem";
 
 function usesCards(data: Data, enabled: boolean): boolean {
     return enabled && data.gameId !== "bn3";
@@ -94,11 +95,140 @@ export function getOptimizerSoulTimeValues(gameId: string, cardsEnabled: boolean
     return [2, 3, 4, 5, 6, 7, 8, 9];
 }
 
+export function getOptimizerBugLevels(data: Data, cardsEnabled: boolean, bugId: string): number[] {
+    const gameId = data.gameId;
+    const targetId = normalizeBugType(bugId);
+    const gameDefs = GAME_BUG_DEFINITIONS[gameId] ?? GAME_BUG_DEFINITIONS.bn6;
+    const ncLevels = new Set<number>();
+    const cardLevels = new Set<number>();
+    const isPanelRefined = gameId === "bn6" || gameId === "bn5";
+
+    const addDefLevels = (defKey: string, into: Set<number>, respectNcMax: boolean) => {
+        const def = gameDefs?.[defKey] ?? GAME_BUG_DEFINITIONS.bn6?.[defKey];
+        if (def?.levels) {
+            const ncMax = respectNcMax ? (def.ncMaxLevel ?? Infinity) : Infinity;
+            for (const key of Object.keys(def.levels)) {
+                const lv = Number(key);
+                if (Number.isInteger(lv) && lv >= 1 && lv <= ncMax) {
+                    into.add(lv);
+                }
+            }
+        } else {
+            into.add(1);
+        }
+    };
+
+    const seenNcTypes = new Set<string>();
+    for (const part of data.partMetas) {
+        for (const rawType of getPartBugTypes(gameId, part.id)) {
+            const mapped = isPanelRefined && rawType === "panel" ? "panelCrack" : normalizeBugType(rawType);
+            if (mapped === targetId && !seenNcTypes.has(rawType)) {
+                seenNcTypes.add(rawType);
+                addDefLevels(rawType, ncLevels, true);
+            }
+        }
+    }
+
+    // Color overflow is an NC status bug source in BN4-6 even without a single supplier part.
+    if (targetId === "status" && gameDefs?.colorStatus) {
+        addDefLevels("colorStatus", ncLevels, true);
+    }
+
+    if (usesCards(data, cardsEnabled)) {
+        for (const card of getModCards(gameId)) {
+            for (const b of card.bugs || []) {
+                const cardBugType = normalizeBugType(getCardBugType(card.id, b.type, card.movePanel, b.level));
+                if (cardBugType === targetId) {
+                    const lv = b.level ?? 1;
+                    if (Number.isInteger(lv) && lv >= 1) {
+                        cardLevels.add(lv);
+                    }
+                }
+            }
+        }
+    }
+
+    const combined = new Set<number>([...ncLevels, ...cardLevels]);
+
+    if ((gameId === "bn5" || gameId === "bn6") && targetId === "battleHp" && ncLevels.size > 0 && cardLevels.size > 0) {
+        for (const ncLv of ncLevels) {
+            for (const cardLv of cardLevels) {
+                combined.add(Math.min(7, ncLv + cardLv));
+            }
+        }
+    }
+
+    const sorted = Array.from(combined)
+        .filter(lv => Number.isInteger(lv) && lv >= 1)
+        .sort((a, b) => a - b);
+    return sorted.length > 1 ? sorted : [];
+}
+
+export function getBugLevelDescription(
+    gameId: string,
+    bugId: string,
+    level: number,
+    lang: "en" | "ja" | "zh",
+): string | undefined {
+    const gameDefs = GAME_BUG_DEFINITIONS[gameId];
+    if (!gameDefs) return undefined;
+    const norm = normalizeBugType(bugId);
+    const candidates: string[] = [norm];
+    if (norm === "panelCrack") candidates.push("panel");
+    if (norm === "status") {
+        if (gameId === "bn4") candidates.unshift("colorStatus");
+        else candidates.push("colorStatus");
+    }
+    for (const key of candidates) {
+        const def = gameDefs[key];
+        if (!def) continue;
+        if (def.levels) {
+            const levelDesc = def.levels[level]?.[lang];
+            if (levelDesc) return levelDesc;
+        } else if (level === 1) {
+            return def.mechanics[lang];
+        }
+    }
+    return undefined;
+}
+
+function normalizeBugRulesForMode(
+    data: Data,
+    rules: Record<string, BugTolerance> | undefined,
+    cardsEnabled: boolean,
+): Record<string, BugTolerance> | undefined {
+    if (!rules) return rules;
+    let changed = false;
+    const next: Record<string, BugTolerance> = {};
+    for (const [bugType, tol] of Object.entries(rules)) {
+        let nextTol = tol;
+        if (tol && tol.startsWith("allowed_lv")) {
+            const maxLv = getMaxAllowedBugLevel(tol);
+            const levels = getOptimizerBugLevels(data, cardsEnabled, bugType);
+            if (levels.length === 0 || maxLv >= levels[levels.length - 1]) {
+                nextTol = "allowed";
+            } else {
+                const clamped = [...levels].reverse().find(lv => lv <= maxLv);
+                nextTol = clamped !== undefined ? (`allowed_lv${clamped}` as BugTolerance) : "forbidden";
+            }
+        }
+        if (nextTol !== tol) changed = true;
+        next[bugType] = nextTol;
+    }
+    return changed ? next : rules;
+}
+
 /** UI-only mode projection. Saved drafts can be restored when cards are re-enabled;
  * hidden settings must not enter the worker request, result, or constraint counts.
  */
 export function getOptimizerModeConstraints(data: Data, constraints: BuildConstraints, cardsEnabled: boolean): BuildConstraints {
-    if (data.gameId === "bn3" || data.gameId === "bn4") {
+    if ((data.gameId === "bn3" || data.gameId === "bn4") && (
+        constraints.allowedBodies !== undefined ||
+        constraints.requiredBody !== undefined ||
+        constraints.allowedChargeAdditions !== undefined ||
+        constraints.requiredChargeAddition !== undefined ||
+        constraints.requireGlitch100ChargeAddition !== undefined
+    )) {
         const {
             allowedBodies: _ab,
             requiredBody: _rb,
@@ -113,7 +243,13 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
         const { minSoulTime: _st, ...restNoSoulTime } = constraints;
         constraints = restNoSoulTime;
     }
-    if (usesCards(data, cardsEnabled)) return constraints;
+    if (usesCards(data, cardsEnabled)) {
+        const normalizedRules = normalizeBugRulesForMode(data, constraints.bugRules, true);
+        if (normalizedRules !== constraints.bugRules) {
+            return { ...constraints, bugRules: normalizedRules };
+        }
+        return constraints;
+    }
     const {
         requiredSpecialMove, allowedSpecialMoves, requiredBLeft, allowedBLefts,
         requiredBButton, allowedBButtons, requiredChargeAddition, allowedChargeAdditions,
@@ -133,7 +269,8 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     const bugIds = new Set(getOptimizerBugOptions(data, false).map(option => option.id));
     if ((data.gameId === "bn6" || data.gameId === "bn5" || data.gameId === "bn3") && bugRules?.panel === "required") bugIds.add("panel");
     const expandedRules = bugRules && Object.fromEntries(Object.entries(expandPanelBugRules(data.gameId, bugRules)).filter(([type]) => bugIds.has(normalizeBugType(type))));
-    const rules = expandedRules && enforceExclusiveRequiredBugs(expandedRules, data.gameId);
+    const exclusiveRules = expandedRules && enforceExclusiveRequiredBugs(expandedRules, data.gameId);
+    const rules = normalizeBugRulesForMode(data, exclusiveRules, false);
     const expandForbidden = (type: string): string[] => {
         const normalized = normalizeBugType(type);
         // BN3 keeps the battle-start panel bug and the poison-step bug separate.

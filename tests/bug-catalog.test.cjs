@@ -39,7 +39,7 @@ for (const game of ["bn3", "bn4", "bn5", "bn6"]) {
 }
 
 test("approved BN5/6 source tables match every audited card's bug and repair categories", () => {
-    const category = type => type.startsWith("panel") ? "panel" : ["damageHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type;
+    const category = type => type.startsWith("panel") ? "panel" : ["damageHp", "damageConfusion", "damageBlind"].includes(type) ? "damage" : type === "busterCharge" ? "buster" : type;
     for (const [game, audit] of Object.entries(manifest.games)) {
         for (const record of audit.cards) {
             const card = getModCard(record.id, game);
@@ -237,4 +237,177 @@ test("BN3 and BN4 do not include emotion bug in catalog and map Humor and BugSto
     assert.deepEqual(getPartBugTypes("bn4", 20), ["player"]);
     assert.deepEqual(getPartBugTypes("bn4", 24), ["player"]);
 });
+
+test("BugTolerance helpers and hash round-trip support allowed_lv1..allowed_lv6", () => {
+    const { games } = require("../games.ts");
+    const { parseGameData } = require("../game-data.ts");
+    const {
+        emptyProblem,
+        toHashString,
+        fromHashString,
+        getMaxAllowedBugLevel,
+        isBugAllowedTolerance,
+    } = require("../problem.ts");
+
+    assert.equal(getMaxAllowedBugLevel(undefined), 0);
+    assert.equal(getMaxAllowedBugLevel("forbidden"), 0);
+    assert.equal(getMaxAllowedBugLevel("allowed"), Infinity);
+    assert.equal(getMaxAllowedBugLevel("allowed_any"), Infinity);
+    assert.equal(getMaxAllowedBugLevel("required"), Infinity);
+    assert.equal(isBugAllowedTolerance("forbidden"), false);
+    assert.equal(isBugAllowedTolerance("required"), false);
+    assert.equal(isBugAllowedTolerance("allowed"), true);
+    assert.equal(isBugAllowedTolerance("allowed_any"), true);
+
+    const bugRules = { busterCharge: "allowed" };
+    for (let lv = 1; lv <= 6; lv++) {
+        const tol = `allowed_lv${lv}`;
+        assert.equal(getMaxAllowedBugLevel(tol), lv);
+        assert.equal(isBugAllowedTolerance(tol), true);
+        bugRules[`bug${lv}`] = tol;
+    }
+
+    const data = parseGameData(require("../data/bn6.json"), games.find(g => g.id === "bn6"));
+    const problem = {
+        ...emptyProblem(data),
+        bugPolicy: { type: "custom", customRules: { battleHp: "allowed_lv4" } },
+        constraints: { bugRules },
+    };
+    const restored = fromHashString(toHashString(problem, data), data);
+    assert.deepEqual(restored.bugPolicy.customRules, { battleHp: "allowed_lv4" });
+    assert.deepEqual(restored.constraints.bugRules, bugRules);
+});
+
+test("TopMan busterCharge rule isolation, repairs, and buster-slot replacement", () => {
+    const { getCardBugType, getDefaultBugRules, getBugRule } = require("../panel-effects.ts");
+    assert.equal(getCardBugType("137-B043", "buster"), "busterCharge");
+    assert.equal(getDefaultBugRules("bn6").busterCharge, "allowed");
+    assert.equal(getBugRule({ buster: "allowed" }, "busterCharge", "buster"), "forbidden");
+    assert.equal(getBugRule({ buster: "allowed", busterCharge: "required" }, "busterCharge", "buster"), "required");
+
+    assert.equal(repairsBugType("Buster Blank Bug (+12.5% ChargeShot chance)", "buster"), true);
+    assert.equal(repairsBugType("Buster Blank Bug (+12.5% ChargeShot chance)", "busterCharge"), false);
+    assert.equal(repairsBugType("Buster Blank Bug", "buster"), true);
+    assert.equal(repairsBugType("Buster Blank Bug", "busterCharge"), true);
+
+    const a = computeDeckStats(["137-B043", "137-A036"], "bn6");
+    assert.deepEqual(
+        a.activeBugs.filter(e => e.bug.type === "buster").map(e => [e.sourceCardId, getCardBugType(e.sourceCardId, e.bug.type), e.bug.level ?? 1]),
+        [["137-A036", "buster", 1]]
+    );
+    const b = computeDeckStats(["137-A036", "137-B043"], "bn6");
+    assert.deepEqual(
+        b.activeBugs.filter(e => e.bug.type === "buster").map(e => [e.sourceCardId, getCardBugType(e.sourceCardId, e.bug.type), e.bug.level ?? 1]),
+        [["137-B043", "busterCharge", 1]]
+    );
+    const c = computeDeckStats(["137-B043", "137-A022"], "bn6");
+    assert.deepEqual(c.activeBugs.filter(e => e.bug.type === "buster"), []);
+});
+
+test("effective in-battle bugs combine BN5/6 battleHp up to Lv7, apply Mod Card overwrites, and enforce allowed_lvN", () => {
+    const hp7Grid = { width: 7, height: 7, commandLineRow: 3, hasOob: true };
+    const metas = [41, 42, 43, 44].map((id, i) => ({ id, name: `HP${id}`, isSolid: false, color: i + 1 }));
+    const reqs = metas.map((_, partIndex) => ({ partIndex }));
+    const cells = new Array(49).fill(null);
+    [[3, 1], [3, 2], [3, 3], [3, 4]].forEach(([y, x], i) => { cells[y * 7 + x] = i; });
+
+    // NC battleHp (clamped to Lv3) + DarkMega battleHp Lv4 => effective Lv7, raw activeBugs preserved
+    const analysis = analyzeSolutionBugs("bn6", metas, reqs, cells, hp7Grid, "en", ["137-C002"]);
+    assert.equal(analysis.activeBugs.filter(b => b.bugType === "battleHp").length, 2);
+    assert.equal(analysis.activeBugs.find(b => b.bugType === "battleHp" && !b.isModCardBug).level, 3);
+    assert.equal(analysis.activeBugs.find(b => b.bugType === "battleHp" && b.isModCardBug).level, 4);
+
+    const effective = getEffectiveInBattleBugs(analysis);
+    const effHp = effective.filter(b => b.bugType === "battleHp");
+    assert.equal(effHp.length, 1);
+    assert.equal(effHp[0].level, 7);
+    assert.match(effHp[0].mechanics, /10 frames/);
+
+    const baseRules = { ...allRules(), battleHp: "allowed_lv6" };
+    assert.equal(isSolutionAcceptable(analysis, { type: "custom" }, [], baseRules), false);
+    assert.equal(isSolutionAcceptable(analysis, { type: "custom" }, [], { ...allRules(), battleHp: "allowed" }), true);
+
+    // Lv5 combined (NC Lv1 + DarkMega Lv4) fits allowed_lv5, fails allowed_lv4
+    const lv5Cells = new Array(49).fill(null);
+    lv5Cells[3 * 7 + 1] = 0;
+    const lv5Analysis = analyzeSolutionBugs("bn6", [metas[0]], [{ partIndex: 0 }], lv5Cells, hp7Grid, "en", ["137-C002"]);
+    assert.equal(getEffectiveInBattleBugs(lv5Analysis).find(b => b.bugType === "battleHp").level, 5);
+    assert.equal(isSolutionAcceptable(lv5Analysis, { type: "custom" }, [], { ...allRules(), battleHp: "allowed_lv4" }), false);
+    assert.equal(isSolutionAcceptable(lv5Analysis, { type: "custom" }, [], { ...allRules(), battleHp: "allowed_lv5" }), true);
+
+    // Single-register Mod Card overwrites in BN6/BN5
+    const synthetic = {
+        gameId: "bn6",
+        hasBugs: true,
+        bugStopActive: false,
+        bugs: [],
+        tooManyColors: true,
+        distinctColorCount: 6,
+        activeBugs: [
+            { bugType: "buster", level: 3, title: "", mechanics: "", parts: [] },
+            { bugType: "colorStatus", level: 2, title: "", mechanics: "", parts: [] },
+            { bugType: "panelCrack", level: 3, title: "", mechanics: "", parts: [] },
+            { bugType: "emotion", level: 1, title: "", mechanics: "", parts: [] },
+            { bugType: "customDamage", level: 3, title: "", mechanics: "", parts: [] },
+            { bugType: "buster", level: 1, title: "", mechanics: "", parts: [], isModCardBug: true, sourceCardName: "KnightMn" },
+            { bugType: "status", level: 1, title: "", mechanics: "", parts: [], isModCardBug: true, sourceCardName: "ErthDrgn" },
+            { bugType: "panelGrass", level: 1, title: "", mechanics: "", parts: [], isModCardBug: true, sourceCardName: "DustMan" },
+            { bugType: "emotion", level: 1, title: "", mechanics: "", parts: [], isModCardBug: true, sourceCardName: "Volcano" },
+            { bugType: "customDamage", level: 1, title: "", mechanics: "", parts: [], isModCardBug: true, sourceCardName: "Kettle" },
+        ],
+    };
+    const effOverwritten = getEffectiveInBattleBugs(synthetic);
+    assert.equal(effOverwritten.length, 5);
+    assert.ok(effOverwritten.every(b => b.isModCardBug));
+    assert.equal(isSolutionAcceptable(synthetic, { type: "custom" }, [], { ...allRules(), status: "allowed_lv1", buster: "allowed_lv1" }), true);
+});
+
+test("optimizer-options exposes bug levels, localized level descriptions, and normalizes mode constraints", () => {
+    const { games } = require("../games.ts");
+    const { parseGameData } = require("../game-data.ts");
+    const {
+        getOptimizerBugLevels,
+        getBugLevelDescription,
+        getOptimizerModeConstraints,
+    } = require("../optimizer-options.ts");
+
+    const bn6 = parseGameData(require("../data/bn6.json"), games.find(g => g.id === "bn6"));
+    const bn5 = parseGameData(require("../data/bn5.json"), games.find(g => g.id === "bn5"));
+    const bn4 = parseGameData(require("../data/bn4.json"), games.find(g => g.id === "bn4"));
+    const bn3 = parseGameData(require("../data/bn3.json"), games.find(g => g.id === "bn3"));
+
+    assert.deepEqual(getOptimizerBugLevels(bn6, false, "battleHp"), [1, 2, 3]);
+    assert.deepEqual(getOptimizerBugLevels(bn6, true, "battleHp"), [1, 2, 3, 4, 5, 6, 7]);
+    assert.deepEqual(getOptimizerBugLevels(bn6, true, "customHp"), [1, 3]);
+    assert.deepEqual(getOptimizerBugLevels(bn6, true, "busterCharge"), []);
+    assert.deepEqual(getOptimizerBugLevels(bn6, false, "panelCrack"), [1, 2, 3]);
+    assert.deepEqual(getOptimizerBugLevels(bn6, false, "status"), [1, 2]);
+    assert.deepEqual(getOptimizerBugLevels(bn5, true, "battleHp"), [1, 2, 3, 4]);
+    assert.deepEqual(getOptimizerBugLevels(bn4, false, "status"), [1, 2]);
+    assert.deepEqual(getOptimizerBugLevels(bn3, false, "panelSet"), [1, 2]);
+
+    assert.match(getBugLevelDescription("bn6", "battleHp", 7, "en"), /10 frames/);
+    assert.match(getBugLevelDescription("bn5", "battleHp", 4, "en"), /25 frames/);
+    assert.match(getBugLevelDescription("bn6", "customHp", 3, "en"), /10 frames/);
+    assert.ok(getBugLevelDescription("bn6", "status", 2, "ja"));
+    assert.ok(getBugLevelDescription("bn4", "status", 1, "zh"));
+
+    const validCardConstraints = { bugRules: { battleHp: "allowed_lv5", busterCharge: "required" } };
+    assert.equal(getOptimizerModeConstraints(bn6, validCardConstraints, true), validCardConstraints);
+
+    const projectedNc = getOptimizerModeConstraints(bn6, {
+        bugRules: { battleHp: "allowed_lv5", buster: "allowed_lv2", busterCharge: "required", customHp: "allowed_lv1" },
+    }, false);
+    assert.deepEqual(projectedNc, {
+        bugRules: { battleHp: "allowed", buster: "allowed_lv2" },
+    });
+
+    const clampedCards = getOptimizerModeConstraints(bn6, {
+        bugRules: { customHp: "allowed_lv2", status: "allowed_lv2" },
+    }, true);
+    assert.deepEqual(clampedCards, {
+        bugRules: { customHp: "allowed_lv1", status: "allowed" },
+    });
+});
+
 

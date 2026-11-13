@@ -3,7 +3,56 @@ import { z } from "zod";
 import type { Data } from "./game-data";
 import type { Requirement } from "./solver";
 
-export type BugTolerance = "forbidden" | "allowed" | "required" | "allowed_lv1" | "allowed_any";
+export type BugTolerance =
+    | "forbidden"
+    | "allowed"
+    | "required"
+    | "allowed_lv1"
+    | "allowed_lv2"
+    | "allowed_lv3"
+    | "allowed_lv4"
+    | "allowed_lv5"
+    | "allowed_lv6"
+    | "allowed_any";
+
+export function getMaxAllowedBugLevel(tolerance?: BugTolerance): number {
+    switch (tolerance) {
+        case undefined:
+        case "forbidden":
+            return 0;
+        case "allowed_lv1":
+            return 1;
+        case "allowed_lv2":
+            return 2;
+        case "allowed_lv3":
+            return 3;
+        case "allowed_lv4":
+            return 4;
+        case "allowed_lv5":
+            return 5;
+        case "allowed_lv6":
+            return 6;
+        case "allowed":
+        case "allowed_any":
+        case "required":
+            return Number.POSITIVE_INFINITY;
+        default:
+            return 0;
+    }
+}
+
+export function isBugAllowedTolerance(tolerance?: BugTolerance): boolean {
+    return (
+        tolerance === "allowed" ||
+        tolerance === "allowed_any" ||
+        tolerance === "allowed_lv1" ||
+        tolerance === "allowed_lv2" ||
+        tolerance === "allowed_lv3" ||
+        tolerance === "allowed_lv4" ||
+        tolerance === "allowed_lv5" ||
+        tolerance === "allowed_lv6"
+    );
+}
 export type BugPolicyType = "no_bugs" | "benign_allowed" | "custom";
 export const BUSTER_STATS = ["attack", "rapid", "charge"] as const;
 export type BusterStat = typeof BUSTER_STATS[number];
