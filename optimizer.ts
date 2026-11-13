@@ -563,6 +563,16 @@ export function orderModCardsForConstraints(
         });
     }
 
+    if (constraints.bugRules?.busterCharge === "required") {
+        sorted.sort((aId, bId) => {
+            const cardA = getModCard(aId, gameId);
+            const cardB = getModCard(bId, gameId);
+            const aSupplies = Boolean(cardA?.bugs?.some(b => getCardBugType(aId, b.type, cardA.movePanel, b.level) === "busterCharge"));
+            const bSupplies = Boolean(cardB?.bugs?.some(b => getCardBugType(bId, b.type, cardB.movePanel, b.level) === "busterCharge"));
+            return Number(aSupplies) - Number(bSupplies);
+        });
+    }
+
     return sorted;
 }
 
@@ -752,6 +762,33 @@ export function optimizeModCards(options: ModCardOptimizeOptions): string[] {
                 const pick = matchingCards[0];
                 locked.push(pick.id);
                 for (const a of pick.abilities || []) covered.add(a);
+            }
+        }
+    }
+
+    // Lock card-only busterCharge (TopMan) when required and not yet supplied
+    if (requiredBugs.some(b => normalizeBugType(b) === "busterCharge")) {
+        const hasBusterCharge = computeDeckStats(locked, gameId).activeBugs.some(entry => {
+            const card = getModCard(entry.sourceCardId, gameId);
+            return getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level) === "busterCharge";
+        });
+        if (!hasBusterCharge) {
+            const matchingCards = allCards.filter(c =>
+                Boolean(c.bugs?.some(b => getCardBugType(c.id, b.type, c.movePanel, b.level) === "busterCharge")) &&
+                isCardAcceptableUnderPolicy(c, policy, forbiddenBugs, bugRules) &&
+                (!c.bPwrAtk || isSpecialMoveAllowed(c.bPwrAtk, constraints)) &&
+                (!c.bLeft || isBLeftAllowed(c.bLeft, constraints)) &&
+                (!c.bButton || isBButtonAllowed(c.bButton, constraints)) &&
+                (!c.disabledChargeAddition || isChargeAdditionAllowed("none", constraints)) &&
+                (!c.chargeAddition || isChargeAdditionAllowed(c.chargeAddition, constraints)) &&
+                (!c.disabledBusterAddition || isBusterAdditionAllowed("none", constraints)) &&
+                (!c.busterAddition || isBusterAdditionAllowed(c.busterAddition, constraints)) &&
+                (c.body === undefined || isBodyAllowed(c.body, constraints, gameId)) &&
+                (!c.gauge || isGaugeAllowed(c.gauge, constraints))
+            );
+            if (matchingCards.length > 0) {
+                matchingCards.sort((a, b) => evaluateCardScore(b, target, requiredBugs, constraints?.requiredAbilities, minSoulTime) - evaluateCardScore(a, target, requiredBugs, constraints?.requiredAbilities, minSoulTime));
+                locked.push(matchingCards[0].id);
             }
         }
     }
