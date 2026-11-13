@@ -6,7 +6,7 @@ const { parseGameData } = require("../game-data.ts");
 const { emptyProblem } = require("../problem.ts");
 const { getChargeAdditionOptions, getBusterAdditionOptions, normalizeBugType } = require("../effects.ts");
 const { bugMatchesRule, getBugRule } = require("../panel-effects.ts");
-const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
+const { getOptimizerAbilityOptions, getOptimizerBugOptions, getOptimizerCustomValues, getOptimizerChipRecoveryValues, getOptimizerSoulTimeValues, getOptimizerModeConstraints } = require("../optimizer-options.ts");
 const { findFeasibleBuild } = require("../feasible-optimizer.ts");
 const dataFor = game => parseGameData(require(`../data/${game}.json`), games.find(g => g.id === game));
 const ids = options => options.map(option => option.id);
@@ -235,4 +235,42 @@ test("exclusive bug variants allow only one Required and keep independent bugs i
     }, false);
     assert.equal(independent.bugRules.panelSet, "required");
     assert.equal(independent.bugRules.poisonWalk, "required");
+});
+
+test("Soul Time values are BN5-only and adapt to NC vs Mod Card availability", () => {
+    assert.deepEqual(getOptimizerSoulTimeValues("bn5", false), [4, 5, 6, 7]);
+    assert.deepEqual(getOptimizerSoulTimeValues("bn5", true), [2, 3, 4, 5, 6, 7, 8, 9]);
+    for (const game of ["bn6", "bn4", "bn3"]) {
+        assert.deepEqual(getOptimizerSoulTimeValues(game, false), []);
+        assert.deepEqual(getOptimizerSoulTimeValues(game, true), []);
+    }
+});
+
+test("BN5 minSoulTime mode projection clamps pure NC to 7, omits <=3, restores with cards, and strips non-BN5", () => {
+    const bn5 = dataFor("bn5");
+    const high = { minSoulTime: 9, minCustom: 6 };
+    assert.deepEqual(getOptimizerModeConstraints(bn5, high, false), { minSoulTime: 7, minCustom: 6 });
+    assert.equal(getOptimizerModeConstraints(bn5, high, true), high);
+    assert.deepEqual(getOptimizerModeConstraints(bn5, { minSoulTime: 8 }, false), { minSoulTime: 7 });
+    assert.deepEqual(getOptimizerModeConstraints(bn5, { minSoulTime: 5 }, false), { minSoulTime: 5 });
+
+    for (const st of [2, 3]) {
+        const low = { minSoulTime: st, minCustom: 6 };
+        assert.deepEqual(getOptimizerModeConstraints(bn5, low, false), { minCustom: 6 });
+        assert.deepEqual(getOptimizerModeConstraints(bn5, low, true), low);
+    }
+
+    for (const game of ["bn6", "bn4", "bn3"]) {
+        const data = dataFor(game);
+        const withSoulTime = { minSoulTime: 6, minCustom: 6 };
+        assert.deepEqual(getOptimizerModeConstraints(data, withSoulTime, false), { minCustom: 6 });
+        assert.deepEqual(getOptimizerModeConstraints(data, withSoulTime, true), { minCustom: 6 });
+
+        const withoutSoulTime = { minCustom: 6 };
+        if (game === "bn6") {
+            assert.equal(getOptimizerModeConstraints(data, withoutSoulTime, true), withoutSoulTime);
+        } else {
+            assert.deepEqual(getOptimizerModeConstraints(data, withoutSoulTime, true), withoutSoulTime);
+        }
+    }
 });

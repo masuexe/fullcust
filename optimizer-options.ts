@@ -88,6 +88,12 @@ export function getOptimizerChipRecoveryValues(gameId: string): ChipRecoveryMini
     return [10, 20, 30, 40];
 }
 
+export function getOptimizerSoulTimeValues(gameId: string, cardsEnabled: boolean): number[] {
+    if (gameId !== "bn5") return [];
+    if (!cardsEnabled) return [4, 5, 6, 7];
+    return [2, 3, 4, 5, 6, 7, 8, 9];
+}
+
 /** UI-only mode projection. Saved drafts can be restored when cards are re-enabled;
  * hidden settings must not enter the worker request, result, or constraint counts.
  */
@@ -103,6 +109,10 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
         } = constraints;
         constraints = restNoBody;
     }
+    if (data.gameId !== "bn5" && constraints.minSoulTime !== undefined) {
+        const { minSoulTime: _st, ...restNoSoulTime } = constraints;
+        constraints = restNoSoulTime;
+    }
     if (usesCards(data, cardsEnabled)) return constraints;
     const {
         requiredSpecialMove, allowedSpecialMoves, requiredBLeft, allowedBLefts,
@@ -113,6 +123,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
         allowedBodies, requiredBody, requiredGauge, allowedGauges, minChipRecovery,
         allowedMovePanels,
         requiredAbilities, minBusterStats, bugRules, forbiddenBugs,
+        minSoulTime,
         ...rest
     } = constraints;
     const abilities = ncAbilities(data);
@@ -134,6 +145,7 @@ export function getOptimizerModeConstraints(data: Data, constraints: BuildConstr
     const ncMovePanels = allowedMovePanels?.filter(p => ncValidPanels.has(p));
     return {
         ...rest,
+        ...(data.gameId === "bn5" && minSoulTime !== undefined && minSoulTime > 3 ? { minSoulTime: Math.min(7, minSoulTime) } : {}),
         ...(ncMovePanels && ncMovePanels.length > 0 ? { allowedMovePanels: ncMovePanels } : {}),
         ...(required?.length ? { requiredAbilities: required } : {}),
         ...(Object.keys(minima).length ? { minBusterStats: minima } : {}),

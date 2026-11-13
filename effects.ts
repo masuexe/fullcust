@@ -16,6 +16,7 @@ export interface PartEffect {
     numberOpen?: boolean;
     megaFolder?: number;
     gigaFolder?: number;
+    soulTime?: number;
     abilities?: string[];
 }
 
@@ -33,6 +34,7 @@ export interface BuildStats {
     custom: number;
     megaFolder: number;
     gigaFolder: number;
+    soulTime?: number;
     abilities: string[];
     // Mod card integration
     modMbUsed?: number;
@@ -143,6 +145,7 @@ export const BN5_PART_EFFECTS: Record<number, PartEffect> = {
     35: { attack: 1 },
     36: { rapid: 1 },
     37: { charge: 1 },
+    38: { soulTime: 1 },
     39: { attackMax: true },
     40: { rapidMax: true },
     41: { chargeMax: true },
@@ -294,6 +297,7 @@ export function computeBuildStats(
     let numberOpen = false;
     let megaFolderBonus = 0;
     let gigaFolderBonus = 0;
+    let soulTimeBonus = 0;
     const abilitySet = new Set<string>();
 
     const effectsTable = GAME_EFFECTS[gameId];
@@ -313,6 +317,7 @@ export function computeBuildStats(
             if (effect.numberOpen) numberOpen = true;
             if (effect.megaFolder) megaFolderBonus += effect.megaFolder;
             if (effect.gigaFolder) gigaFolderBonus += effect.gigaFolder;
+            if (effect.soulTime) soulTimeBonus += effect.soulTime;
 
             if (effect.abilities) {
                 for (const ab of effect.abilities) {
@@ -384,6 +389,7 @@ export function computeBuildStats(
         customBonus += deck.stats.custom;
         megaFolderBonus += deck.stats.megaFolder;
         gigaFolderBonus += deck.stats.gigaFolder;
+        if (deck.stats.soulTime) soulTimeBonus += deck.stats.soulTime;
 
         for (const ab of deck.activeAbilities) {
             abilitySet.add(ab);
@@ -462,6 +468,7 @@ export function computeBuildStats(
     const custom = numberOpen ? 10 : Math.max(2, Math.min(10, 5 + customBonus));
     const megaFolder = Math.max(0, 5 + megaFolderBonus);
     const gigaFolder = Math.max(0, 1 + gigaFolderBonus);
+    const soulTime = gameId === "bn5" ? Math.max(1, 3 + soulTimeBonus) : undefined;
 
     return {
         baseHp,
@@ -477,6 +484,7 @@ export function computeBuildStats(
         custom,
         megaFolder,
         gigaFolder,
+        ...(soulTime !== undefined ? { soulTime } : {}),
         abilities: Array.from(abilitySet).sort(),
         modPanelEffect,
         modMbUsed,
