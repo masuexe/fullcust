@@ -172,7 +172,7 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)[Symbol.iterator]().next().done) return;
             progress.checkedBuilds++;
             if (remaining === 0 && missing.length === 0) {
-                const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbidden, constraints?.bugRules, modCards);
+                const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbidden, constraints?.bugRules, modCards, allowSupportBugGlitch);
                 for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
                     if (stopped()) return;
                     const placedStats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
