@@ -1,6 +1,6 @@
-import { GridSettings, Part, Requirement, Solution } from "./solver";
+import type { GridSettings, Part, Requirement, Solution } from "./solver";
 
-import type { Request, Response } from "./worker";
+import type { Request, Response, WorkerPolicyContext } from "./worker";
 
 export default class AsyncSolver {
     worker: Worker;
@@ -10,7 +10,8 @@ export default class AsyncSolver {
         parts: Part[],
         requirements: Requirement[],
         gridSettings: GridSettings,
-        spinnableColors: boolean[]
+        spinnableColors: boolean[],
+        policyContext?: WorkerPolicyContext
     ) {
         const worker = new Worker(new URL("./worker.ts", import.meta.url), {
             type: "module",
@@ -36,7 +37,13 @@ export default class AsyncSolver {
 
             worker.postMessage({
                 type: "init",
-                args: { parts, requirements, gridSettings, spinnableColors },
+                args: {
+                    parts,
+                    requirements,
+                    gridSettings,
+                    spinnableColors,
+                    ...(policyContext ? { policyContext } : {}),
+                },
             } as Request);
 
             while (true) {

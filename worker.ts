@@ -1,4 +1,10 @@
 import { GridSettings, Part, Requirement, Solution, solve } from "./solver";
+import { PolicySolveOptions, solveForDisplay } from "./optimizer";
+
+export type WorkerPolicyContext = Omit<
+    PolicySolveOptions,
+    "requirements" | "gridSettings" | "spinnableColors" | "shouldStop"
+>;
 
 export type Request =
     | { type: "next" }
@@ -9,6 +15,7 @@ export type Request =
               requirements: Requirement[];
               gridSettings: GridSettings;
               spinnableColors: boolean[];
+              policyContext?: WorkerPolicyContext;
           };
       };
 
@@ -23,11 +30,12 @@ self.onmessage = function (e: MessageEvent<Request>) {
     console.time(e.data.type);
     switch (e.data.type) {
         case "init": {
-            const { parts, requirements, gridSettings, spinnableColors } =
+            const { parts, requirements, gridSettings, spinnableColors, policyContext } =
                 e.data.args;
-            it = solve(parts, requirements, gridSettings, spinnableColors, undefined, true, undefined, true)[
-                Symbol.iterator
-            ]();
+            it = (policyContext
+                ? solveForDisplay({ ...policyContext, requirements, gridSettings, spinnableColors })
+                : solve(parts, requirements, gridSettings, spinnableColors, undefined, true, undefined, true)
+            )[Symbol.iterator]();
             break;
         }
 

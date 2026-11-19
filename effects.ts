@@ -246,6 +246,49 @@ export function getPartEffect(gameId: string, partId: number): PartEffect | unde
     return GAME_EFFECTS[gameId]?.[partId];
 }
 
+export const NON_BATTLE_ABILITIES: ReadonlySet<string> = new Set([
+    "humor",
+    "poem",
+    "slipRunner",
+    "sneakRun",
+    "oilBody",
+    "fish",
+    "battery",
+    "jungle",
+    "collect",
+    "millions",
+    "soulClean",
+    "autoHeal",
+]);
+
+export const BN3_NON_BATTLE_PART_IDS: ReadonlySet<number> = new Set([
+    20, // Press
+    21, // EngyChng
+    22, // Alpha
+    46, // BlckMind
+]);
+
+export function isNonBattleProgram(
+    gameId: string,
+    partId: number,
+    requiredAbilities?: readonly string[]
+): boolean {
+    if (gameId === "bn3" && BN3_NON_BATTLE_PART_IDS.has(partId)) {
+        return true;
+    }
+    const effect = getPartEffect(gameId, partId);
+    if (!effect || !effect.abilities || effect.abilities.length === 0) {
+        return false;
+    }
+    const hasCombatStat = Object.entries(effect).some(
+        ([key, value]) => key !== "abilities" && Boolean(value)
+    );
+    if (hasCombatStat) return false;
+    return effect.abilities.every(
+        ab => NON_BATTLE_ABILITIES.has(ab) && !requiredAbilities?.includes(ab)
+    );
+}
+
 export function getBusterStatLimits(gameId: string): Record<BusterStat, number> {
     return { attack: gameId === "bn5" || gameId === "bn6" ? 10 : 5, rapid: 5, charge: 5 };
 }

@@ -1,10 +1,10 @@
 import { bugMatchesRule, getBugRule, getCardBugType, PANEL_BUG_TYPES } from "./panel-effects";
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isSolutionAcceptable, normalizeBugType } from "./effects";
+import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, getPartBugTypes, isNonBattleProgram, isSolutionAcceptable, normalizeBugType } from "./effects";
 import { computeDeckStats, getModCard, getModCards } from "./modcards";
 import { BUSTER_STATS, BugTolerance, getBusterMinimums, getMaxAllowedBugLevel, isBugAllowedTolerance, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { Requirement, placeAll, solve } from "./solver";
-import { cardSpecConstraintsPossible, busterMinimumsPossible, soulTimeMinimumPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, removeRedundantAbilityParts, requirementsUnderPolicy } from "./optimizer";
+import { buildPreferOffLineReqs, cardSpecConstraintsPossible, busterMinimumsPossible, soulTimeMinimumPossible, doesBuildSatisfyConstraints, matchMovePanel, OptimizeOptions, OptimizeResult, partSuppliesRequiredPanelOrBug, removeRedundantAbilityParts, requirementsUnderPolicy, shouldLockSolidOnCommandLine } from "./optimizer";
 
 /** A goal is judged on the final stats plus the bugs the chosen parts and deck
  * can supply. Bug supply is an approximation used for branching only; the
@@ -13,6 +13,8 @@ import { cardSpecConstraintsPossible, busterMinimumsPossible, soulTimeMinimumPos
 interface GoalState {
     stats: BuildStats;
     bugs: Set<string>;
+    colorCount: number;
+    hasBugStop: boolean;
 }
 
 interface Goal {
@@ -63,9 +65,8 @@ export function findFeasibleBuild(
         }
         return supplied;
     };
-    // A required bug with no choosable supplier here (for example the implicit
-    // color overflow bug) cannot be directed by this pass. Leave it to the final
-    // validation instead of turning it into a dead end.
+    // A required bug with no choosable supplier here cannot be directed by this
+    // pass. Leave it to the final validation instead of turning it into a dead end.
     const supplierCards = modCardMode === "auto" && data.gameId !== "bn3" ? getModCards(data.gameId) : [];
     const hasSupplier = (key: string) => {
         const normalized = normalizeBugType(key);
@@ -74,21 +75,45 @@ export function findFeasibleBuild(
         return supplierCards.some(card => (card.bugs ?? []).some(bug =>
             bugMatchesRule(normalizeBugType(getCardBugType(card.id, bug.type, card.movePanel, bug.level)), normalized)));
     };
+    const nonBattleBugSuppliers = new Set<string>();
+    for (let i = 0; i < data.partMetas.length; i++) {
+        if (!isNonBattleProgram(data.gameId, data.partMetas[i].id, constraints?.requiredAbilities)) continue;
+        for (const type of getPartBugTypes(data.gameId, data.partMetas[i].id)) {
+            nonBattleBugSuppliers.add(normalizePartBug(type));
+        }
+    }
     const goals: Goal[] = [];
-    const addGoal = (satisfied: Goal["satisfied"], advances?: Goal["advances"]) => {
-        goals.push({ satisfied, advances: advances ?? ((_before, after) => satisfied(after)) });
+    const bugGoals = new Set<Goal>();
+    const addGoal = (satisfied: Goal["satisfied"], advances?: Goal["advances"], isBugGoal = false) => {
+        const goal: Goal = { satisfied, advances: advances ?? ((_before, after) => satisfied(after)) };
+        goals.push(goal);
+        if (isBugGoal) bugGoals.add(goal);
     };
     for (const ability of constraints?.requiredAbilities ?? []) addGoal(state => state.stats.abilities.includes(ability));
     // A required bug must actually appear. Panel bugs can come from cards (final
-    // panel effect) or from a buggy NaviCust program; every other bug can only
-    // come from a buggy program or a card, so track supply instead of the
-    // card-only panel field.
-    for (const key of requiredBugKeys.filter(hasSupplier)) {
+    // panel effect) or from a buggy NaviCust program; BN4-6 status bugs can also
+    // come from 5+ distinct NC colors when BugStop is absent.
+    let addedColorStatusGoal = false;
+    for (const key of requiredBugKeys) {
         const normalized = normalizeBugType(key);
+        if (data.gameId !== "bn3" && (normalized === "status" || normalized === "colorStatus")) {
+            if (!addedColorStatusGoal) {
+                addedColorStatusGoal = true;
+                addGoal(
+                    state => state.bugs.has("status") || (!state.hasBugStop && state.colorCount >= 5),
+                    (before, after) => (!before.bugs.has("status") && after.bugs.has("status")) ||
+                        (!after.hasBugStop && after.colorCount > before.colorCount),
+                    true
+                );
+            }
+            continue;
+        }
+        if (!hasSupplier(key)) continue;
         addGoal(state => state.bugs.has(normalized) ||
             (PANEL_BUG_TYPES.includes(normalized as typeof PANEL_BUG_TYPES[number]) && state.stats.modPanelEffect === normalized),
             (before, after) => (after.bugs.has(normalized) && !before.bugs.has(normalized)) ||
-                (!before.stats.modPanelEffect && after.stats.modPanelEffect === normalized));
+                (!before.stats.modPanelEffect && after.stats.modPanelEffect === normalized),
+            true);
     }
     if (constraints?.allowedMovePanels !== undefined && constraints.allowedMovePanels.length > 0 && !constraints.allowedMovePanels.includes("none")) {
         addGoal(state => state.stats.modPanelEffect !== undefined && constraints.allowedMovePanels!.some(allowed => matchMovePanel(state.stats.modPanelEffect!, allowed)));
@@ -117,23 +142,40 @@ export function findFeasibleBuild(
         if (value !== undefined) addGoal(state => doesBuildSatisfyConstraints(state.stats, emptyAnalysis, { [key]: value }));
     }
     const freeReqs: Requirement[] = data.parts.map((_, partIndex) => ({ partIndex,
-        constraint: { onCommandLine: null, compressed: null, minBugLevel: 0, maxBugLevel: Infinity } }));
+        constraint: {
+            onCommandLine: shouldLockSolidOnCommandLine(
+                data,
+                partIndex,
+                rules,
+                constraints?.allowSupportBugGlitch,
+                constraints?.allowedMovePanels,
+                constraints?.requiredAbilities
+            ) ? true : null,
+            compressed: null,
+            minBugLevel: 0,
+            maxBugLevel: Infinity,
+        } }));
     const minimumCells = (req: Requirement) => {
         const part = data.parts[req.partIndex];
         const c = part.compressedMask.filter(Boolean).length;
         const u = part.uncompressedMask.filter(Boolean).length;
         return req.constraint.compressed === null ? Math.min(c, u) : req.constraint.compressed ? c : u;
     };
-    const isBugStop = (req: Requirement) => getPartEffect(data.gameId, data.partMetas[req.partIndex].id)?.abilities?.includes("bugStop");
+    const isBugStop = (req: Requirement) => Boolean(getPartEffect(data.gameId, data.partMetas[req.partIndex].id)?.abilities?.includes("bugStop"));
     const partSizes = freeReqs.map(minimumCells);
     const visited = new Set<string>();
+    const colorCountFor = (requirements: Requirement[]) =>
+        new Set(requirements.map(r => data.parts[r.partIndex].color)).size;
+    const hasBugStopFor = (requirements: Requirement[]) => requirements.some(isBugStop);
     const statsFor = (requirements: Requirement[], cards: string[]) => computeBuildStats(data.gameId,
         requirements.map(r => data.partMetas[r.partIndex].id), cards, problem.baseHp ?? 1000);
     const bugsFor = (requirements: Requirement[], cards: string[]): Set<string> => {
         const supplied = cardBugs(cards);
         for (const key of requiredBugKeys) {
             const normalized = normalizeBugType(key);
-            if (requirements.some(req => providesRequiredBug(req.partIndex) &&
+            if (requirements.some((req, idx) =>
+                (idx < problem.requirements.length ? req.constraint.maxBugLevel > 0 : req.constraint.minBugLevel >= 1) &&
+                providesRequiredBug(req.partIndex) &&
                 getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id)
                     .some(type => bugMatchesRule(normalizePartBug(type), normalized)))) supplied.add(normalized);
         }
@@ -146,13 +188,15 @@ export function findFeasibleBuild(
         occupied: number;
         stats: BuildStats;
         bugs: Set<string>;
+        colorCount: number;
+        hasBugStop: boolean;
     }
     function visit(state: State): OptimizeResult | null {
         if (shouldStop() || state.occupied > capacity) return null;
         const deck = computeDeckStats(state.cards, data.gameId);
         if (deck.isOverCapacity || deck.hasSlotConflict) return null;
         if (colorCompatibility(data, { ...problem, requirements: state.requirements }).error) return null;
-        if (data.gameId !== "bn3" && new Set(state.requirements.map(r => data.parts[r.partIndex].color)).size > 6) return null;
+        if (data.gameId !== "bn3" && state.colorCount > 6) return null;
         const key = JSON.stringify([[...state.added].sort((a, b) => a - b), state.cards]);
         if (visited.has(key)) return null;
         visited.add(key);
@@ -161,7 +205,8 @@ export function findFeasibleBuild(
         if (missing.length === 0) {
             const reqs = requirementsUnderPolicy(data, state.requirements, policy,
                 constraints?.forbiddenBugs ?? [], constraints?.bugRules, state.cards, constraints?.allowSupportBugGlitch);
-            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
+            const preferOffLine = buildPreferOffLineReqs(data, reqs, constraints?.requiredAbilities);
+            for (const solution of solve(data.parts, reqs, grid, problem.spinnableColors, shouldStop, true, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true, preferOffLine)) {
                 if (shouldStop()) return null;
                 const stats = computePlacedBuildStats(data.gameId, data.partMetas, state.requirements,
                     placeAll(data.parts, state.requirements, solution, grid), grid, state.cards, problem.baseHp ?? 1000);
@@ -179,14 +224,26 @@ export function findFeasibleBuild(
             // BugStop is useful even when it supplies no missing stat or ability.
             // Other policy-repair combinations are left to the exhaustive pass.
         }
-        interface Choice { state: State; gain: number; cost: number }
+        interface Choice {
+            state: State;
+            gain: number;
+            cost: number;
+            nonBattleDirectBug: boolean;
+            nonBattleColorFiller: boolean;
+        }
         const choices: Choice[] = [];
         const currentCovered = goals.filter(g => g.satisfied(state)).length;
-        const consider = (next: State, cost: number) => {
+        const consider = (next: State, cost: number, nonBattleDirectBug: boolean, nonBattleColorFiller: boolean) => {
             const nextDeck = computeDeckStats(next.cards, data.gameId);
             if (nextDeck.isOverCapacity || nextDeck.hasSlotConflict) return;
             if (!missing.some(g => g.advances(state, next)) && missing.length > 0) return;
-            choices.push({ state: next, cost, gain: goals.filter(g => g.satisfied(next)).length - currentCovered });
+            choices.push({
+                state: next,
+                cost,
+                gain: goals.filter(g => g.satisfied(next)).length - currentCovered,
+                nonBattleDirectBug,
+                nonBattleColorFiller,
+            });
         };
         for (const req of freeReqs) {
             if (shouldStop()) return null;
@@ -194,22 +251,62 @@ export function findFeasibleBuild(
             const occupied = state.occupied + partSizes[req.partIndex];
             if (occupied > capacity) continue;
             if (missing.length === 0 && !getPartEffect(data.gameId, data.partMetas[req.partIndex].id)?.abilities?.includes("bugStop")) continue;
-            // A program that supplies a required bug must actually be bugged: force
-            // the minimum bug level so the placement solver keeps it buggy.
-            const constraint = providesRequiredBug(req.partIndex) && req.constraint.minBugLevel < 1
+            const isNonBattle = isNonBattleProgram(
+                data.gameId,
+                data.partMetas[req.partIndex].id,
+                constraints?.requiredAbilities
+            );
+            // Force minBugLevel: 1 only when this part is needed for a still-missing
+            // required bug, preferring non-battle parts over combat parts while
+            // non-bug goals remain.
+            const missingBugSupply = getPartBugTypes(data.gameId, data.partMetas[req.partIndex].id)
+                .map(normalizePartBug)
+                .filter(type => requiredBugKeys.some(key => {
+                    const normKey = normalizeBugType(key);
+                    return bugMatchesRule(type, normKey) && !state.bugs.has(normKey);
+                }));
+            const hasNonBugGoalsLeft = missing.some(goal => !bugGoals.has(goal));
+            const shouldForceBug = missingBugSupply.length > 0 && req.constraint.minBugLevel < 1 && (
+                isNonBattle ||
+                !hasNonBugGoalsLeft ||
+                missingBugSupply.some(type => !nonBattleBugSuppliers.has(type))
+            );
+            const constraint = shouldForceBug
                 ? { ...req.constraint, minBugLevel: 1 }
                 : req.constraint;
             const requirements = [...state.requirements, { ...req, constraint }];
-            consider({ requirements, cards: state.cards, added: [...state.added, req.partIndex], occupied,
-                stats: statsFor(requirements, state.cards), bugs: bugsFor(requirements, state.cards) },
-                partSizes[req.partIndex] / capacity);
+            const nextColorCount = colorCountFor(requirements);
+            const nextHasBugStop = state.hasBugStop || isBugStop(req);
+            const nonBattleDirectBug = !isBugStop(req) &&
+                isNonBattle &&
+                partSuppliesRequiredPanelOrBug(data, req.partIndex, rules, constraints?.allowedMovePanels);
+            const addsColorForRequiredStatus = data.gameId !== "bn3" &&
+                (rules?.status === "required" || rules?.colorStatus === "required") &&
+                !state.bugs.has("status") &&
+                !nextHasBugStop &&
+                state.colorCount < 5 &&
+                nextColorCount > state.colorCount;
+            consider({
+                requirements,
+                cards: state.cards,
+                added: [...state.added, req.partIndex],
+                occupied,
+                stats: statsFor(requirements, state.cards),
+                bugs: bugsFor(requirements, state.cards),
+                colorCount: nextColorCount,
+                hasBugStop: nextHasBugStop,
+            }, partSizes[req.partIndex] / capacity, nonBattleDirectBug, addsColorForRequiredStatus && isNonBattle);
         }
         for (const card of availableCards) {
             if (shouldStop()) return null;
             if (missing.length === 0 && card.repairs.length === 0) continue;
             const cards = [...state.cards, card.id];
-            consider({ ...state, cards, stats: statsFor(state.requirements, cards), bugs: bugsFor(state.requirements, cards) },
-                data.gameId === "bn4" ? 1 / 5 : card.mb / 80);
+            consider({
+                ...state,
+                cards,
+                stats: statsFor(state.requirements, cards),
+                bugs: bugsFor(state.requirements, cards),
+            }, data.gameId === "bn4" ? 1 / 5 : card.mb / 80, false, false);
         }
         // Branch on the missing requirement with the fewest suppliers. This locks
         // card-only moves and abilities before exploring optional filler programs.
@@ -221,13 +318,18 @@ export function findFeasibleBuild(
                 if (providers.length < selected.length) selected = providers;
             }
         }
-        selected.sort((a, b) => b.gain - a.gain || a.cost - b.cost);
+        selected.sort((a, b) =>
+            b.gain - a.gain ||
+            Number(b.nonBattleDirectBug) - Number(a.nonBattleDirectBug) ||
+            a.cost - b.cost ||
+            Number(b.nonBattleColorFiller) - Number(a.nonBattleColorFiller));
         for (const choice of selected) {
             if (shouldStop()) return null;
             // Only geometric impossibility is safe for intermediate states;
             // a later neighbor may still satisfy an explicit minimum bug level.
             const relaxed = choice.state.requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)[Symbol.iterator]().next().done) continue;
+            const preferOffLineRelaxed = buildPreferOffLineReqs(data, relaxed, constraints?.requiredAbilities);
+            if (solve(data.parts, relaxed, grid, problem.spinnableColors, shouldStop, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true, preferOffLineRelaxed)[Symbol.iterator]().next().done) continue;
             const result = visit(choice.state);
             if (result) return result;
         }
@@ -236,7 +338,8 @@ export function findFeasibleBuild(
     const cards = data.gameId !== "bn3" && modCardMode === "keep" ? problem.modCards ?? [] : [];
     const initial: State = { requirements: [...problem.requirements], cards, added: [],
         occupied: problem.requirements.reduce((sum, req) => sum + minimumCells(req), 0),
-        stats: statsFor(problem.requirements, cards), bugs: bugsFor(problem.requirements, cards) };
+        stats: statsFor(problem.requirements, cards), bugs: bugsFor(problem.requirements, cards),
+        colorCount: colorCountFor(problem.requirements), hasBugStop: hasBugStopFor(problem.requirements) };
     const requiresBug = Object.values(rules ?? {}).includes("required");
     const isRestrictedTolerance = (tol?: BugTolerance) =>
         !isBugAllowedTolerance(tol) || getMaxAllowedBugLevel(tol) < Infinity;
@@ -267,7 +370,7 @@ export function findFeasibleBuild(
             const requirements = [...initial.requirements, req];
             const result = visit({ ...initial, requirements, added: [req.partIndex],
                 occupied: initial.occupied + partSizes[req.partIndex], stats: statsFor(requirements, cards),
-                bugs: bugsFor(requirements, cards) });
+                bugs: bugsFor(requirements, cards), colorCount: colorCountFor(requirements), hasBugStop: true });
             if (result) return result;
         }
         preferredDeadline = Infinity;

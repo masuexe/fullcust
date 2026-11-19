@@ -267,7 +267,8 @@ export function* solve(
     shouldStop: () => boolean = () => false,
     deduplicate: boolean = true,
     onPlacementAttempt?: () => void,
-    preferProgramsOnCommandLine: boolean = false
+    preferProgramsOnCommandLine: boolean = false,
+    preferOffLineReqs?: readonly boolean[]
 ): Iterable<Solution> {
     if (gridSettings.commandLineRow > gridSettings.height) {
         return;
@@ -294,12 +295,30 @@ export function* solve(
     }
 
     if (preferProgramsOnCommandLine) {
+        const touchesLine = (candidate: Candidate) => candidate.cellIndices.some(index =>
+            Math.floor(index / gridSettings.width) === gridSettings.commandLineRow);
         for (const [reqIdx, placements] of candidates) {
-            if (!parts[requirements[reqIdx].partIndex].isSolid) continue;
-            const touchesLine = (candidate: Candidate) => candidate.cellIndices.some(index =>
-                Math.floor(index / gridSettings.width) === gridSettings.commandLineRow);
-            // Reorder only: explicit placement constraints and off-line fallbacks survive.
-            placements.sort((a, b) => Number(touchesLine(b)) - Number(touchesLine(a)));
+            const req = requirements[reqIdx];
+            const isSolid = parts[req.partIndex].isSolid;
+            const minBug = req.constraint.minBugLevel;
+            const preferOffLine = Boolean(preferOffLineReqs?.[reqIdx]) &&
+                req.constraint.onCommandLine !== true &&
+                req.constraint.maxBugLevel > 0;
+            const preferOnLine = isSolid && !preferOffLine;
+            // Reorder only: explicit placement constraints and fallbacks survive.
+            // Combat solid programs prefer touching the command line; Plus parts and
+            // bug-trigger non-battle programs prefer staying off it (in-bounds Lv1 bug before OOB Lv2).
+            placements.sort((a, b) => {
+                const lineCmp = preferOnLine
+                    ? Number(touchesLine(b)) - Number(touchesLine(a))
+                    : Number(touchesLine(a)) - Number(touchesLine(b));
+                if (lineCmp !== 0) return lineCmp;
+                if (minBug > 0) {
+                    const meetsCmp = Number(a.baseBugLevel < minBug) - Number(b.baseBugLevel < minBug);
+                    if (meetsCmp !== 0) return meetsCmp;
+                }
+                return a.baseBugLevel - b.baseBugLevel;
+            });
         }
     }
 

@@ -2,7 +2,7 @@ import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, BuildStats, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
 import { findFeasibleBuild } from "./feasible-optimizer";
 import { computeDeckStats, getModCard, getModCards } from "./modcards";
-import { doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts } from "./optimizer";
+import { doesBuildSatisfyConstraints, compareBuildStats, haveSameBuildEffects, occupiedBuildCells, OptimizeOptions, OptimizeResult, optimizeBuild, removeRedundantAbilityParts, countNcPlacementBugLoad } from "./optimizer";
 import { getCardBugType } from "./panel-effects";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll } from "./solver";
@@ -46,6 +46,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
     if (shouldStop()) return initialBest;
     let best = removeRedundantAbilityParts(options, initialBest);
     let bestCells = occupiedBuildCells(data, best);
+    const activeRules = constraints?.bugRules ?? policy.customRules;
+    let bestBugLoad = countNcPlacementBugLoad(best.analysis, constraints?.requiredAbilities, activeRules);
     if (best !== initialBest) onImprove?.(best);
     const grid = makeGridSettings(data, problem);
     const ids = modCardMode === "auto" && data.gameId !== "bn3" ? getModCards(data.gameId).map(card => card.id) : [];
@@ -63,14 +65,18 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
             !doesBuildSatisfyConstraints(result.stats, result.analysis, constraints, data.gameId)) return;
         const comparison = compareBuildStats(result.stats, best.stats, target);
         const cells = occupiedBuildCells(data, result);
+        const bugLoad = countNcPlacementBugLoad(result.analysis, constraints?.requiredAbilities, activeRules);
         if (comparison < 0 || (comparison === 0 &&
-            (cells >= bestCells || !haveSameBuildEffects(result.stats, best.stats, constraints)))) return;
+            (!haveSameBuildEffects(result.stats, best.stats, constraints) ||
+                cells > bestCells ||
+                (cells === bestCells && bugLoad >= bestBugLoad)))) return;
         best = { ...result,
             problem: { ...result.problem, constraints, bugPolicy: policy },
             addedPartIndices: result.problem.requirements.slice(problem.requirements.length).map(req => req.partIndex),
             addedCardIds: modCardMode === "auto" ? result.problem.modCards : [],
         };
         bestCells = cells;
+        bestBugLoad = bugLoad;
         onImprove?.(best);
     };
     // Changes in card coverage may free automatic NC parts even when the score
@@ -96,7 +102,8 @@ export function improveBuildLocally(options: LocalOptions): OptimizeResult {
     while (!shouldStop()) {
         const roundStats = best.stats;
         const roundCells = bestCells;
-        const improvedThisRound = () => compareBuildStats(best.stats, roundStats, target) > 0 || bestCells < roundCells;
+        const roundBugLoad = bestBugLoad;
+        const improvedThisRound = () => compareBuildStats(best.stats, roundStats, target) > 0 || bestCells < roundCells || bestBugLoad < roundBugLoad;
         const base = best;
         const cells = placeAll(data.parts, base.problem.requirements, base.solution, grid);
         const seen = new Set<string>();

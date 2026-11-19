@@ -1,6 +1,6 @@
 import type { BugTolerance } from "./problem";
 import { colorCompatibility } from "./compatibility";
-import { analyzeSolutionBugs, computeBuildStats, computePlacedBuildStats, getPartEffect, isSolutionAcceptable } from "./effects";
+import { analyzeSolutionBugs, computeBuildStats, computePlacedBuildStats, getPartEffect, isNonBattleProgram, isSolutionAcceptable } from "./effects";
 import { computeDeckStats, getModCards, ModCard } from "./modcards";
 import { BUSTER_STATS, getBusterMinimums, DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { placeAll, Requirement, solve } from "./solver";
@@ -11,6 +11,10 @@ import {
     cardSpecConstraintsPossible,
     busterMinimumsPossible,
     soulTimeMinimumPossible,
+    shouldLockSolidOnCommandLine,
+    countNcPlacementBugLoad,
+    buildPreferOffLineReqs,
+    partSuppliesRequiredPanelOrBug,
 } from "./optimizer";
 
 export interface SearchProgress {
@@ -71,7 +75,10 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         doesBuildSatisfyConstraints(initial.stats, initial.analysis, constraints, data.gameId);
     const progress: SearchProgress = { checkedBuilds: 0, best: validInitial ? initial : null };
     if (progress.best) onProgress?.({ ...progress });
+    const ruleMap = constraints?.bugRules ?? (policy.customRules as Partial<Record<string, BugTolerance>> | undefined);
+    const allowSupportBugGlitch = constraints?.allowSupportBugGlitch;
     let bestCells = progress.best ? occupiedBuildCells(data, progress.best) : Infinity;
+    let bestBugLoad = progress.best ? countNcPlacementBugLoad(progress.best.analysis, constraints?.requiredAbilities, ruleMap) : Infinity;
     let lastReport = 0;
     const stopped = () => {
         const now = Date.now();
@@ -88,11 +95,40 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
         return req.constraint.compressed === null ? Math.min(c, u) : req.constraint.compressed ? c : u;
     };
     const freeReq = (partIndex: number): Requirement => ({ partIndex,
-        constraint: { compressed: null, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } });
+        constraint: {
+            compressed: null,
+            onCommandLine: shouldLockSolidOnCommandLine(
+                data,
+                partIndex,
+                ruleMap,
+                allowSupportBugGlitch,
+                constraints?.allowedMovePanels,
+                constraints?.requiredAbilities
+            ) ? true : null,
+            minBugLevel: 0,
+            maxBugLevel: Infinity,
+        } });
     // Heuristics affect order only. All parts, including zero-score support parts,
     // all color variants, and repeated copies remain in the exhaustive search.
     const ranked = getCandidateFillerParts(data, target);
     const priorities = new Map(ranked.map((index, rank) => [index, rank]));
+    const suppliesReqBug = (i: number) => partSuppliesRequiredPanelOrBug(data, i, ruleMap, constraints?.allowedMovePanels);
+    const isNonBattle = (i: number) => isNonBattleProgram(data.gameId, data.partMetas[i].id, constraints?.requiredAbilities);
+    const smallestByColor = new Set<number>();
+    if (data.gameId !== "bn3" && (ruleMap?.status === "required" || ruleMap?.colorStatus === "required")) {
+        const bestForColor = new Map<number, number>();
+        for (let i = 0; i < data.parts.length; i++) {
+            if (getPartEffect(data.gameId, data.partMetas[i].id)?.abilities?.includes("bugStop")) continue;
+            const color = data.parts[i].color;
+            const prev = bestForColor.get(color);
+            if (prev === undefined ||
+                minimumCells(freeReq(i)) < minimumCells(freeReq(prev)) ||
+                (minimumCells(freeReq(i)) === minimumCells(freeReq(prev)) && isNonBattle(i) && !isNonBattle(prev))) {
+                bestForColor.set(color, i);
+            }
+        }
+        for (const idx of bestForColor.values()) smallestByColor.add(idx);
+    }
     const candidates = data.parts.map((_, i) => i).sort((a, b) => {
         const abilities = (i: number) => getPartEffect(data.gameId, data.partMetas[i].id)?.abilities ?? [];
         const boostsRequiredStat = (i: number) => {
@@ -102,9 +138,20 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                 BUSTER_STATS.some(stat => minimums[stat] !== undefined &&
                 ((effect?.[stat] ?? 0) > 0 || effect?.[`${stat}Max`]));
         };
-        const priority = (i: number) => abilities(i).some(ab => constraints?.requiredAbilities?.includes(ab)) ? -2 :
-            boostsRequiredStat(i) ? -2 : abilities(i).includes("bugStop") ? -1 : (priorities.get(i) ?? data.parts.length);
-        return priority(a) - priority(b) || a - b;
+        const priority = (i: number) => {
+            const reqBug = suppliesReqBug(i);
+            if (reqBug && isNonBattle(i)) return -3;
+            if (abilities(i).some(ab => constraints?.requiredAbilities?.includes(ab)) ||
+                boostsRequiredStat(i) || reqBug || smallestByColor.has(i)) return -2;
+            if (abilities(i).includes("bugStop")) return -1;
+            return priorities.get(i) ?? data.parts.length;
+        };
+        const pa = priority(a);
+        const pb = priority(b);
+        return pa - pb ||
+            (pa <= -2 ? minimumCells(freeReq(a)) - minimumCells(freeReq(b)) : 0) ||
+            Number(isNonBattle(b)) - Number(isNonBattle(a)) ||
+            a - b;
     });
     const coreCells = problem.requirements.reduce((sum, r) => sum + minimumCells(r), 0);
     if (!cardSpecConstraintsPossible(constraints) || !busterMinimumsPossible(options) || !soulTimeMinimumPossible(options) || coreCells > capacity || colorCompatibility(data, problem).error ||
@@ -122,10 +169,8 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
     // rules become allowed here because added NaviCust programs can still supply
     // a required bug, and a required key must not fall back to its forbidden
     // default while the deck check runs.
-    const ruleMap = constraints?.bugRules ?? (policy.customRules as Partial<Record<string, BugTolerance>> | undefined);
     const deckRules = ruleMap && Object.fromEntries(Object.entries(ruleMap)
         .map(([key, tolerance]) => [key, tolerance === "required" ? "allowed_any" : tolerance]));
-    const allowSupportBugGlitch = constraints?.allowSupportBugGlitch;
 
     function searchDeck(modCards: string[], additions: number): void {
         if (stopped()) return;
@@ -169,11 +214,13 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
             // Geometric impossibility is monotone. Minimum bug levels are not:
             // another same-color neighbor can satisfy them later, so relax minima.
             const geometric = requirements.map(r => ({ ...r, constraint: { ...r.constraint, minBugLevel: 0 } }));
-            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)[Symbol.iterator]().next().done) return;
+            const preferOffLineGeo = buildPreferOffLineReqs(data, geometric, constraints?.requiredAbilities);
+            if (solve(data.parts, geometric, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true, preferOffLineGeo)[Symbol.iterator]().next().done) return;
             progress.checkedBuilds++;
             if (remaining === 0 && missing.length === 0) {
                 const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbidden, constraints?.bugRules, modCards, allowSupportBugGlitch);
-                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true)) {
+                const preferOffLine = buildPreferOffLineReqs(data, searchReqs, constraints?.requiredAbilities);
+                for (const solution of solve(data.parts, searchReqs, grid, problem.spinnableColors, stopped, false, options.onSearchWork ? () => options.onSearchWork!("placement") : undefined, true, preferOffLine)) {
                     if (stopped()) return;
                     const placedStats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
                         placeAll(data.parts, requirements, solution, grid), grid, modCards, problem.baseHp ?? 1000);
@@ -190,8 +237,11 @@ export function searchBuilds(options: ExhaustiveOptions): SearchProgress & { com
                             addedCardIds: modCardMode === "auto" ? [...modCards] : [],
                         });
                         const cells = occupiedBuildCells(data, candidate);
-                        if (comparison > 0 || (cells < bestCells && progress.best && haveSameBuildEffects(candidate.stats, progress.best.stats, constraints))) {
+                        const bugLoad = countNcPlacementBugLoad(candidate.analysis, constraints?.requiredAbilities, ruleMap);
+                        if (comparison > 0 || (progress.best && haveSameBuildEffects(candidate.stats, progress.best.stats, constraints) &&
+                            (cells < bestCells || (cells === bestCells && bugLoad < bestBugLoad)))) {
                             bestCells = cells;
+                            bestBugLoad = bugLoad;
                             progress.best = candidate;
                             lastReport = Date.now();
                             onProgress?.({ ...progress });

@@ -4,7 +4,7 @@ import bn5Seeds from "./data/bn5-build-seeds.json";
 import bn6Seeds from "./data/bn6-build-seeds.json";
 import { colorCompatibility } from "./compatibility";
 import { analyzeSolutionBugs, computePlacedBuildStats, isSolutionAcceptable } from "./effects";
-import { compareBuildStats, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, occupiedBuildCells, removeRedundantAbilityParts } from "./optimizer";
+import { compareBuildStats, doesBuildSatisfyConstraints, OptimizeOptions, OptimizeResult, occupiedBuildCells, removeRedundantAbilityParts, shouldLockSolidOnCommandLine, countNcPlacementBugLoad } from "./optimizer";
 import { computeDeckStats } from "./modcards";
 import { DEFAULT_BUG_POLICY, makeGridSettings } from "./problem";
 import { isSolutionGeometryValid, placeAll, Requirement, Solution } from "./solver";
@@ -81,15 +81,48 @@ export function findKnownBuild(options: OptimizeOptions & {
             if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
                     constraints?.allowSupportBugGlitch) ||
                 !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) return null;
-            return removeRedundantAbilityParts(options, { problem: candidateProblem, solution, stats, analysis,
+            const cleaned = removeRedundantAbilityParts(options, { problem: candidateProblem, solution, stats, analysis,
                 addedPartIndices: requirements.slice(problem.requirements.length).map(r => r.partIndex),
                 addedCardIds: modCardMode === "auto" ? [...seed.cards] : [] });
+            const rules = constraints?.bugRules ?? policy.customRules;
+            const cleanedCells = placeAll(data.parts, cleaned.problem.requirements, cleaned.solution, grid);
+            const cleanedOnLine = new Set(cleanedCells.slice(grid.commandLineRow * grid.width, (grid.commandLineRow + 1) * grid.width));
+            const normalizedRequirements = cleaned.problem.requirements.map((req, idx) => {
+                if (
+                    idx >= problem.requirements.length &&
+                    req.constraint.onCommandLine === null &&
+                    req.constraint.minBugLevel === 0 &&
+                    cleanedOnLine.has(idx) &&
+                    shouldLockSolidOnCommandLine(
+                        data,
+                        req.partIndex,
+                        rules,
+                        constraints?.allowSupportBugGlitch,
+                        constraints?.allowedMovePanels,
+                        constraints?.requiredAbilities
+                    )
+                ) {
+                    return { ...req, constraint: { ...req.constraint, onCommandLine: true } };
+                }
+                return req;
+            });
+            return { ...cleaned, problem: { ...cleaned.problem, requirements: normalizedRequirements } };
         };
         const result = matchCore(0);
-        if (result && (!best || compareBuildStats(result.stats, best.stats, target) > 0 ||
-            (compareBuildStats(result.stats, best.stats, target) === 0 && occupiedBuildCells(data, result) < occupiedBuildCells(data, best)))) {
-            best = result;
-            options.onImprove?.(best);
+        if (result) {
+            const cmp = best ? compareBuildStats(result.stats, best.stats, target) : 1;
+            const cells = occupiedBuildCells(data, result);
+            const bestCells = best ? occupiedBuildCells(data, best) : Infinity;
+            const rules = constraints?.bugRules ?? policy.customRules;
+            if (cmp > 0 || (cmp === 0 && best && (
+                cells < bestCells ||
+                (cells === bestCells &&
+                    countNcPlacementBugLoad(result.analysis, constraints?.requiredAbilities, rules) <
+                    countNcPlacementBugLoad(best.analysis, constraints?.requiredAbilities, rules))
+            ))) {
+                best = result;
+                options.onImprove?.(best);
+            }
         }
     }
     return best;

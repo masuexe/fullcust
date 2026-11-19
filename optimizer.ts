@@ -10,7 +10,9 @@ import {
     getBusterStatLimits,
     getPartBugTypes,
     isBenignBug,
+    isNonBattleProgram,
     isSolutionAcceptable,
+    NON_BATTLE_ABILITIES,
     normalizeBugType,
     BugDefinition,
     BuildStats,
@@ -24,7 +26,7 @@ import {
     repairsBugType,
     ModCard,
 } from "./modcards";
-import { BODY_ELEMENTS, GAUGE_VALUES, BUSTER_STATS, getBusterMinimums, getMaxAllowedBugLevel, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
+import { BODY_ELEMENTS, GAUGE_VALUES, BUSTER_STATS, BusterStat, getBusterMinimums, getMaxAllowedBugLevel, BugPolicy, BugTolerance, BuildConstraints, DEFAULT_BUG_POLICY, Problem, makeGridSettings } from "./problem";
 import { meetsPlacementBugConstraints, placeAll, solve, GridSettings, Requirement, Solution } from "./solver";
 
 export type OptimizationTarget = "max_hp" | "max_attack";
@@ -59,10 +61,15 @@ export function occupiedBuildCells(data: Data, result: OptimizeResult): number {
     }, 0);
 }
 
-/** Preserve effects when simplifying a build, except optional automatic BugStop. */
+/** Preserve effects when simplifying a build, except optional automatic BugStop and unrequested non-battle abilities. */
 export function haveSameBuildEffects(a: BuildStats, b: BuildStats, constraints?: BuildConstraints): boolean {
-    const normalize = (stats: BuildStats) => constraints?.requiredAbilities?.includes("bugStop") ? stats :
-        { ...stats, abilities: stats.abilities.filter(ability => ability !== "bugStop") };
+    const normalize = (stats: BuildStats) => ({
+        ...stats,
+        abilities: stats.abilities.filter(ability =>
+            constraints?.requiredAbilities?.includes(ability) ||
+            (ability !== "bugStop" && !NON_BATTLE_ABILITIES.has(ability))
+        ),
+    });
     return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 }
 
@@ -73,12 +80,25 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
     const grid = makeGridSettings(data, result.problem);
     const cards = result.problem.modCards ?? [];
     let cleaned = result;
+    const initialCells = placeAll(data.parts, result.problem.requirements, result.solution, grid);
+    const onLine = new Set<number>();
+    for (let x = 0; x < grid.width; x++) {
+        const index = initialCells[grid.commandLineRow * grid.width + x];
+        if (index != null && index >= 0) onLine.add(index);
+    }
     const candidates = result.problem.requirements.map((req, index) => {
-        const effect = getPartEffect(data.gameId, data.partMetas[req.partIndex].id);
-        const pureAbility = effect?.abilities?.length && !Object.entries(effect).some(([key, value]) => key !== "abilities" && value);
-        return { req, index, abilityCount: effect?.abilities?.length ?? 0, pureAbility };
-    }).filter(c => c.index >= problem.requirements.length && c.pureAbility && c.req.constraint.minBugLevel === 0)
-        .sort((a, b) => a.abilityCount - b.abilityCount || b.index - a.index);
+        const partId = data.partMetas[req.partIndex].id;
+        const isSolid = data.parts[req.partIndex].isSolid;
+        const isOffLineSolid = isSolid && !onLine.has(index);
+        const effect = getPartEffect(data.gameId, partId);
+        const nonBattle = isNonBattleProgram(data.gameId, partId, constraints?.requiredAbilities);
+        const pureAbility = Boolean(effect?.abilities?.length && !Object.entries(effect).some(([key, value]) => key !== "abilities" && value));
+        return { req, index, abilityCount: effect?.abilities?.length ?? 0, pureAbility, isOffLineSolid, effect, nonBattle };
+    }).filter(c => c.index >= problem.requirements.length && c.req.constraint.minBugLevel === 0 &&
+        (c.isOffLineSolid || c.effect !== undefined || c.nonBattle))
+        .sort((a, b) => Number(!a.isOffLineSolid) - Number(!b.isOffLineSolid) ||
+            Number(!a.pureAbility) - Number(!b.pureAbility) ||
+            a.abilityCount - b.abilityCount || b.index - a.index);
     const removed = new Set<number>();
     for (const candidate of candidates) {
         // Translate the original index after earlier removals; repeated part
@@ -86,14 +106,15 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         const index = candidate.index - [...removed].filter(i => i < candidate.index).length;
         const requirements = cleaned.problem.requirements.filter((_, i) => i !== index);
         const solution = cleaned.solution.filter((_, i) => i !== index);
+        const cells = placeAll(data.parts, requirements, solution, grid);
         const stats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
-            placeAll(data.parts, requirements, solution, grid), grid, cards, problem.baseHp ?? 1000);
+            cells, grid, cards, problem.baseHp ?? 1000);
         // Optional automatic BugStop can disappear only if the remaining layout
         // still satisfies the full policy, requirements and placement constraints.
         if (!haveSameBuildEffects(stats, cleaned.stats, constraints)) continue;
         if (!meetsPlacementBugConstraints(data.parts, requirements, solution, grid)) continue;
         const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements,
-            placeAll(data.parts, requirements, solution, grid), grid, "en", cards);
+            cells, grid, "en", cards);
         if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
                 constraints?.allowSupportBugGlitch) ||
             !doesBuildSatisfyConstraints(stats, analysis, constraints, data.gameId)) continue;
@@ -102,6 +123,170 @@ export function removeRedundantAbilityParts(options: OptimizeOptions, result: Op
         removed.add(candidate.index);
     }
     return cleaned;
+}
+
+/** Check whether a part directly generates a specific normalized bug type when placed improperly. */
+export function partDirectlySuppliesBug(
+    data: Data,
+    partIndex: number,
+    targetNormalizedBug: string
+): boolean {
+    const meta = data.partMetas[partIndex];
+    if (!meta) return false;
+    for (const rawType of getPartBugTypes(data.gameId, meta.id)) {
+        const expandedTypes =
+            (data.gameId === "bn5" || data.gameId === "bn6") && rawType === "panel"
+                ? ["panelCrack"]
+                : data.gameId === "bn4" && rawType === "player"
+                    ? ["player", "playerConfuse", "playerMoveForward", "playerMoveBackward"]
+                    : data.gameId === "bn3" && rawType === "involuntaryMove"
+                        ? ["involuntaryMove", "movement", "involuntaryMoveUp", "involuntaryMoveDown", "involuntaryMoveConfuse"]
+                        : data.gameId === "bn3" && rawType === "charge"
+                            ? ["charge", "chargeCube", "chargeWater", "chargeFlower"]
+                            : data.gameId === "bn3" && rawType === "buster"
+                                ? ["buster", "busterBlank", "busterBlank1", "busterBlank2", "busterGuard"]
+                                : [normalizeBugType(rawType)];
+        if (expandedTypes.some(t => bugMatchesRule(t, targetNormalizedBug))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Check whether a part can contribute to any bug rule marked "required". */
+export function partCanSupplyRequiredBug(
+    data: Data,
+    partIndex: number,
+    rules?: Partial<Record<string, BugTolerance>>
+): boolean {
+    const requiredKeys = Object.entries(rules ?? {})
+        .filter(([, tol]) => tol === "required")
+        .map(([k]) => normalizeBugType(k));
+    if (requiredKeys.length === 0) return false;
+    if (data.gameId !== "bn3" && requiredKeys.some(k => k === "status" || k === "colorStatus")) {
+        return true;
+    }
+    return requiredKeys.some(reqKey => partDirectlySuppliesBug(data, partIndex, reqKey));
+}
+
+/** Check whether a non-BugStop part directly supplies a required bug or requested move panel. */
+export function partSuppliesRequiredPanelOrBug(
+    data: Data,
+    partIndex: number,
+    rules?: Partial<Record<string, BugTolerance>>,
+    allowedMovePanels?: string[]
+): boolean {
+    const meta = data.partMetas[partIndex];
+    if (!meta) return false;
+    if (getPartEffect(data.gameId, meta.id)?.abilities?.includes("bugStop")) {
+        return false;
+    }
+    const requiredKeys = Object.entries(rules ?? {})
+        .filter(([, tol]) => tol === "required")
+        .map(([k]) => normalizeBugType(k));
+    if (requiredKeys.some(reqKey => partDirectlySuppliesBug(data, partIndex, reqKey))) {
+        return true;
+    }
+    if (
+        allowedMovePanels &&
+        allowedMovePanels.length > 0 &&
+        !allowedMovePanels.some(p => p.toLowerCase() === "none") &&
+        getPartBugTypes(data.gameId, meta.id).includes("panel")
+    ) {
+        const ncPanels = data.gameId === "bn4"
+            ? ["panelCrack", "panelHole", "panelPoison"]
+            : ["panelCrack1", "panelCrack2", "panelCrack3"];
+        if (ncPanels.some(actual => allowedMovePanels.some(target => matchMovePanel(actual, target)))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Determine whether an automatically placed (or unconstrained) solid program should be locked on the command line.
+ * Off-line solid programs contribute no ability/stat effects and are only useful when triggering a requested bug.
+ */
+export function shouldLockSolidOnCommandLine(
+    data: Data,
+    partIndex: number,
+    rules?: Partial<Record<string, BugTolerance>>,
+    allowSupportBugGlitch?: boolean,
+    allowedMovePanels?: string[],
+    requiredAbilities?: readonly string[]
+): boolean {
+    if (!data.parts[partIndex]?.isSolid) return false;
+    const meta = data.partMetas[partIndex];
+    if (!meta) return false;
+    if (isNonBattleProgram(data.gameId, meta.id, requiredAbilities)) {
+        return false;
+    }
+    if (getPartEffect(data.gameId, meta.id)?.abilities?.some(ab => requiredAbilities?.includes(ab))) {
+        return true;
+    }
+    if (data.gameId === "bn5" && allowSupportBugGlitch && (meta.id === 30 || meta.id === 31)) {
+        return false;
+    }
+    if (partCanSupplyRequiredBug(data, partIndex, rules)) {
+        return false;
+    }
+    if (
+        allowedMovePanels &&
+        allowedMovePanels.length > 0 &&
+        !allowedMovePanels.some(p => p.toLowerCase() === "none") &&
+        getPartBugTypes(data.gameId, meta.id).includes("panel")
+    ) {
+        const ncPanels = data.gameId === "bn4"
+            ? ["panelCrack", "panelHole", "panelPoison"]
+            : ["panelCrack1", "panelCrack2", "panelCrack3"];
+        if (ncPanels.some(actual => allowedMovePanels.some(target => matchMovePanel(actual, target)))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** Mark unconstrained non-battle programs whose own bug is allowed so the solver tries off-line in-bounds first. */
+export function buildPreferOffLineReqs(
+    data: Data,
+    requirements: Requirement[],
+    requiredAbilities?: readonly string[]
+): boolean[] {
+    return requirements.map(req =>
+        isNonBattleProgram(data.gameId, data.partMetas[req.partIndex]?.id, requiredAbilities) &&
+        req.constraint.onCommandLine !== true &&
+        req.constraint.maxBugLevel > 0
+    );
+}
+
+/** Score NC placement bug load so tie-breakers prefer cleaner, zero-bug layouts. */
+export function countNcPlacementBugLoad(
+    analysis: SolutionBugAnalysis,
+    requiredAbilities?: readonly string[],
+    rules?: Partial<Record<string, BugTolerance>>
+): number {
+    const gameId = analysis.gameId ?? "bn6";
+    const bugs = analysis.bugs ?? [];
+    const wantsColorBug = rules?.status === "required" || rules?.colorStatus === "required";
+    const rawLoad = bugs.reduce((sum, b) => {
+        if (isNonBattleProgram(gameId, b.partId, requiredAbilities) && !b.causes.includes("outOfBounds")) {
+            return sum;
+        }
+        return sum + b.level;
+    }, 0) + (!wantsColorBug && analysis.tooManyColors ? Math.max(0, analysis.distinctColorCount - 4) : 0);
+    const activeNcLoad = (analysis.activeBugs ?? [])
+        .filter(b => !b.isModCardBug)
+        .reduce((sum, b) => {
+            if (b.bugType === "colorStatus" && wantsColorBug) return sum;
+            const matchingRaw = bugs.filter(raw => normalizeBugType(raw.bugType) === normalizeBugType(b.bugType));
+            const onlyNonBattleInBounds = b.bugType !== "colorStatus" &&
+                matchingRaw.length > 0 &&
+                matchingRaw.every(raw =>
+                    isNonBattleProgram(gameId, raw.partId, requiredAbilities) &&
+                    !raw.causes.includes("outOfBounds"));
+            return onlyNonBattleInBounds ? sum : sum + b.level;
+        }, 0);
+    return activeNcLoad * 100 + rawLoad;
 }
 
 export interface ModCardOptimizeOptions {
@@ -1213,13 +1398,17 @@ function runNaviCustBeamSearch(
     timeoutMs: number,
     beamWidth: number,
     onSearchWork?: OptimizeOptions["onSearchWork"],
-    allowSupportBugGlitch?: boolean
+    allowSupportBugGlitch?: boolean,
+    allowedMovePanels?: string[],
+    requiredAbilities?: readonly string[]
 ): SearchNode | null {
     const shouldStop = () => Date.now() - startTime >= timeoutMs;
+    const activeRules = bugRules ?? policy.customRules;
     const findPlacement = (requirements: Requirement[]) => {
         onSearchWork?.("candidate");
         const searchReqs = requirementsUnderPolicy(data, requirements, policy, forbiddenBugs, bugRules, modCards, allowSupportBugGlitch);
-        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined, true)) {
+        const preferOffLine = buildPreferOffLineReqs(data, searchReqs, requiredAbilities);
+        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, onSearchWork ? () => onSearchWork("placement") : undefined, true, preferOffLine)) {
             if (shouldStop()) break;
             const occ = placeAll(data.parts, requirements, solution, gridSettings);
             const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, occ, gridSettings, "en", modCards);
@@ -1280,7 +1469,14 @@ function runNaviCustBeamSearch(
                 const candReq: Requirement = {
                     partIndex: candIdx,
                     constraint: {
-                        onCommandLine: null,
+                        onCommandLine: shouldLockSolidOnCommandLine(
+                            data,
+                            candIdx,
+                            activeRules,
+                            allowSupportBugGlitch,
+                            allowedMovePanels,
+                            requiredAbilities
+                        ) ? true : null,
                         minBugLevel: 0,
                         maxBugLevel: Infinity,
                         compressed: true,
@@ -1305,7 +1501,10 @@ function runNaviCustBeamSearch(
 
                     nextNodes.push(childNode);
 
-                    if (compareBuildStats(testStats, bestNode.stats, target) > 0) {
+                    const statCmp = compareBuildStats(testStats, bestNode.stats, target);
+                    if (statCmp > 0 || (statCmp === 0 &&
+                        countNcPlacementBugLoad(foundAnalysis, requiredAbilities, activeRules) <
+                        countNcPlacementBugLoad(bestNode.analysis, requiredAbilities, activeRules))) {
                         bestNode = childNode;
                     }
                 }
@@ -1313,7 +1512,10 @@ function runNaviCustBeamSearch(
         }
 
         if (nextNodes.length === 0) break;
-        nextNodes.sort((a, b) => compareBuildStats(b.stats, a.stats, target));
+        nextNodes.sort((a, b) =>
+            compareBuildStats(b.stats, a.stats, target) ||
+            countNcPlacementBugLoad(a.analysis, requiredAbilities, activeRules) -
+            countNcPlacementBugLoad(b.analysis, requiredAbilities, activeRules));
         beam = nextNodes.slice(0, beamWidth);
     }
 
@@ -1343,6 +1545,8 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
     const baseHp = problem.baseHp ?? 1000;
     const forbiddenBugs = constraints?.forbiddenBugs || [];
     const allCandidates = getCandidateFillerParts(data, target);
+    const activeRules = constraints?.bugRules ?? policy.customRules;
+    const gridCapacity = gridSettings.width * gridSettings.height - (gridSettings.hasOob ? 4 : 0);
 
     // Helper to generate NC requirements for missing abilities
     const createReqsForAbilities = (abilities: string[]): Requirement[] | null => {
@@ -1358,7 +1562,14 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                 extraReqs.push({
                     partIndex: partIdx,
                     constraint: {
-                        onCommandLine: null,
+                        onCommandLine: shouldLockSolidOnCommandLine(
+                            data,
+                            partIdx,
+                            activeRules,
+                            constraints?.allowSupportBugGlitch,
+                            constraints?.allowedMovePanels,
+                            constraints?.requiredAbilities
+                        ) ? true : null,
                         minBugLevel: 0,
                         maxBugLevel: Infinity,
                         compressed: true,
@@ -1368,6 +1579,190 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             }
         }
         return [...problem.requirements, ...extraReqs];
+    };
+
+    const compressedCells = (idx: number) => data.parts[idx].compressedMask.filter(Boolean).length || 1;
+    const isBugStopPart = (idx: number) =>
+        Boolean(getPartEffect(data.gameId, data.partMetas[idx].id)?.abilities?.includes("bugStop"));
+
+    // Seed required NC bugs (preferring smallest non-battle parts) and 5-color overflow when status is required.
+    const createReqsForRequiredBugs = (currentReqs: Requirement[], modCards: string[]): Requirement[] => {
+        const reqs = currentReqs.map(r => ({ ...r, constraint: { ...r.constraint } }));
+        const deck = modCards.length > 0 ? computeDeckStats(modCards, data.gameId) : undefined;
+        const cardBugTypes = deck
+            ? deck.activeBugs.map(entry => {
+                const card = getModCard(entry.sourceCardId, data.gameId);
+                return normalizeBugType(getCardBugType(entry.sourceCardId, entry.bug.type, card?.movePanel, entry.bug.level));
+            })
+            : [];
+
+        const existingIndices = new Set(reqs.map(r => r.partIndex));
+        const existingColors = new Set(reqs.map(r => data.parts[r.partIndex].color));
+        let occupiedCells = reqs.reduce((sum, r) => sum + compressedCells(r.partIndex), 0);
+
+        const requiredKeys: string[] = [];
+        for (const [key, tol] of Object.entries(activeRules ?? {})) {
+            if (tol === "required") requiredKeys.push(key);
+        }
+        const allowedMovePanels = constraints?.allowedMovePanels;
+        if (
+            allowedMovePanels &&
+            allowedMovePanels.length > 0 &&
+            !allowedMovePanels.some(p => p.toLowerCase() === "none") &&
+            !deck?.movePanel &&
+            !cardBugTypes.some(t => t.startsWith("panel"))
+        ) {
+            const ncPanels = data.gameId === "bn4"
+                ? ["panelCrack", "panelHole", "panelPoison"]
+                : ["panelCrack1", "panelCrack2", "panelCrack3"];
+            if (ncPanels.some(actual => allowedMovePanels.some(target => matchMovePanel(actual, target)))) {
+                const panelKey = data.gameId === "bn4" ? "panel" : "panelCrack";
+                if (!requiredKeys.some(k => normalizeBugType(k) === panelKey)) {
+                    requiredKeys.push(panelKey);
+                }
+            }
+        }
+
+        for (const rawKey of requiredKeys) {
+            const normKey = normalizeBugType(rawKey);
+            if (normKey === "busterCharge" || normKey === "status" || normKey === "colorStatus") continue;
+            if (cardBugTypes.some(t => bugMatchesRule(t, normKey))) continue;
+            if (normKey === "support" && constraints?.allowSupportBugGlitch && data.gameId === "bn5" && modCards.includes("136-A006")) {
+                continue;
+            }
+
+            const existingNonBattleIdx = reqs.findIndex(r =>
+                !isBugStopPart(r.partIndex) &&
+                isNonBattleProgram(data.gameId, data.partMetas[r.partIndex].id, constraints?.requiredAbilities) &&
+                partDirectlySuppliesBug(data, r.partIndex, normKey)
+            );
+            if (existingNonBattleIdx >= 0) {
+                const r = reqs[existingNonBattleIdx];
+                if (r.constraint.onCommandLine !== true && r.constraint.maxBugLevel >= 1) {
+                    r.constraint.minBugLevel = Math.max(r.constraint.minBugLevel, 1);
+                }
+                continue;
+            }
+
+            const matching = data.parts.map((_, idx) => idx).filter(idx => {
+                if (existingIndices.has(idx) || isBugStopPart(idx)) return false;
+                if (!partDirectlySuppliesBug(data, idx, normKey)) return false;
+                if (occupiedCells + compressedCells(idx) > gridCapacity) return false;
+                if (data.gameId !== "bn3") {
+                    return existingColors.has(data.parts[idx].color) || existingColors.size < 6;
+                }
+                return !data.styleColorRules || isPartCompatible(data, { ...problem, requirements: reqs }, idx);
+            }).sort((a, b) =>
+                Number(isNonBattleProgram(data.gameId, data.partMetas[b].id, constraints?.requiredAbilities)) -
+                Number(isNonBattleProgram(data.gameId, data.partMetas[a].id, constraints?.requiredAbilities)) ||
+                compressedCells(a) - compressedCells(b) ||
+                a - b
+            );
+
+            const hasExistingCombatSupplier = reqs.some(r =>
+                !isBugStopPart(r.partIndex) && partDirectlySuppliesBug(data, r.partIndex, normKey)
+            );
+            if (hasExistingCombatSupplier) {
+                // Only add a dedicated supplier when a non-battle program exists so combat programs stay clean.
+                const nonBattlePick = matching.find(idx =>
+                    isNonBattleProgram(data.gameId, data.partMetas[idx].id, constraints?.requiredAbilities)
+                );
+                if (nonBattlePick === undefined) continue;
+                reqs.push({
+                    partIndex: nonBattlePick,
+                    constraint: { onCommandLine: null, minBugLevel: 1, maxBugLevel: Infinity, compressed: true },
+                });
+                existingIndices.add(nonBattlePick);
+                existingColors.add(data.parts[nonBattlePick].color);
+                occupiedCells += compressedCells(nonBattlePick);
+                continue;
+            }
+
+            if (matching.length > 0) {
+                const pick = matching[0];
+                reqs.push({
+                    partIndex: pick,
+                    constraint: { onCommandLine: null, minBugLevel: 1, maxBugLevel: Infinity, compressed: true },
+                });
+                existingIndices.add(pick);
+                existingColors.add(data.parts[pick].color);
+                occupiedCells += compressedCells(pick);
+            }
+        }
+
+        const wantsColorStatus = data.gameId !== "bn3" &&
+            (activeRules?.status === "required" || activeRules?.colorStatus === "required") &&
+            !cardBugTypes.some(t => t === "status" || t === "colorStatus") &&
+            !reqs.some(r => isBugStopPart(r.partIndex));
+
+        if (wantsColorStatus) {
+            let onLineCount = reqs.filter(r => r.constraint.onCommandLine === true).length;
+            while (existingColors.size < 5) {
+                const colorCandidates = data.parts.map((_, idx) => idx).filter(idx => {
+                    if (existingIndices.has(idx) || isBugStopPart(idx)) return false;
+                    const color = data.parts[idx].color;
+                    if (existingColors.has(color)) return false;
+                    if (problem.spinnableColors[color] === undefined) return false;
+                    if (occupiedCells + compressedCells(idx) > gridCapacity) return false;
+                    const [pol] = requirementsUnderPolicy(
+                        data,
+                        [{ partIndex: idx, constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }],
+                        policy,
+                        forbiddenBugs,
+                        constraints?.bugRules,
+                        modCards,
+                        constraints?.allowSupportBugGlitch
+                    );
+                    const needsZeroBug = (pol.constraint.maxBugLevel ?? Infinity) === 0;
+                    if (data.parts[idx].isSolid && needsZeroBug && onLineCount >= gridSettings.width) {
+                        return false;
+                    }
+                    return true;
+                }).sort((a, b) =>
+                    compressedCells(a) - compressedCells(b) ||
+                    Number(isNonBattleProgram(data.gameId, data.partMetas[b].id, constraints?.requiredAbilities)) -
+                    Number(isNonBattleProgram(data.gameId, data.partMetas[a].id, constraints?.requiredAbilities)) ||
+                    a - b
+                );
+
+                if (colorCandidates.length === 0) break;
+                const pick = colorCandidates[0];
+                const lockOnLine = shouldLockSolidOnCommandLine(
+                    data,
+                    pick,
+                    activeRules,
+                    constraints?.allowSupportBugGlitch,
+                    constraints?.allowedMovePanels,
+                    constraints?.requiredAbilities
+                );
+                const [pol] = requirementsUnderPolicy(
+                    data,
+                    [{ partIndex: pick, constraint: { compressed: true, onCommandLine: null, minBugLevel: 0, maxBugLevel: Infinity } }],
+                    policy,
+                    forbiddenBugs,
+                    constraints?.bugRules,
+                    modCards,
+                    constraints?.allowSupportBugGlitch
+                );
+                if (data.parts[pick].isSolid && (lockOnLine || (pol.constraint.maxBugLevel ?? Infinity) === 0)) {
+                    onLineCount++;
+                }
+                reqs.push({
+                    partIndex: pick,
+                    constraint: {
+                        onCommandLine: lockOnLine ? true : null,
+                        minBugLevel: 0,
+                        maxBugLevel: Infinity,
+                        compressed: true,
+                    },
+                });
+                existingIndices.add(pick);
+                existingColors.add(data.parts[pick].color);
+                occupiedCells += compressedCells(pick);
+            }
+        }
+
+        return reqs;
     };
 
     interface CandidateBranch {
@@ -1392,7 +1787,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         const uncovered0 = (constraints?.requiredAbilities || []).filter(ab => !covered0.has(ab));
         const reqs0 = createReqsForAbilities(uncovered0);
         if (reqs0) {
-            branches.push({ modCards: modCards0, reqs: reqs0, isAutoCards: true });
+            branches.push({ modCards: modCards0, reqs: createReqsForRequiredBugs(reqs0, modCards0), isAutoCards: true });
         }
 
         // Branch 1: NC covers all required abilities that NC can provide, Mod Cards optimize remaining
@@ -1414,7 +1809,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
                 policy,
                 constraints: modConstraints1,
             });
-            branches.push({ modCards: modCards1, reqs: reqs1, isAutoCards: true });
+            branches.push({ modCards: modCards1, reqs: createReqsForRequiredBugs(reqs1, modCards1), isAutoCards: true });
         }
     } else {
         // modCardMode === "none" or "keep"
@@ -1437,7 +1832,7 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
         const uncovered = (constraints?.requiredAbilities || []).filter(ab => !covered.has(ab));
         const reqs = createReqsForAbilities(uncovered);
         if (reqs) {
-            branches.push({ modCards, reqs, isAutoCards: false });
+            branches.push({ modCards, reqs: createReqsForRequiredBugs(reqs, modCards), isAutoCards: false });
         }
     }
 
@@ -1471,7 +1866,9 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             branchDeadline,
             beamWidth,
             options.onSearchWork,
-            constraints?.allowSupportBugGlitch
+            constraints?.allowSupportBugGlitch,
+            constraints?.allowedMovePanels,
+            constraints?.requiredAbilities
         );
 
         if (!node) continue;
@@ -1480,26 +1877,171 @@ export function optimizeBuild(options: OptimizeOptions): OptimizeResult | null {
             continue;
         }
 
-        if (!bestResult || compareBuildStats(node.stats, bestResult.stats, target) > 0) {
-            bestResult = {
-                problem: {
-                    ...problem,
-                    requirements: node.requirements,
-                    bugPolicy: policy,
-                    modCards: branch.modCards,
-                    constraints,
-                },
-                solution: node.solution,
-                stats: node.stats,
-                analysis: node.analysis,
-                addedPartIndices: [
-                    ...branch.reqs.slice(problem.requirements.length).map(r => r.partIndex),
-                    ...node.addedPartIndices,
-                ],
-                addedCardIds: branch.isAutoCards ? branch.modCards : [],
-            };
+        const candidateResult = removeRedundantAbilityParts(options, {
+            problem: {
+                ...problem,
+                requirements: node.requirements,
+                bugPolicy: policy,
+                modCards: branch.modCards,
+                constraints,
+            },
+            solution: node.solution,
+            stats: node.stats,
+            analysis: node.analysis,
+            addedPartIndices: [
+                ...branch.reqs.slice(problem.requirements.length).map(r => r.partIndex),
+                ...node.addedPartIndices,
+            ],
+            addedCardIds: branch.isAutoCards ? branch.modCards : [],
+        });
+
+        const cmp = bestResult ? compareBuildStats(candidateResult.stats, bestResult.stats, target) : 1;
+        if (cmp > 0 || (cmp === 0 && bestResult && (
+            (haveSameBuildEffects(candidateResult.stats, bestResult.stats, constraints) &&
+                occupiedBuildCells(data, candidateResult) < occupiedBuildCells(data, bestResult)) ||
+            ((!haveSameBuildEffects(candidateResult.stats, bestResult.stats, constraints) ||
+                occupiedBuildCells(data, candidateResult) === occupiedBuildCells(data, bestResult)) &&
+                countNcPlacementBugLoad(candidateResult.analysis, constraints?.requiredAbilities, activeRules) <
+                countNcPlacementBugLoad(bestResult.analysis, constraints?.requiredAbilities, activeRules))
+        ))) {
+            bestResult = candidateResult;
         }
     }
 
-    return bestResult ? removeRedundantAbilityParts(options, bestResult) : null;
+    return bestResult;
+}
+
+export interface PolicySolveOptions {
+    data: Data;
+    requirements: Requirement[];
+    gridSettings: GridSettings;
+    spinnableColors: boolean[];
+    bugPolicy?: BugPolicy;
+    constraints?: BuildConstraints;
+    modCards?: string[];
+    baseHp?: number;
+    shouldStop?: () => boolean;
+}
+
+/**
+ * Enumerate layouts for display while enforcing active bug policies, achievable placement-sensitive
+ * constraints, and preferring non-required-bug solid programs on the command line.
+ */
+export function* solveForDisplay(options: PolicySolveOptions): Iterable<Solution> {
+    const {
+        data,
+        requirements,
+        gridSettings,
+        spinnableColors,
+        shouldStop = () => false,
+    } = options;
+    const hasActivePolicy = Boolean(options.constraints) ||
+        Boolean(options.bugPolicy && options.bugPolicy.type !== "no_bugs");
+    if (!hasActivePolicy) {
+        const preferOffLine = buildPreferOffLineReqs(data, requirements);
+        yield* solve(data.parts, requirements, gridSettings, spinnableColors, shouldStop, true, undefined, true, preferOffLine);
+        return;
+    }
+
+    const policy = options.bugPolicy ?? DEFAULT_BUG_POLICY;
+    const constraints = options.constraints;
+    const cards = options.modCards ?? [];
+    const baseHp = options.baseHp ?? 1000;
+    const rules = constraints?.bugRules ?? policy.customRules;
+
+    const policyReqs = requirementsUnderPolicy(
+        data,
+        requirements,
+        policy,
+        constraints?.forbiddenBugs ?? [],
+        constraints?.bugRules,
+        cards,
+        constraints?.allowSupportBugGlitch
+    );
+
+    let tightenedChanged = false;
+    const candidateTightened = policyReqs.map(req => {
+        if (
+            req.constraint.onCommandLine === null &&
+            req.constraint.minBugLevel === 0 &&
+            shouldLockSolidOnCommandLine(
+                data,
+                req.partIndex,
+                rules,
+                constraints?.allowSupportBugGlitch,
+                constraints?.allowedMovePanels,
+                constraints?.requiredAbilities
+            )
+        ) {
+            tightenedChanged = true;
+            return { ...req, constraint: { ...req.constraint, onCommandLine: true } };
+        }
+        return req;
+    });
+    const onLineCount = candidateTightened.filter(r => r.constraint.onCommandLine === true).length;
+    const tightenedReqs = tightenedChanged && onLineCount <= gridSettings.width
+        ? candidateTightened
+        : policyReqs;
+
+    let effectiveConstraints: BuildConstraints | undefined;
+    if (constraints) {
+        const installedStats = computeBuildStats(
+            data.gameId,
+            requirements.map(r => data.partMetas[r.partIndex].id),
+            cards,
+            baseHp
+        );
+        const minimums = getBusterMinimums(constraints);
+        const achievableBuster = Object.fromEntries(
+            BUSTER_STATS
+                .filter(stat => minimums[stat] !== undefined && minimums[stat]! <= installedStats[stat])
+                .map(stat => [stat, minimums[stat]!])
+        ) as Partial<Record<BusterStat, number>>;
+        const achievableAbilities = (constraints.requiredAbilities ?? [])
+            .filter(ab => installedStats.abilities.includes(ab));
+        effectiveConstraints = {
+            ...(achievableAbilities.length > 0 ? { requiredAbilities: achievableAbilities } : {}),
+            ...(Object.keys(achievableBuster).length > 0 ? { minBusterStats: achievableBuster } : {}),
+            ...(constraints.minCustom !== undefined && installedStats.custom >= constraints.minCustom
+                ? { minCustom: constraints.minCustom } : {}),
+            ...(constraints.minSoulTime !== undefined && (data.gameId !== "bn5" || (installedStats.soulTime ?? 3) >= constraints.minSoulTime)
+                ? { minSoulTime: constraints.minSoulTime } : {}),
+            ...(constraints.minChipRecovery !== undefined && (installedStats.modChipRecovery ?? 0) >= constraints.minChipRecovery
+                ? { minChipRecovery: constraints.minChipRecovery } : {}),
+            ...(constraints.allowedMovePanels !== undefined ? { allowedMovePanels: constraints.allowedMovePanels } : {}),
+            ...(constraints.allowSupportBugGlitch ? { allowSupportBugGlitch: true } : {}),
+            ...(constraints.forbiddenBugs ? { forbiddenBugs: constraints.forbiddenBugs } : {}),
+            ...(constraints.bugRules ? { bugRules: constraints.bugRules } : {}),
+        };
+    }
+
+    function* yieldValidFrom(searchReqs: Requirement[]): Iterable<Solution> {
+        const preferOffLine = buildPreferOffLineReqs(data, searchReqs, constraints?.requiredAbilities);
+        for (const solution of solve(data.parts, searchReqs, gridSettings, spinnableColors, shouldStop, true, undefined, true, preferOffLine)) {
+            if (shouldStop()) return;
+            const cells = placeAll(data.parts, requirements, solution, gridSettings);
+            const analysis = analyzeSolutionBugs(data.gameId, data.partMetas, requirements, cells, gridSettings, "en", cards);
+            if (!isSolutionAcceptable(analysis, policy, constraints?.forbiddenBugs, constraints?.bugRules,
+                    constraints?.allowSupportBugGlitch)) {
+                continue;
+            }
+            if (effectiveConstraints) {
+                const stats = computePlacedBuildStats(data.gameId, data.partMetas, requirements,
+                    cells, gridSettings, cards, baseHp);
+                if (!doesBuildSatisfyConstraints(stats, analysis, effectiveConstraints, data.gameId)) {
+                    continue;
+                }
+            }
+            yield solution;
+        }
+    }
+
+    let yielded = 0;
+    for (const solution of yieldValidFrom(tightenedReqs)) {
+        yielded++;
+        yield solution;
+    }
+    if (yielded === 0 && tightenedReqs !== policyReqs && !shouldStop()) {
+        yield* yieldValidFrom(policyReqs);
+    }
 }

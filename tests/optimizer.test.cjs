@@ -398,8 +398,8 @@ test("optimizeBuild with bugRules: required buster bug selects build with Buster
         "Result must trigger the required Buster blank bug"
     );
 
-    // Verify rejecting when required bug is impossible to trigger (modCardMode: none and clean NC)
-    const impossible = optimizeBuild({
+    // Buster blank bug is also triggerable in pure NC mode via Speed+1/Attack+1 on command line
+    const ncResult = optimizeBuild({
         data,
         problem,
         target: "max_hp",
@@ -409,9 +409,29 @@ test("optimizeBuild with bugRules: required buster bug selects build with Buster
                 buster: "required",
             },
         },
+        timeoutMs: 1500,
+    });
+    assert.ok(ncResult, "Should find an NC-only solution satisfying required buster bug");
+    assert.deepEqual(ncResult.problem.modCards ?? [], [], "modCardMode none must not add mod cards");
+    assert.ok(
+        (ncResult.analysis.activeBugs || []).some(b => b.bugType.toLowerCase() === "buster" && b.level >= 1),
+        "NC-only result must trigger the required Buster blank bug"
+    );
+
+    // Verify rejecting when required bug is genuinely card-only and impossible in modCardMode none
+    const impossible = optimizeBuild({
+        data,
+        problem,
+        target: "max_hp",
+        modCardMode: "none",
+        constraints: {
+            bugRules: {
+                damageConfusion: "required",
+            },
+        },
         timeoutMs: 1000,
     });
-    assert.equal(impossible, null, "Should return null when required bug cannot be triggered in modCardMode none");
+    assert.equal(impossible, null, "Should return null when card-only required bug cannot be triggered in modCardMode none");
 });
 
 test("problem hash serialization round-trips bugRules", () => {

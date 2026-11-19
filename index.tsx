@@ -59,6 +59,7 @@ import {
     computeBuildStats,
     computePlacedBuildStats,
     getBusterStatLimits,
+    isNonBattleProgram,
     tAbility,
     analyzeSolutionBugs,
     getEffectiveInBattleBugs,
@@ -2401,9 +2402,11 @@ function PartSelector({
                                             )
                                                 ? true
                                                 : false,
-                                            onCommandLine: part.isSolid
-                                                ? true
-                                                : null,
+                                            onCommandLine:
+                                                part.isSolid &&
+                                                !isNonBattleProgram(data.gameId, data.partMetas[partIndex].id)
+                                                    ? true
+                                                    : null,
                                         },
                                     },
                                     ...problem.requirements,
@@ -3245,6 +3248,11 @@ function Results({
 
     const { ref, inView } = useInView({});
 
+    const initialCells = React.useMemo(
+        () => initialSolution ? placeAll(data.parts, problem.requirements, initialSolution, gs) : null,
+        [data.parts, problem.requirements, initialSolution, gs]
+    );
+
     React.useEffect(() => {
         if (problem.requirements.length == 0) {
             setDone(true);
@@ -3255,7 +3263,14 @@ function Results({
             data.parts,
             problem.requirements,
             gs,
-            problem.spinnableColors
+            problem.spinnableColors,
+            {
+                data,
+                bugPolicy: problem.bugPolicy,
+                constraints: problem.constraints,
+                modCards: problem.modCards,
+                baseHp: problem.baseHp,
+            }
         );
 
         solverRef.current = solver;
@@ -3272,6 +3287,13 @@ function Results({
             }
             setPending(true);
             let { done: nextDone, value } = await solverRef.current.next();
+            while (
+                !nextDone &&
+                initialCells &&
+                isEqual(placeAll(data.parts, problem.requirements, value, gs), initialCells)
+            ) {
+                ({ done: nextDone, value } = await solverRef.current.next());
+            }
             if (nextDone) {
                 setDone(true);
             } else {
@@ -3284,7 +3306,7 @@ function Results({
             }
             setPending(false);
         })();
-    }, [inView, done, pending, setDone, setSolutions, onSolutionFound]);
+    }, [inView, done, pending, setDone, setSolutions, onSolutionFound, initialCells, data.parts, problem.requirements, gs]);
 
     return (
         <div>
