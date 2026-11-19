@@ -39,14 +39,8 @@ jobs:
             - name: Run install
               run: pnpm install --frozen-lockfile
 
-            - name: Check types
-              run: pnpm typecheck
-
-            - name: Run regression tests
-              run: pnpm test
-
-            - name: Run build
-              run: pnpm build
+            - name: Run gate (typecheck + tests + build)
+              run: pnpm gate
 
             - name: Setup Pages
               uses: actions/configure-pages@v5

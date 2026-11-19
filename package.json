@@ -29,6 +29,7 @@
         "dev": "vite",
         "build": "vite build",
         "typecheck": "tsc --noEmit",
-        "test": "node tests/run.cjs"
+        "test": "node tests/run.cjs",
+        "gate": "tsc --noEmit && node tests/run.cjs && vite build"
     }
 }
